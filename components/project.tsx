@@ -40,7 +40,7 @@ export default function Project({
                     <p className='mt-2 leading-relaxed text-gray-700 dark:text-white/70'>
                         {description}
                     </p>
-                    <div className='flex items-center mt-1'>
+                    <div className='flex items-center my-1'>
                         {link && (
                             <a
                                 className='bg-white p-2 mr-1 text-gray-700 hover:text-gray-950 flex items-center gap-2 rounded-full focus:scale-[1.15] hover:scale-[1.15] active:scale-105 transition cursor-pointer borderBlack dark:bg-white/10 dark:text-white/60'

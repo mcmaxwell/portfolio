@@ -1,15 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-interface MousePosition {
-    x: number
-    y: number
-}
-
 function CustomCursorComponent() {
     const cursorDotOutline = useRef<HTMLDivElement>(null)
     const cursorDot = useRef<HTMLDivElement>(null)
-    const requestRef = useRef<number>()
-    const previousTimeRef = useRef<number>()
+    const requestRef = useRef<number>(0)
+    const previousTimeRef = useRef<number>(0)
     let [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
     const [width, setWidth] = useState<number>(
         typeof window !== 'undefined' ? window.innerWidth : 0
@@ -17,8 +12,8 @@ function CustomCursorComponent() {
     const [height, setHeight] = useState<number>(
         typeof window !== 'undefined' ? window.innerHeight : 0
     )
-    let cursorVisible = useState(false)
-    let cursorEnlarged = useState(false)
+    let cursorVisible: any = useState(false) // temporary
+    let cursorEnlarged: any = useState(false)
 
     /**
      * Mouse Moves
@@ -44,7 +39,7 @@ function CustomCursorComponent() {
         cursorEnlarged.current = false
         toggleCursorSize()
     }
-    const onResize = (event) => {
+    const onResize = () => {
         setWidth(window.innerWidth)
         setHeight(window.innerHeight)
     }
@@ -99,12 +94,9 @@ function CustomCursorComponent() {
      * Toggle Cursor Visiblity
      */
     function toggleCursorVisibility() {
-        if (cursorVisible.current) {
-            cursorDot.current.style.opacity = 1
-            cursorDotOutline.current.style.opacity = 1
-        } else {
-            cursorDot.current.style.opacity = 0
-            cursorDotOutline.current.style.opacity = 0
+        if (cursorDot.current && cursorDotOutline.current) {
+            cursorDot.current.style.opacity = cursorVisible ? '1' : '0'
+            cursorDotOutline.current.style.opacity = cursorVisible ? '1' : '0'
         }
     }
 
@@ -112,15 +104,18 @@ function CustomCursorComponent() {
      * Toggle Cursor Size
      */
     function toggleCursorSize() {
-        if (cursorEnlarged.current) {
-            cursorDot.current.style.transform =
-                'translate(-50%, -50%) scale(0.7)'
-            cursorDotOutline.current.style.transform =
-                'translate(-50%, -50%) scale(5)'
-        } else {
-            cursorDot.current.style.transform = 'translate(-50%, -50%) scale(1)'
-            cursorDotOutline.current.style.transform =
-                'translate(-50%, -50%) scale(1)'
+        if (cursorDot.current && cursorDotOutline.current) {
+            if (cursorEnlarged.current) {
+                cursorDot.current.style.transform =
+                    'translate(-50%, -50%) scale(0.7)'
+                cursorDotOutline.current.style.transform =
+                    'translate(-50%, -50%) scale(5)'
+            } else {
+                cursorDot.current.style.transform =
+                    'translate(-50%, -50%) scale(1)'
+                cursorDotOutline.current.style.transform =
+                    'translate(-50%, -50%) scale(1)'
+            }
         }
     }
 
@@ -148,11 +143,13 @@ function CustomCursorComponent() {
      * @param {number} time
      */
     const animateDotOutline = (time: number) => {
-        if (previousTimeRef.current !== undefined) {
-            x += (endX - x) / 8
-            y += (endY - y) / 8
-            cursorDotOutline.current.style.top = y + 'px'
-            cursorDotOutline.current.style.left = x + 'px'
+        if (previousTimeRef.current !== undefined && cursorDotOutline.current) {
+            const deltaX = (endX - x) / 8
+            const deltaY = (endY - y) / 8
+            x += deltaX
+            y += deltaY
+            cursorDotOutline.current.style.top = `${y}px`
+            cursorDotOutline.current.style.left = `${x}px`
         }
         previousTimeRef.current = time
         requestRef.current = requestAnimationFrame(animateDotOutline)
