@@ -6,10 +6,10 @@ interface MousePosition {
 }
 
 function CustomCursorComponent() {
-    const cursorDotOutline = useRef()
-    const cursorDot = useRef()
-    const requestRef = useRef()
-    const previousTimeRef = useRef()
+    const cursorDotOutline = useRef<HTMLDivElement>(null)
+    const cursorDot = useRef<HTMLDivElement>(null)
+    const requestRef = useRef<number>()
+    const previousTimeRef = useRef<number>()
     let [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
     const [width, setWidth] = useState<number>(
         typeof window !== 'undefined' ? window.innerWidth : 0
@@ -23,7 +23,7 @@ function CustomCursorComponent() {
     /**
      * Mouse Moves
      */
-    const onMouseMove = (event) => {
+    const onMouseMove = (event: { pageX: any; pageY: any }) => {
         const { pageX: x, pageY: y } = event
         setMousePosition({ x, y })
         positionDot(event)
@@ -83,7 +83,7 @@ function CustomCursorComponent() {
      * Position Dot (cursor)
      * @param {event}
      */
-    function positionDot(e) {
+    function positionDot(e: { pageX: any; pageY: any }) {
         cursorVisible.current = true
         toggleCursorVisibility()
         // Position the dot
@@ -147,7 +147,7 @@ function CustomCursorComponent() {
      * Aniamtes cursor outline with trailing effect.
      * @param {number} time
      */
-    const animateDotOutline = (time) => {
+    const animateDotOutline = (time: number) => {
         if (previousTimeRef.current !== undefined) {
             x += (endX - x) / 8
             y += (endY - y) / 8

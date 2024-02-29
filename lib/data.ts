@@ -6,9 +6,12 @@ const promptopia = './promptopia.jpg'
 const chatters = './chatters.jpg'
 const adobeBadgeImg = './Adobe_Badge.png'
 const ibmBadgeImg = './ibm.png'
-const kudostokiddos = './kudostokiddos.jpg'
+const portfolio = './portfolio.jpg'
 const googleSert = './1708707168479.jpeg'
-const chattersBooking = './booking.png'
+const chattersBooking = './booking.jpg'
+const cocorepublic = './coco.jpg'
+const blog = './blog.jpg'
+
 export const links = [
     {
         name: 'Home',
@@ -106,28 +109,35 @@ export const projectsData = [
     {
         title: 'Blog',
         description:
-            'Create a Full-Stack Blog with Google Authentication, Featuring Capabilities for Post Creation with Images and Content',
-        link: 'https://promtopia-401114.web.app/',
-        github: 'https://github.com/mcmaxwell/promptopia',
-        tags: ['Nextjs', 'MongonDB', 'Reactjs', 'tailwindcss', 'Typescript'],
-        imageUrl: promptopia,
+            'Create a Full-Stack Blog with Google Authentication, Featuring Capabilities for Post Creation with Images and Content, Project in progress.',
+        link: '',
+        github: 'https://github.com/mcmaxwell/blog-full-stack',
+        tags: ['Nextjs', 'MongonDB', 'Reactjs', 'tailwindcss', 'google auth'],
+        imageUrl: blog,
     },
     // {
     //     title: 'Civic news',
     //     description:
     //         'Create a Full-Stack News portal with Google Authentication, Featuring Capabilities for Post Creation with Images and Content',
-    //     link: 'https://promtopia-401114.web.app/',
-    //     github: 'https://github.com/mcmaxwell/promptopia',
+    //     link: 'https://civicvoice.news/',
+    //     github: 'https://github.com/mcmaxwell/civicvoice',
     //     tags: ['Nextjs', 'MongonDB', 'Reactjs', 'tailwindcss', 'Typescript'],
     //     imageUrl: promptopia,
     // },
     {
-        title: 'Kudos to kiddos',
-        description: 'Project in progress',
-        link: 'https://get-a-fun.web.app/',
-        github: '',
-        tags: ['bun', 'daisyui', 'Reactjs', 'tailwindcss', 'Typescript'],
-        imageUrl: kudostokiddos,
+        title: 'Portfolio',
+        description: 'My site, Project in progress.',
+        link: 'https://liutsko.me',
+        github: 'https://github.com/mcmaxwell/portfolio',
+        tags: [
+            'React & Next.js',
+            '(App Router & Server Actions)',
+            'TypeScript',
+            'Tailwind CSS',
+            'Framer Motion',
+            'React Email & Resend',
+        ],
+        imageUrl: portfolio,
     },
     {
         title: 'features-generation',
@@ -143,7 +153,7 @@ export const projectsData = [
             'Change main menu, created custom deals and promotions features, styling and coding checkout and cart pages',
         link: 'https://www.teppermans.com/',
         github: '',
-        tags: ['Magento 2'],
+        tags: ['Adobe commerce'],
         imageUrl: teppermans,
     },
     {
@@ -152,7 +162,7 @@ export const projectsData = [
             'Created features ans styling product page and product listing page, styling and coding checkout and cart pages',
         link: 'https://chatters.ca/',
         github: '',
-        tags: ['Magento 2'],
+        tags: ['Adobe commerce'],
         imageUrl: chatters,
     },
     {
@@ -162,6 +172,14 @@ export const projectsData = [
         github: '',
         tags: ['knokoutjs'],
         imageUrl: chattersBooking,
+    },
+    {
+        title: 'Coco Republic',
+        description: 'Customize mega menu, checkout and Product page.',
+        link: 'https://www.cocorepublic.com.au/',
+        github: '',
+        tags: ['Magento 2'],
+        imageUrl: cocorepublic,
     },
 ] as const
 
