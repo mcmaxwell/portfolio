@@ -23,7 +23,9 @@ export default function Experience() {
         >
             <SectionHeading>My experience</SectionHeading>
             <VerticalTimeline lineColor=''>
+                {/* @ts-ignore: Unreachable code error */}
                 {experiencesData.map((item, index) => (
+                    /* @ts-ignore: Unreachable code error */
                     <VerticalTimelineElement
                         key={index}
                         contentStyle={{
