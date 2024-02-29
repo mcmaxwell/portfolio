@@ -19,24 +19,16 @@ export default function About() {
         >
             <SectionHeading>About me</SectionHeading>
             <p className='mb-3'>
-                I like my job as a front-end developer. I developed and
-                implemented interesting ideas at 111 Minutes, where I first
-                started to write code with ReactJS. In Orot Technologies company
-                I switched to e-commerce projects, which used Magento, where I
-                later combined my earlier knowledge of ReactJS and wrote the
-                front end part of Magento 2 online store in ReactJS +
-                typescript. I started to develop leadership skills at Luxinten,
-                where I was the lead front-end developer. After I joined
-                Overdose company I went deeper into Magento2 and also became the
-                leading front-end developer in the team, where I consulted and
-                reviewed the code of other developers, took part in the
-                evaluation of the projects, and developed custom modules for
-                online stores. Last two years I worked with magento 2 and in the
-                last year, I have become an{' '}
-                <span className='font-bold italic'>
-                    Adobe Certified Expert-Adobe Commerce Front-End Developer
-                </span>
-                .
+                Adobe Certified Front-End Web Developer with extensive
+                experience in Magento and Wordpress. Demonstrated e-commerce
+                development expertise, creating custom online store modules, and
+                leading frontend teams, committed to best-in class front-end
+                experiences, user engagement, satisfaction, and loyalty. Adept
+                at combining innovative technologies like ReactJS with Magento
+                to enhance e-commerce capabilities. Dedicated to continuous
+                learning, recently updated skills with the latest version of
+                Reactjs. Created several projects using Typescript and
+                Nextjs, for the backend using Express and MongoDB.
             </p>
 
             <p>
@@ -45,7 +37,7 @@ export default function About() {
                 I also enjoy{' '}
                 <span className='font-medium'>learning new things</span>. I am
                 currently learning about{' '}
-                <span className='font-medium'>culinary ans space</span>.
+                <span className='font-medium'>culinary and space</span>.
             </p>
         </motion.section>
     )

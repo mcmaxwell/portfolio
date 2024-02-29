@@ -1,13 +1,14 @@
 import React from 'react'
 import { CgWorkAlt } from 'react-icons/cg'
-import featuresGeneration from '@/public/features.jpg'
-import teppermans from '@/public/teppermans.jpg'
-import promptopia from '@/public/promptopia.jpg'
-import chatters from '@/public/chatters.jpg'
-import adobeBadgeImg from '@/public/Adobe_Badge.png'
-import ibmBadgeImg from '@/public/ibm.png'
-import kudostokiddos from '@/public/kudostokiddos.jpg'
-
+const featuresGeneration = './features.jpg'
+const teppermans = './teppermans.jpg' //temp change to standart img tag
+const promptopia = './promptopia.jpg'
+const chatters = './chatters.jpg'
+const adobeBadgeImg = './Adobe_Badge.png'
+const ibmBadgeImg = './ibm.png'
+const kudostokiddos = './kudostokiddos.jpg'
+const googleSert = './1708707168479.jpeg'
+const chattersBooking = './booking.png'
 export const links = [
     {
         name: 'Home',
@@ -103,49 +104,29 @@ estimations.
 
 export const projectsData = [
     {
-        title: 'Teppermans',
-        description: 'Created features ans styling',
-        link: 'https://www.teppermans.com/',
-        github: '',
-        tags: ['Magento 2'],
-        imageUrl: teppermans,
-    },
-    {
-        title: 'Chatters',
-        description: 'Created features ans styling pages',
-        link: 'https://chatters.ca/',
-        github: '',
-        tags: ['Magento 2'],
-        imageUrl: chatters,
-    },
-    {
-        title: 'Promptopia',
-        description: 'Discover & Share AI-Powered Prompts',
-        link: 'https://portfolio-c22ac.web.app/',
+        title: 'Blog',
+        description:
+            'Create a Full-Stack Blog with Google Authentication, Featuring Capabilities for Post Creation with Images and Content',
+        link: 'https://promtopia-401114.web.app/',
         github: 'https://github.com/mcmaxwell/promptopia',
-        tags: [
-            'Nextjs',
-            'MongonDB',
-            'Firebase',
-            'Reactjs',
-            'tailwindcss',
-            'Typescript',
-        ],
+        tags: ['Nextjs', 'MongonDB', 'Reactjs', 'tailwindcss', 'Typescript'],
         imageUrl: promptopia,
     },
+    // {
+    //     title: 'Civic news',
+    //     description:
+    //         'Create a Full-Stack News portal with Google Authentication, Featuring Capabilities for Post Creation with Images and Content',
+    //     link: 'https://promtopia-401114.web.app/',
+    //     github: 'https://github.com/mcmaxwell/promptopia',
+    //     tags: ['Nextjs', 'MongonDB', 'Reactjs', 'tailwindcss', 'Typescript'],
+    //     imageUrl: promptopia,
+    // },
     {
         title: 'Kudos to kiddos',
         description: 'Project in progress',
         link: 'https://get-a-fun.web.app/',
         github: '',
-        tags: [
-            'bun',
-            'daisyui',
-            'Firebase',
-            'Reactjs',
-            'tailwindcss',
-            'Typescript',
-        ],
+        tags: ['bun', 'daisyui', 'Reactjs', 'tailwindcss', 'Typescript'],
         imageUrl: kudostokiddos,
     },
     {
@@ -155,6 +136,32 @@ export const projectsData = [
         github: 'https://github.com/mcmaxwell/features-generation/blob/main/package.json',
         tags: ['React', 'Vite'],
         imageUrl: featuresGeneration,
+    },
+    {
+        title: 'Teppermans',
+        description:
+            'Change main menu, created custom deals and promotions features, styling and coding checkout and cart pages',
+        link: 'https://www.teppermans.com/',
+        github: '',
+        tags: ['Magento 2'],
+        imageUrl: teppermans,
+    },
+    {
+        title: 'Chatters',
+        description:
+            'Created features ans styling product page and product listing page, styling and coding checkout and cart pages',
+        link: 'https://chatters.ca/',
+        github: '',
+        tags: ['Magento 2'],
+        imageUrl: chatters,
+    },
+    {
+        title: 'Chatters',
+        description: 'Custom booking system',
+        link: ' https://chatters.ca/book/ontario/on-north-york-onch37',
+        github: '',
+        tags: ['knokoutjs'],
+        imageUrl: chattersBooking,
     },
 ] as const
 
@@ -177,11 +184,16 @@ export const achievementsData = [
     {
         title: 'IBM Web Development Fundamentals',
         imageUrl: ibmBadgeImg,
-        date: 'October 03, 2023',
+        date: 'October, 2023',
     },
     {
         title: 'Adobe Certified Expert-Adobe Commerce Front-End Developer',
         imageUrl: adobeBadgeImg,
-        date: 'October 28, 2022',
+        date: 'October, 2022',
+    },
+    {
+        title: 'Google Digital Marketing and E-Commerce Professional Certificate',
+        imageUrl: googleSert,
+        date: 'February, 2024',
     },
 ]

@@ -1,3 +1,5 @@
+'use client'
+import CustomCursorComponent from '@/components/CustomCursorComponent'
 import About from '@/components/about'
 import Achievements from '@/components/achievements'
 import Contact from '@/components/contact'
@@ -10,6 +12,7 @@ import Skills from '@/components/skills'
 export default function Home() {
     return (
         <main className='flex flex-col items-center px-4'>
+            <CustomCursorComponent />
             <Intro />
             <SectionDivider />
             <About />

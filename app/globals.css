@@ -6,6 +6,11 @@
   --foreground-rgb      : 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb  : 255, 255, 255;
+
+  --color-cursor        : 217, 72, 33;
+  --cursor-outline-shade: 0.3;
+  --cursor-size         : 10px;
+  --cursor-outline-size : 12px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,4 +26,42 @@ body {
   background: linear-gradient(to bottom,
       transparent,
       rgba(var(--background-end-rgb))) rgba(var(--background-start-rgb));
+
+      cursor: none!important;
+}
+
+#cursor-dot,
+#cursor-dot-outline {
+  z-index       : 999;
+  pointer-events: none;
+  position      : absolute;
+  top           : 50%;
+  left          : 50%;
+  border-radius : 50%;
+  opacity       : 0;
+  transform     : translate(-50%, -50%);
+  transition    : opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+#cursor-dot {
+  width           : var(--cursor-size);
+  height          : var(--cursor-size);
+  background-color: rgba(var(--color-cursor), 0.9);
+  border: 1px solid #fff;
+}
+
+#cursor-dot-outline {
+  width           : var(--cursor-outline-size);
+  height          : var(--cursor-outline-size);
+  background-color: rgba(var(--color-cursor), var(--cursor-outline-shade));
+    border: 1px solid #fff;
+}
+.hover-image,
+.hover-link {
+  transition: all 300ms;
+}
+
+.hover-image:hover,
+.hover-link:hover {
+  transform: scale(1.1);
 }

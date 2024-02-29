@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import React from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -9,7 +8,7 @@ import { HiDownload } from 'react-icons/hi'
 import { FaGithubSquare } from 'react-icons/fa'
 import { useSectionInView } from '@/lib/hooks'
 import { useActiveSectionContext } from '@/context/active-section-context'
-import photo from '@/public/photo.jpeg'
+import { Tailwind } from '@react-email/tailwind';
 
 export default function Intro() {
     const { ref } = useSectionInView('Home', 0.5)
@@ -22,7 +21,7 @@ export default function Intro() {
             className='mb-28 max-w-[50rem] text-center sm:mb-0 scroll-mt-[100rem]'
         >
             <div className='flex items-center justify-center'>
-                <div className='relative'>
+                <div className='relative hover-image'>
                     <motion.div
                         initial={{ x: -1300, scale: 0, rotate: 1360 }}
                         animate={{ x: 0, rotate: 0, scale: 1 }}
@@ -32,13 +31,11 @@ export default function Intro() {
                             damping: 60,
                         }}
                     >
-                        <Image
-                            src={photo}
+                        <img
+                            src='./photo.jpeg'
                             alt='Maksym portrait'
                             width='192'
                             height='192'
-                            quality='95'
-                            priority={true}
                             className='h-24 w-24 rounded-full object-cover border-[0.35rem] border-white shadow-xl'
                         />
                     </motion.div>
@@ -53,9 +50,8 @@ export default function Intro() {
                 <span className='font-bold'>Hello, I&apos;m Maksym.</span>{' '}
                 I&apos;m a <span className='font-bold'>frontend developer</span>{' '}
                 with <span className='font-bold'>8 years</span> of experience. I
-                enjoy building <span className='italic'>sites & apps</span>. My
-                focus is{' '}
-                <span className='underline'>Adobe Commerce and React</span>.
+                enjoy building <span className='italic'>web sites & apps</span>.
+
             </motion.h1>
 
             <motion.div
@@ -80,7 +76,7 @@ export default function Intro() {
 
                 <a
                     className='group bg-white px-7 py-3 flex items-center gap-2 rounded-full outline-none focus:scale-110 hover:scale-110 active:scale-105 transition cursor-pointer borderBlack dark:bg-white/10'
-                    href='Liutsko_maksym_cv.pdf'
+                    href='Liutsko Maksym Resume.pdf'
                     download
                 >
                     Download CV{' '}
