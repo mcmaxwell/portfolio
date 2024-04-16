@@ -11,6 +11,9 @@ const googleSert = './1708707168479.jpeg'
 const chattersBooking = './booking.jpg'
 const cocorepublic = './coco.jpg'
 const blog = './blog.jpg'
+const metaSert = './metaSert.jpeg'
+const MSert = './MSert.jpeg'
+const awsSert = './awsSert.jpeg'
 
 export const links = [
     {
@@ -196,22 +199,40 @@ export const skillsData = [
     'Adobe Ecommerce / Magetno 2',
     'KnokoutJS',
     'jQuery',
+    'Django',
+    'MongoDB',
+    'MySQL'
 ] as const
 
 export const achievementsData = [
-    {
-        title: 'IBM Web Development Fundamentals',
-        imageUrl: ibmBadgeImg,
-        date: 'October, 2023',
-    },
     {
         title: 'Adobe Certified Expert-Adobe Commerce Front-End Developer',
         imageUrl: adobeBadgeImg,
         date: 'October, 2022',
     },
     {
+        title: 'IBM Web Development Fundamentals',
+        imageUrl: ibmBadgeImg,
+        date: 'October, 2023',
+    },
+    {
         title: 'Google Digital Marketing and E-Commerce Professional Certificate',
         imageUrl: googleSert,
         date: 'February, 2024',
+    },
+    {
+        title: 'The Full Stack',
+        imageUrl: metaSert,
+        date: 'March, 2024',
+    },
+    {
+        title: 'Introduction to Structured Query Language (SQL)',
+        imageUrl: MSert,
+        date: 'March, 2024',
+    },
+    {
+        title: 'Digital Classroom - Running Containers on Amazon Elastic Kubernetes Service (Amazon EKS)',
+        imageUrl: awsSert,
+        date: 'April, 2024',
     },
 ]
