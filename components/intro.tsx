@@ -79,7 +79,7 @@ export default function Intro() {
                     href='Liutsko Maksym Resume.pdf'
                     download
                 >
-                    Download CV{' '}
+                    Download my Resume{' '}
                     <HiDownload className='opacity-60 group-hover:translate-y-1 transition' />
                 </a>
 
