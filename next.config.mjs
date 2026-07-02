@@ -1,40 +1,60 @@
-import {withSentryConfig} from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
 
-export default withSentryConfig(nextConfig, {
-// For all available options, see:
-// https://github.com/getsentry/sentry-webpack-plugin#options
+// Content-Security-Policy — allows what the site actually uses:
+// - self for app code/styles/fonts (next/font self-hosts)
+// - OpenAI Realtime (ephemeral token + SDP POST to api.openai.com)
+// - Google Analytics (gtag)
+// WebRTC media (mic/audio) is not governed by CSP; the mic is gated by
+// Permissions-Policy below.
+// Next.js dev (React Fast Refresh) needs 'unsafe-eval'; production bundles
+// don't, so we only relax it in development.
+const isDev = process.env.NODE_ENV !== "production";
+const scriptSrc = [
+  "script-src 'self' 'unsafe-inline'",
+  // 'wasm-unsafe-eval' lets three.js instantiate its KTX2 texture transcoder
+  // (WebAssembly) without allowing general eval. Dev additionally needs
+  // 'unsafe-eval' for React Fast Refresh.
+  "'wasm-unsafe-eval'",
+  isDev ? "'unsafe-eval'" : "",
+  "https://www.googletagmanager.com",
+]
+  .filter(Boolean)
+  .join(" ");
 
-// Suppresses source map uploading logs during build
-silent: true,
-org: "javascript-mastery",
-project: "javascript-nextjs",
-}, {
-// For all available options, see:
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+const csp = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  scriptSrc,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com",
+  "font-src 'self' data:",
+  "connect-src 'self' blob: data: https://api.openai.com https://*.openai.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com",
+  "media-src 'self' blob:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+].join("; ");
 
-// Upload a larger set of source maps for prettier stack traces (increases build time)
-widenClientFileUpload: true,
+const securityHeaders = [
+  { key: "Content-Security-Policy", value: csp },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "microphone=(self), camera=(), geolocation=(), browsing-topics=()",
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+];
 
-// Transpiles SDK to be compatible with IE11 (increases bundle size)
-transpileClientSDK: true,
+const nextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
+};
 
-// Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-// This can increase your server load as well as your hosting bill.
-// Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-// side errors will fail.
-// tunnelRoute: "/monitoring",
-
-// Hides source maps from generated client bundles
-hideSourceMaps: true,
-
-// Automatically tree-shake Sentry logger statements to reduce bundle size
-disableLogger: true,
-
-// Enables automatic instrumentation of Vercel Cron Monitors.
-// See the following for more information:
-// https://docs.sentry.io/product/crons/
-// https://vercel.com/docs/cron-jobs
-automaticVercelMonitors: true,
-});
+export default nextConfig;

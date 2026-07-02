@@ -150,6 +150,25 @@ body {
 .text-glow {
   text-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
 }
+
+/* a11y: visible keyboard focus */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #4ade80;
+  outline-offset: 2px;
+}
+
+/* a11y: honour reduced-motion (disables blinks, flicker, scanline animations) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 .box-glow {
   box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25),
     0 0 18px -6px rgba(74, 222, 128, 0.5);

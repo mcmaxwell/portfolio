@@ -64,7 +64,7 @@ export function Projects() {
                     className="flex h-7 w-7 items-center justify-center rounded-full border border-term-line bg-term-panel"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={icon} alt="tech" width={14} height={14} />
+                    <img src={icon} alt="" aria-hidden width={14} height={14} />
                   </span>
                 ))}
               </div>

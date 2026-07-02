@@ -44,7 +44,11 @@ export function TermSection({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="mx-auto w-full max-w-5xl px-5 py-16 md:py-24">
+    <section
+      id={id}
+      aria-label={title.replace(/^~\//, "").replace(/\.\w+$/, "")}
+      className="mx-auto w-full max-w-5xl px-5 py-16 md:py-24"
+    >
       <p className="mb-4 text-sm text-term-muted">
         <span className="text-term-green">maksym@portfolio</span>
         <span className="text-term-muted">:</span>

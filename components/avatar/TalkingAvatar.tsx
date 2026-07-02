@@ -2,7 +2,7 @@
 
 import { Suspense, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Html } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
@@ -50,6 +50,7 @@ const TalkingAvatar = () => {
   return (
     <section
       id="talk"
+      aria-label="Interactive 3D AI avatar — talk to Maksym"
       className="relative h-screen w-full"
     >
       <Canvas
@@ -57,8 +58,10 @@ const TalkingAvatar = () => {
         className="!absolute inset-0"
         style={{ touchAction: "pan-y" }}
       >
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[2, 4, 3]} intensity={1.4} />
+        <ambientLight intensity={1.1} />
+        <hemisphereLight args={[0xffffff, 0x1a2a1f, 0.7]} />
+        <directionalLight position={[2, 4, 3]} intensity={1.6} />
+        <directionalLight position={[-3, 2, -2]} intensity={0.5} />
         <Suspense
           fallback={
             <Html center className="whitespace-nowrap text-sm text-term-green">
@@ -74,7 +77,6 @@ const TalkingAvatar = () => {
             gesturingRef={gesturingRef}
             position={[0, -1.5, 0]}
           />
-          <Environment preset="city" />
         </Suspense>
         <CameraRig />
       </Canvas>
