@@ -5,7 +5,7 @@
 
 export const owner = {
   name: "Maksym Liutsko",
-  role: "Front-End & AI Automation Engineer",
+  role: "AI Automation Engineer & Product Builder",
   location: "London, Ontario, Canada — open to remote",
   email: "maksym.liutsko@gmail.com",
   site: "liutsko.me",

@@ -125,7 +125,7 @@ const TalkingAvatar = () => {
           <span className="ml-1 inline-block h-6 w-2.5 translate-y-1 bg-term-green animate-blink" />
         </h1>
         <p className="pointer-events-none -mt-3 px-6 text-xs text-term-muted md:text-sm">
-          Front-End &amp; AI Automation Engineer · Co-founder &amp; CTO @
+          AI Automation Engineer &amp; Product Builder · Co-founder &amp; CTO @
           XecSuite
         </p>
         <button

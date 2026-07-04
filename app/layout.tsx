@@ -10,7 +10,7 @@ const GA_ID = "G-RW77DJRDV1";
 const SITE_URL = "https://liutsko.me";
 const TITLE = `${owner.name} — ${owner.role}`;
 const DESCRIPTION =
-  "Maksym Liutsko — Front-End & AI Automation Engineer. Co-founder & CTO of XecSuite, co-founder of Apex Mind Automation. I build AI-integrated products, autonomous agents and end-to-end automation with React, TypeScript and LLMs.";
+  "Maksym Liutsko — AI Automation Engineer & Product Builder. Co-founder & CTO of XecSuite, co-founder of Apex Mind Automation. I build AI-integrated products, autonomous agents and end-to-end automation with React, TypeScript and LLMs.";
 
 const mono = JetBrains_Mono({
   subsets: ["latin"],

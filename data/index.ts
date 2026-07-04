@@ -39,7 +39,7 @@ export const gridItems = [
   },
   {
     id: 4,
-    title: "Front-End & AI Automation Engineer with 12+ years of experience.",
+    title: "AI Automation Engineer & Product Builder — 12+ years in software.",
     description: "",
     className: "lg:col-span-2 md:col-span-3 md:row-span-1",
     imgClassName: "",
