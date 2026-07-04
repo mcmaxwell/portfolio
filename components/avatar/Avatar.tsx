@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -51,6 +51,32 @@ function retargetClip(clip: THREE.AnimationClip): THREE.AnimationClip {
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
 }
 
+/**
+ * Loads the 9 gesture clips (~16MB) in ITS OWN Suspense so the avatar renders
+ * as soon as its own model is ready — gestures stream in behind and register
+ * themselves into `actionsRef` when available.
+ */
+function GestureClips({
+  mixer,
+  actionsRef,
+}: {
+  mixer: THREE.AnimationMixer;
+  actionsRef: React.MutableRefObject<Record<string, THREE.AnimationAction>>;
+}) {
+  const gestureGltfs = useGLTF(GESTURE_URLS);
+
+  useEffect(() => {
+    const map: Record<string, THREE.AnimationAction> = {};
+    GESTURES.forEach((name, i) => {
+      const clip = gestureGltfs[i]?.animations?.[0];
+      if (clip) map[name] = mixer.clipAction(retargetClip(clip));
+    });
+    actionsRef.current = map;
+  }, [mixer, gestureGltfs, actionsRef]);
+
+  return null;
+}
+
 export function Avatar({
   url,
   volumeRef,
@@ -60,20 +86,14 @@ export function Avatar({
   scale = 1,
 }: AvatarProps) {
   const { scene, animations } = useGLTF(url);
-  const gestureGltfs = useGLTF(GESTURE_URLS);
 
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
+  const gestureActionsRef = useRef<Record<string, THREE.AnimationAction>>({});
 
-  // Build the idle action + one action per gesture clip.
-  const { idleAction, gestureActions } = useMemo(() => {
-    const idle = animations.length ? mixer.clipAction(animations[0]) : null;
-    const map: Record<string, THREE.AnimationAction> = {};
-    GESTURES.forEach((name, i) => {
-      const clip = gestureGltfs[i]?.animations?.[0];
-      if (clip) map[name] = mixer.clipAction(retargetClip(clip));
-    });
-    return { idleAction: idle, gestureActions: map };
-  }, [mixer, animations, gestureGltfs]);
+  const idleAction = useMemo(
+    () => (animations.length ? mixer.clipAction(animations[0]) : null),
+    [mixer, animations]
+  );
 
   const activeAction = useRef<THREE.AnimationAction | null>(null);
   const lastSeq = useRef(0);
@@ -143,7 +163,7 @@ export function Avatar({
     if (gestureRef.current.seq !== lastSeq.current) {
       lastSeq.current = gestureRef.current.seq;
       const g = gestureRef.current.name
-        ? gestureActions[gestureRef.current.name]
+        ? gestureActionsRef.current[gestureRef.current.name]
         : null;
       if (g) {
         if (gesturingRef) gesturingRef.current = true;
@@ -198,6 +218,10 @@ export function Avatar({
   return (
     <group position={position} scale={scale}>
       <primitive object={scene} />
+      {/* Gesture clips stream in independently — no fallback needed. */}
+      <Suspense fallback={null}>
+        <GestureClips mixer={mixer} actionsRef={gestureActionsRef} />
+      </Suspense>
     </group>
   );
 }

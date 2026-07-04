@@ -39,7 +39,7 @@ export function Nav() {
   }, []);
 
   return (
-    <nav className="fixed right-5 top-1/2 z-40 flex -translate-y-1/2 flex-col items-end gap-4">
+    <nav className="fixed right-5 top-1/2 z-40 hidden -translate-y-1/2 flex-col items-end gap-4 md:flex">
       {items.map((it) => {
         const isActive = active === it.watch;
         return (

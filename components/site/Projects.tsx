@@ -26,7 +26,8 @@ export function Projects() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.img}
-                    alt={p.title}
+                    alt={`Screenshot of ${p.title}`}
+                    loading="lazy"
                     className="h-full w-full object-cover object-top opacity-80 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-term-bg/80 to-transparent" />

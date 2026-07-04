@@ -124,6 +124,10 @@ const TalkingAvatar = () => {
           maksym.liutsko
           <span className="ml-1 inline-block h-6 w-2.5 translate-y-1 bg-term-green animate-blink" />
         </h1>
+        <p className="pointer-events-none -mt-3 px-6 text-xs text-term-muted md:text-sm">
+          Front-End &amp; AI Automation Engineer · Co-founder &amp; CTO @
+          XecSuite
+        </p>
         <button
           onClick={active ? disconnect : connect}
           disabled={status === "connecting"}
@@ -133,8 +137,9 @@ const TalkingAvatar = () => {
         </button>
       </div>
 
-      {/* Gesture command list */}
-      <div className="absolute left-5 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1.5">
+      {/* Gesture command list — vertical on desktop, compact chip row on mobile
+          (so it doesn't cover the avatar on small screens) */}
+      <div className="absolute left-5 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-1.5 md:flex">
         <span className="mb-1 text-[10px] uppercase tracking-widest text-term-muted">
           gestures
         </span>
@@ -150,6 +155,22 @@ const TalkingAvatar = () => {
             className="text-left text-xs text-term-muted transition-colors hover:text-term-green"
           >
             <span className="text-term-green">&gt;</span> {g.replace("_", " ")}
+          </button>
+        ))}
+      </div>
+      <div className="absolute bottom-44 left-0 right-0 z-20 flex gap-2 overflow-x-auto px-5 pb-1 md:hidden [scrollbar-width:none]">
+        {GESTURES.map((g) => (
+          <button
+            key={g}
+            onClick={() =>
+              (gestureRef.current = {
+                seq: gestureRef.current.seq + 1,
+                name: g,
+              })
+            }
+            className="shrink-0 border border-term-line bg-term-bg/70 px-2.5 py-1 text-xs text-term-muted backdrop-blur transition-colors active:border-term-green active:text-term-green"
+          >
+            &gt; {g.replace("_", " ")}
           </button>
         ))}
       </div>
