@@ -1,0 +1,40 @@
+{
+  "workItemId": "TASK-001",
+  "stageId": "03-qa-engineer",
+  "assignee": "qa-engineer",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Independently verify the portfolio onboarding: every recorded memory fact is evidence-backed against target source, no product code changed, index is fresh, and no secrets/absolute paths leaked into memory.",
+  "contextFiles": [
+    "./.company/tasks/active/TASK-001/work-item.json",
+    "./.company/tasks/active/TASK-001/reports/01-project-auditor.json",
+    "./.company/memory/project-profile.md",
+    "./.company/memory/modules.md",
+    "./.company/memory/features.md",
+    "./.company/memory/changelog.md"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-001/reports/01-project-auditor.json",
+    ".company/tasks/active/TASK-001/reports/02-tech-writer.json"
+  ],
+  "acceptanceCriteria": [
+    "The company-map index is fresh at the current target commit (verify with scripts/company-map status portfolio).",
+    "A representative sample of recorded profile facts and module facts is independently confirmed against target source (spot-check package.json, tsconfig.json, next.config.mjs, app/api/realtime-session/route.ts, and at least two component/lib files by file:line).",
+    "modules.md covers every real module and each status label (verified/hypothesis) matches evidence; no invented facts.",
+    "The realtime-session/OPENAI_API_KEY boundary is recorded correctly and no secret value, .env content, credential, or machine-absolute path appears anywhere in .company/memory/.",
+    "No product code or tracked product file was modified by this work item (git diff of the target shows changes only inside the untracked .company/ workspace; pre-existing dirty README.md/AGENTS.md/CLAUDE.md are unchanged by this task)."
+  ],
+  "constraints": [
+    "Independent verification: run your own commands (git status/diff, grep, scripts/company-map status/query) — do not trust the dev/auditor claims.",
+    "Read-only: do not edit product or memory files.",
+    "verificationProfile is standard: verify recorded facts against source; do not run product builds/deploys.",
+    "Subscription-only (authType subscription). You hold veto power over 'done'."
+  ],
+  "deliverables": ["QA verdict report with independently executed evidence"],
+  "reportPath": ".company/tasks/active/TASK-001/reports/03-qa-engineer.json"
+}

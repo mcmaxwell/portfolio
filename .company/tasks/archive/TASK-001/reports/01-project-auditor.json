@@ -1,0 +1,182 @@
+{
+  "workItemId": "TASK-001",
+  "stageId": "01-project-auditor",
+  "agent": "general-purpose",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Read-only audit. Read package.json/tsconfig/next.config plus projectContext.relevantFiles, expanded only along concrete imports (lib/persona, lib/gestures, useRealtimeChat, data/index, tailwind.config). Cross-checked entrypoints with scripts/company-map query. Extracted env-var NAMES only from .env.local.example and process.env references; never opened .env.local. No files edited.",
+  "actualModel": "opus-4-8[1m]",
+  "summary": "portfolio is a Next.js 14.1.4 App Router site (TypeScript, npm, Node 22.x) — a single-page terminal-themed developer portfolio whose hero is an interactive 3D talking avatar driven by the OpenAI Realtime API over WebRTC. The only server surface is app/api/realtime-session/route.ts, which mints a short-lived ephemeral token using server-only OPENAI_API_KEY and never returns that secret to the client. No test suite exists in the repo.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+    "targetResultCommit": null,
+    "targetDiffFiles": [],
+    "projectContextUsed": true
+  },
+  "testsRun": [],
+  "criteria": [
+    {"criterion": "Profile facts each carry concrete evidence (file:line or package.json field)", "status": "passed", "evidence": "See auditFacts.profileFacts — each entry has an evidence field pointing to package.json field or repo-relative file:line"},
+    {"criterion": "Module inventory covers every real top-level source area with template fields and status", "status": "passed", "evidence": "auditFacts.moduleInventory has 7 entries: app router, app/api/realtime-session, components/site, components/avatar, lib, data, public assets"},
+    {"criterion": "realtime-session route and .env.local usage described without reproducing secrets", "status": "passed", "evidence": "auditFacts.securityBoundaries names only ENV VAR NAMES (OPENAI_API_KEY, NEXT_PUBLIC_AVATAR_URL); no secret value or .env.local content reproduced"},
+    {"criterion": "Every fact evidence-backed; unverifiable items omitted or marked hypothesis", "status": "passed", "evidence": "Config-file ambiguity (next.config.ts vs .mjs) marked as hypothesis with reason; all other facts cite source"},
+    {"criterion": "No product or memory file modified (read-only)", "status": "passed", "evidence": "filesChanged=[]; only Read/Bash(grep,ls,find) used"}
+  ],
+  "assumptions": [
+    "Active Next config is next.config.mjs (which defines the CSP/security headers); the sibling next.config.ts is an unused stub — Next.js 14.1.4 loads .js/.mjs config and does not natively load next.config.ts (TS config support landed in Next 15). Marked hypothesis in facts.",
+    "Package manager is npm inferred solely from package-lock.json being the only lockfile present (no yarn.lock/pnpm-lock.yaml/bun.lockb).",
+    "'No tests' means no *.test.* or *.spec.* files exist under the repo (excluding node_modules); there is no configured test script in package.json either."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Onboard portfolio as a Next.js 14 App Router single-page portfolio; the single security-sensitive boundary to protect in future changes is app/api/realtime-session/route.ts (server-only OPENAI_API_KEY -> ephemeral token).",
+    "Note for future editors: repo contains duplicate config files (next.config.mjs is active + next.config.ts stub; postcss.config.js + postcss.config.mjs). Consider consolidating to avoid confusion, but out of scope for this audit."
+  ],
+  "lessonsProposed": [
+    "company-map query confirmed the app-router entrypoint set (layout/page/provider/robots/sitemap/opengraph-image + the api route) without reading the whole tree — good first step before opening files."
+  ],
+  "selfUsage": {"filesRead": 14, "approxLinesRead": 950, "approxLinesWritten": 0, "retries": 0},
+  "auditFacts": {
+    "profileFacts": [
+      {"fact": "language", "value": "TypeScript (strict)", "evidence": "tsconfig.json:6 \"strict\": true; sources are .ts/.tsx; devDependencies typescript ^5 (package.json:40)"},
+      {"fact": "node engine", "value": "22.x", "evidence": "package.json:5-7 engines.node \"22.x\""},
+      {"fact": "framework", "value": "Next.js 14.1.4 (App Router)", "evidence": "package.json:22 next \"14.1.4\"; app/ directory with app/layout.tsx, app/page.tsx"},
+      {"fact": "react", "value": "React 18", "evidence": "package.json:24-25 react ^18, react-dom ^18"},
+      {"fact": "package manager", "value": "npm", "evidence": "package-lock.json present; no yarn.lock/pnpm-lock.yaml/bun.lockb"},
+      {"fact": "script: dev", "value": "next dev", "evidence": "package.json:9"},
+      {"fact": "script: build", "value": "next build", "evidence": "package.json:10"},
+      {"fact": "script: start", "value": "next start", "evidence": "package.json:11"},
+      {"fact": "script: lint", "value": "next lint", "evidence": "package.json:12"},
+      {"fact": "script: deploy", "value": "vercel --prod (Vercel; vercel ^34 dep)", "evidence": "package.json:13 and package.json:29"},
+      {"fact": "no test script / no tests", "value": "none", "evidence": "package.json scripts (8-14) has no test; find for *.test.*/*.spec.* returns nothing outside node_modules"},
+      {"fact": "rendering model", "value": "App Router with RSC by default; interactive UI opts into client components", "evidence": "app/layout.tsx is a server component with metadata export; app/page.tsx:1 \"use client\"; app/provider.tsx:1, components/avatar/*, components/site/* use \"use client\""},
+      {"fact": "path alias", "value": "@/* -> ./*", "evidence": "tsconfig.json:20-22 paths"},
+      {"fact": "theming", "value": "next-themes, attribute=class, defaultTheme=dark, enableSystem; custom Tailwind 'terminal' palette (term.*)", "evidence": "app/layout.tsx:92-97 ThemeProvider props; app/provider.tsx wraps next-themes; tailwind.config.ts:32-44 term color tokens (bg #050807, green #4ade80, etc.)"},
+      {"fact": "3D / animation libraries", "value": "three ^0.163, @react-three/fiber ^8.16.2, @react-three/drei ^9.105.4, framer-motion ^11", "evidence": "package.json:16-28; components/avatar/Avatar.tsx:4-6 import fiber/drei/three; TalkingAvatar.tsx:4-5"},
+      {"fact": "styling utilities", "value": "TailwindCSS ^3.3, tailwind-merge, clsx (cn helper), tailwindcss-animate, autoprefixer/postcss", "evidence": "package.json:17,26,27,34-39; lib/utils.ts cn() = twMerge(clsx(...))"},
+      {"fact": "fonts", "value": "JetBrains Mono via next/font/google, self-hosted, exposed as --font-mono", "evidence": "app/layout.tsx:2,15-19; tailwind.config.ts:29-31"},
+      {"fact": "analytics", "value": "Google Analytics gtag (GA id in layout, loaded via next/script afterInteractive)", "evidence": "app/layout.tsx:9,102-111"},
+      {"fact": "external LLM provider", "value": "OpenAI Realtime API (gpt-realtime-2, voice cedar) — NOT Anthropic", "evidence": "app/api/realtime-session/route.ts:10-11,23; components/avatar/useRealtimeChat.ts:203 fetch https://api.openai.com/v1/realtime/calls"},
+      {"fact": "config-file ambiguity", "value": "next.config.mjs is the active config (defines CSP + security headers); next.config.ts is an unused stub (Next 14 does not load .ts config). Also duplicate postcss.config.js/.mjs", "evidence": "next.config.mjs:54-58 headers(); next.config.ts:3-5 empty config object", "status": "hypothesis", "reason": "Next.js 14.1.4 native config loading is .js/.mjs only (TS config support is a Next 15 feature); not verified by running a build"}
+    ],
+    "moduleInventory": [
+      {
+        "module": "app router (app/)",
+        "responsibility": "Next.js App Router root: HTML shell, SEO/metadata + JSON-LD, theme + GA bootstrap, and route-level generated assets (robots, sitemap, OG image, favicon). Renders the single-page portfolio via app/page.tsx.",
+        "packageRoot": "app/",
+        "entrypoints": "app/layout.tsx (RootLayout), app/page.tsx (Home), app/provider.tsx (ThemeProvider), app/robots.ts, app/sitemap.ts, app/opengraph-image.tsx, app/icon.svg, app/globals.css",
+        "setupDevCommands": "npm install; npm run dev",
+        "buildTestLintCommands": "npm run build; npm run lint; tests: none",
+        "dependenciesExternalServices": "next, next-themes, next/font/google (JetBrains Mono, self-hosted), Google Analytics (gtag script). No secrets used here.",
+        "securityDataBoundaries": "Server component sets global CSP/security headers via next.config.mjs; GA script whitelisted in CSP. app/page.tsx dynamically imports TalkingAvatar with ssr:false (browser-only WebRTC/Canvas).",
+        "keySourceFiles": "app/layout.tsx, app/page.tsx, app/provider.tsx",
+        "relatedTests": "none",
+        "status": "verified"
+      },
+      {
+        "module": "realtime-session API route (app/api/realtime-session/)",
+        "responsibility": "Only server-side endpoint. GET mints a short-lived ephemeral client secret from OpenAI so the browser can open a direct WebRTC session, injecting the avatar persona instructions and the two tool definitions (navigate_to_section, play_gesture).",
+        "packageRoot": "app/api/realtime-session/",
+        "entrypoints": "app/api/realtime-session/route.ts (GET; runtime='nodejs', dynamic='force-dynamic')",
+        "setupDevCommands": "Requires OPENAI_API_KEY in .env.local; npm run dev",
+        "buildTestLintCommands": "npm run build / npm run lint; tests: none",
+        "dependenciesExternalServices": "OpenAI POST https://api.openai.com/v1/realtime/client_secrets. Imports buildInstructions() from lib/persona and GESTURES from lib/gestures. ENV VAR NAME: OPENAI_API_KEY.",
+        "securityDataBoundaries": "Reads process.env.OPENAI_API_KEY server-side only; returns 500 if unset (route.ts:14-20). Returns only the OpenAI response (ephemeral key at data.value) to the client — the long-lived OPENAI_API_KEY is never sent to the browser. Comment route.ts:4-5 confirms intent.",
+        "keySourceFiles": "app/api/realtime-session/route.ts",
+        "relatedTests": "none",
+        "status": "verified"
+      },
+      {
+        "module": "components/site",
+        "responsibility": "Static portfolio content sections rendered under the avatar hero: nav, about (bento grid), projects, experience, contact/footer, plus a reusable terminal-window wrapper.",
+        "packageRoot": "components/site/",
+        "entrypoints": "Nav.tsx, About.tsx, Projects.tsx, Experience.tsx, Contact.tsx (Contact + SiteFooter), TermWindow.tsx (TermSection)",
+        "setupDevCommands": "npm run dev",
+        "buildTestLintCommands": "npm run build / npm run lint; tests: none",
+        "dependenciesExternalServices": "React client components; content from data/ (e.g. Projects.tsx imports { projects } from @/data); framer-motion for animation; no external network services.",
+        "securityDataBoundaries": "External project links rendered with target=_blank rel=noopener noreferrer (Projects.tsx:11). No secrets.",
+        "keySourceFiles": "components/site/Projects.tsx, components/site/TermWindow.tsx",
+        "relatedTests": "none",
+        "status": "verified"
+      },
+      {
+        "module": "components/avatar",
+        "responsibility": "The interactive 3D talking-avatar hero: renders the r3f Canvas + GLTF avatar, runs the OpenAI Realtime voice loop over WebRTC, drives lip-sync from model audio volume, and plays body-gesture animations triggered by the user or by model tool-calls.",
+        "packageRoot": "components/avatar/",
+        "entrypoints": "TalkingAvatar.tsx (default export, Canvas + UI), Avatar.tsx (Avatar, GLTF/animation), useRealtimeChat.ts (WebRTC voice hook), AskHints.tsx (typewriter prompt hints)",
+        "setupDevCommands": "npm run dev (mic permission + OPENAI_API_KEY needed for live session)",
+        "buildTestLintCommands": "npm run build / npm run lint; tests: none",
+        "dependenciesExternalServices": "@react-three/fiber, @react-three/drei (useGLTF), three; OpenAI Realtime API — useRealtimeChat fetches /api/realtime-session for the ephemeral key then POSTs SDP to https://api.openai.com/v1/realtime/calls. Uses navigator.mediaDevices.getUserMedia (microphone). Loads GLB assets from public/.",
+        "securityDataBoundaries": "Client never sees OPENAI_API_KEY — only the ephemeral key from the server route (useRealtimeChat.ts:109-118). Mic access gated by browser + Permissions-Policy 'microphone=(self)' (next.config.mjs:46). Client function-call handler only runs whitelisted local actions (navigate_to_section, play_gesture) — useRealtimeChat.ts:6-24,171-192.",
+        "keySourceFiles": "components/avatar/useRealtimeChat.ts, components/avatar/Avatar.tsx, components/avatar/TalkingAvatar.tsx",
+        "relatedTests": "none",
+        "status": "verified"
+      },
+      {
+        "module": "lib",
+        "responsibility": "Shared non-UI logic: avatar persona/knowledge and system-instruction assembly, the gesture registry, and the cn() Tailwind class-merge helper.",
+        "packageRoot": "lib/",
+        "entrypoints": "persona.ts (owner, skills, experience, education, extraKnowledge, buildInstructions()), gestures.ts (GESTURES, GESTURE_URLS, gestureUrl), utils.ts (cn)",
+        "setupDevCommands": "n/a (imported by app/api and components)",
+        "buildTestLintCommands": "npm run lint; tests: none",
+        "dependenciesExternalServices": "clsx, tailwind-merge (utils.ts). No network/secrets. persona.buildInstructions() consumed by the API route; gestures consumed by API route + Avatar.",
+        "securityDataBoundaries": "persona.ts contains only public owner bio/contact info (name, email, LinkedIn) — no secrets. Note: owner email/phone are hardcoded public contact details, appropriate for a portfolio.",
+        "keySourceFiles": "lib/persona.ts, lib/gestures.ts, lib/utils.ts",
+        "relatedTests": "none",
+        "status": "verified"
+      },
+      {
+        "module": "data",
+        "responsibility": "Static content data for the portfolio site sections (nav items, bento grid items, projects list) plus animation JSON assets.",
+        "packageRoot": "data/",
+        "entrypoints": "data/index.ts (navItems, gridItems, projects, ...), data/confetti.json, data/globe.json",
+        "setupDevCommands": "n/a (imported by components/site)",
+        "buildTestLintCommands": "npm run lint; tests: none",
+        "dependenciesExternalServices": "None; plain TS/JSON. Imported via @/data (e.g. Projects.tsx:1).",
+        "securityDataBoundaries": "Public static content only; no secrets.",
+        "keySourceFiles": "data/index.ts",
+        "relatedTests": "none",
+        "status": "verified"
+      },
+      {
+        "module": "public assets",
+        "responsibility": "Static served assets: the 3D avatar model, gesture animation clips, and portfolio SVG/PNG imagery and background.",
+        "packageRoot": "public/",
+        "entrypoints": "public/avatar.glb (default AVATAR_URL), public/animations/*.glb (9 clips: wave, run, walk, dance, silly_dance, zombie, defeated, dodge, climb), public/*.svg and public/proj-*.png, public/bg.png",
+        "setupDevCommands": "n/a (served statically by Next)",
+        "buildTestLintCommands": "n/a; tests: none",
+        "dependenciesExternalServices": "Consumed by components/avatar (useGLTF loads /avatar.glb and /animations/<name>.glb via lib/gestures.GESTURE_URLS) and components/site (img src=/proj-*.png, /b1.svg, etc.).",
+        "securityDataBoundaries": "Public static files; CSP media-src/img-src/worker-src allow 'self' + blob (next.config.mjs:31-36). No secrets.",
+        "keySourceFiles": "public/avatar.glb, public/animations/wave.glb",
+        "relatedTests": "none",
+        "status": "verified"
+      }
+    ],
+    "securityBoundaries": {
+      "realtimeSessionRoute": {
+        "file": "app/api/realtime-session/route.ts",
+        "whatItDoes": "Server-only GET handler (runtime nodejs, dynamic force-dynamic). Reads the OpenAI API key from the environment and POSTs to https://api.openai.com/v1/realtime/client_secrets to mint a short-lived ephemeral client secret, embedding the avatar persona instructions (lib/persona.buildInstructions) and two tool definitions. Returns the OpenAI JSON (ephemeral key at data.value) to the browser.",
+        "secretEnvVarName": "OPENAI_API_KEY",
+        "exposesSecretToClient": false,
+        "evidence": "route.ts:14 reads process.env.OPENAI_API_KEY; route.ts:23-25 sends it only in the server->OpenAI Authorization header; route.ts:84-86 returns only the OpenAI response body (ephemeral key) to the caller. Client (useRealtimeChat.ts:116-118) uses data.value/client_secret.value, never the long-lived key."
+      },
+      "clientPublicEnv": {
+        "envVarName": "NEXT_PUBLIC_AVATAR_URL",
+        "note": "Optional public override for the avatar GLB URL; NEXT_PUBLIC_ prefix means it is intentionally client-exposed and holds no secret.",
+        "evidence": "components/avatar/TalkingAvatar.tsx:13 process.env.NEXT_PUBLIC_AVATAR_URL || '/avatar.glb'"
+      },
+      "envLocalUsage": {
+        "note": "Secrets are supplied via .env.local (gitignored). Only OPENAI_API_KEY is required, per the committed template .env.local.example (which lists OPENAI_API_KEY= with no value). .env.local content was NOT read or reproduced.",
+        "evidence": ".gitignore ignores .env* ; .env.local.example declares the variable name OPENAI_API_KEY only; grep of app/components/lib shows the only server secret reference is process.env.OPENAI_API_KEY (route.ts:14)"
+      },
+      "transportHardening": {
+        "note": "next.config.mjs sets a strict CSP (connect-src allows self + https://api.openai.com/*.openai.com + Google Analytics; script-src adds wasm-unsafe-eval for three.js KTX2, unsafe-eval only in dev), X-Frame-Options DENY, HSTS, and Permissions-Policy limiting microphone to self and disabling camera/geolocation.",
+        "evidence": "next.config.mjs:24-52"
+      }
+    }
+  }
+}

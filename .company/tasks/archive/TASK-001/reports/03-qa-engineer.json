@@ -1,0 +1,43 @@
+{
+  "workItemId": "TASK-001",
+  "stageId": "03-qa-engineer",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "approved",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Independent read-only verification: ran scripts/company-map status portfolio; ran git status/diff on the target; opened and cross-checked package.json, tsconfig.json, next.config.mjs, app/api/realtime-session/route.ts, app/layout.tsx, components/avatar/useRealtimeChat.ts, components/site/Projects.tsx, lib/utils.ts against every cited file:line in project-profile.md/modules.md; diffed actual directory listings (app/, components/, lib/, data/) against modules.md's 7 module sections; grepped .company/memory/ for absolute paths, .env content, and secret-like patterns.",
+  "actualModel": "sonnet-5",
+  "summary": "All 5 stage acceptance criteria pass with first-hand evidence: index is fresh at the exact target commit, spot-checked facts match source exactly (including precise file:line citations), module coverage matches the real directory tree with no invented modules, the OPENAI_API_KEY boundary is recorded correctly with zero secret leakage, and no tracked product file was modified by this task.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+    "targetResultCommit": null,
+    "targetDiffFiles": [],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {"command": "scripts/company-map status portfolio", "exitCode": 0, "result": "state=fresh, indexedCommit==currentCommit==7233049e9dcb7f13e5c1c11c0edd1f36212a0567, changedFiles=[]", "evidence": "{\"projectId\":\"portfolio\",\"state\":\"fresh\",\"indexedCommit\":\"7233049...\",\"currentCommit\":\"7233049...\",\"changedFiles\":[]}"},
+    {"command": "git -C . status --short && git diff --stat && git rev-parse HEAD", "exitCode": 0, "result": "Only pre-existing dirty items present; HEAD matches base commit", "evidence": " M README.md\n?? .company/\n?? AGENTS.md\n?? CLAUDE.md\n README.md | 5 +++++\n 1 file changed, 5 insertions(+)\n7233049e9dcb7f13e5c1c11c0edd1f36212a0567"},
+    {"command": "git -C . diff README.md", "exitCode": 0, "result": "README.md change is a pre-existing AI-Company banner insert (5 lines), unrelated to this task's memory/index output", "evidence": "+> **AI Company workflow:** developers and agents must read [.company/README.md] before project work. The registered project ID is `portfolio`."},
+    {"command": "Read+diff 8 source files against cited file:line in memory", "exitCode": 0, "result": "Every spot-checked fact/citation matched source exactly", "evidence": "package.json scripts 9-13, tsconfig.json:6 strict, next.config.mjs:24-52 CSP, route.ts:14 process.env.OPENAI_API_KEY, route.ts:84-86 returns only OpenAI response body, useRealtimeChat.ts:109-118 ephemeral-key-only, Projects.tsx:11 rel=noopener noreferrer, lib/utils.ts cn()=twMerge(clsx())"},
+    {"command": "ls -la app components lib data && find app/api -type d", "exitCode": 0, "result": "Real module set matches modules.md's 7 sections exactly", "evidence": "app/api tree contains only realtime-session/; components/ contains only avatar/ and site/; lib/ has gestures.ts,persona.ts,utils.ts; data/ has index.ts,confetti.json,globe.json"},
+    {"command": "grep -rn '/Users/' .company/memory/ ; grep -rniE 'sk-[a-zA-Z0-9]' .company/memory/ ; grep -rn 'OPENAI_API_KEY=' .company/memory/", "exitCode": 1, "result": "No absolute paths, no secret values, no .env content. One sk- grep hit was a false positive (substring of 'TASK-001')", "evidence": "grep /Users/ exit 1; grep OPENAI_API_KEY= exit 1; sole sk- hit = 'TASK-001' literal, not a secret"}
+  ],
+  "criteria": [
+    {"criterion": "The company-map index is fresh at the current target commit.", "status": "passed", "evidence": "status returned state=fresh, indexedCommit==currentCommit==7233049..., changedFiles=[]"},
+    {"criterion": "A representative sample of recorded profile and module facts is independently confirmed against target source.", "status": "passed", "evidence": "8 files spot-checked (exceeds 2-file minimum); every cited file:line matched the recorded fact exactly"},
+    {"criterion": "modules.md covers every real module and each status label matches evidence; no invented facts.", "status": "passed", "evidence": "Directory listing matches modules.md's 7 sections one-to-one; all 'verified' with file:line evidence; no fabricated module"},
+    {"criterion": "realtime-session/OPENAI_API_KEY boundary recorded correctly; no secret/.env/credential/absolute path in memory.", "status": "passed", "evidence": "route.ts server-only read + ephemeral-only response confirmed by source; grep found zero absolute paths, zero secret values; only env var NAME appears"},
+    {"criterion": "No product code or tracked product file modified by this work item.", "status": "passed", "evidence": "git diff --stat shows only pre-existing README.md banner; .company/ is untracked task output; AGENTS.md/CLAUDE.md pre-existing untracked, untouched"}
+  ],
+  "assumptions": [],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "For onboarding-only tasks, precise file:line citations in memory facts are a strong, cheap independent-verification signal; QA reopened the exact cited lines to confirm."
+  ],
+  "selfUsage": {"filesRead": 25, "approxLinesRead": 2600, "approxLinesWritten": 0, "retries": 0}
+}
