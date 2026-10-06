@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useRef } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -8,6 +8,8 @@ import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
+import { ReadySignal } from "@/components/game/shell/ReadySignal";
+import { isWebGLAvailable, useExperienceShell } from "@/components/game/shell/useExperienceShell";
 
 // Your local Avaturn model in /public. Override via NEXT_PUBLIC_AVATAR_URL.
 const AVATAR_URL = process.env.NEXT_PUBLIC_AVATAR_URL || "/avatar.glb";
@@ -47,6 +49,15 @@ const TalkingAvatar = () => {
 
   const active = status !== "idle" && status !== "error";
 
+  // Play / explore: the game mounts in this same canvas (design 3.1). Hero children
+  // are rendered only outside game mode.
+  const playRef = useRef<HTMLButtonElement>(null);
+  const [avatarReady, setAvatarReady] = useState(false);
+  const onAvatarReady = useCallback(() => setAvatarReady(true), []);
+  const shell = useExperienceShell({ stopVoice: disconnect, returnFocusRef: playRef });
+  const inGame = shell.mode === "game";
+  const GameScene = shell.game?.module.GameScene;
+
   return (
     <section
       id="talk"
@@ -55,9 +66,10 @@ const TalkingAvatar = () => {
     >
       <Canvas
         camera={{ position: [0, -0.3, 4.9], fov: 32 }}
-        className="!absolute inset-0"
-        style={{ touchAction: "pan-y" }}
+        className={inGame ? "!fixed inset-0 z-50" : "!absolute inset-0"}
+        style={{ touchAction: inGame ? "none" : "pan-y" }}
       >
+        {!inGame && <>
         <ambientLight intensity={1.1} />
         <hemisphereLight args={[0xffffff, 0x1a2a1f, 0.7]} />
         <directionalLight position={[2, 4, 3]} intensity={1.6} />
@@ -77,9 +89,36 @@ const TalkingAvatar = () => {
             gesturingRef={gesturingRef}
             position={[0, -1.5, 0]}
           />
+          <ReadySignal onReady={onAvatarReady} />
         </Suspense>
         <CameraRig />
+        </>}
+        {GameScene && shell.game && (
+          <GameScene
+            game={shell.game.handle}
+            assets={shell.assets}
+            active={inGame}
+            avatarUrl={AVATAR_URL}
+            layout={shell.layout}
+            onPhysics={shell.reportPhysics}
+            onExit={shell.exit}
+          />
+        )}
       </Canvas>
+
+      {inGame && (
+        <div className="fixed left-4 top-4 z-[60] flex items-center gap-3 text-xs">
+          <button
+            onClick={shell.exit}
+            className="border border-term-green bg-term-bg/80 px-4 py-2 text-term-green-bright backdrop-blur transition-colors hover:bg-term-green hover:text-term-bg"
+          >
+            [ exit ]
+          </button>
+          <span className="hidden text-term-muted md:inline">
+            WASD move · shift run · space jump · drag to look · R recenter
+          </span>
+        </div>
+      )}
 
       {/* scanline overlay (scoped to the hero) */}
       <div
@@ -90,6 +129,7 @@ const TalkingAvatar = () => {
         }}
       />
 
+      {!inGame && <>
       {/* Status line */}
       <div className="absolute left-5 top-20 z-20 flex items-center gap-2 border border-term-line bg-term-bg/70 px-3 py-1.5 text-xs backdrop-blur">
         <span
@@ -128,13 +168,33 @@ const TalkingAvatar = () => {
           AI Automation Engineer &amp; Product Builder · Co-founder &amp; CTO @
           XecSuite
         </p>
-        <button
-          onClick={active ? disconnect : connect}
-          disabled={status === "connecting"}
-          className="pointer-events-auto border border-term-green bg-term-green/10 px-8 py-3 text-sm text-term-green-bright transition-colors hover:bg-term-green hover:text-term-bg disabled:opacity-50 box-glow"
-        >
-          {active ? "[ end session ]" : "[ talk to me ]"}
-        </button>
+        <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={active ? disconnect : connect}
+            disabled={status === "connecting" || shell.mode === "loading"}
+            className="border border-term-green bg-term-green/10 px-8 py-3 text-sm text-term-green-bright transition-colors hover:bg-term-green hover:text-term-bg disabled:opacity-50 box-glow"
+          >
+            {active ? "[ end session ]" : "[ talk to me ]"}
+          </button>
+          <button
+            ref={playRef}
+            onClick={shell.play}
+            disabled={
+              !avatarReady ||
+              status === "connecting" ||
+              shell.mode !== "hero" ||
+              !isWebGLAvailable()
+            }
+            className="border border-term-cyan bg-term-cyan/10 px-8 py-3 text-sm text-term-cyan transition-colors hover:bg-term-cyan hover:text-term-bg disabled:opacity-50"
+          >
+            {shell.mode === "loading" ? "[ loading… ]" : "[ play / explore ]"}
+          </button>
+        </div>
+        {shell.load.kind === "failed" && shell.mode === "hero" && (
+          <p role="alert" className="text-xs text-term-red">
+            ! could not start the game: {shell.load.message}
+          </p>
+        )}
       </div>
 
       {/* Gesture command list — vertical on desktop, compact chip row on mobile
@@ -179,6 +239,7 @@ const TalkingAvatar = () => {
       <div className="absolute bottom-3 left-0 right-0 z-20 text-center text-xs text-term-muted">
         ↓ scroll
       </div>
+      </>}
     </section>
   );
 };

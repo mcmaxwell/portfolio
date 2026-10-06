@@ -1,0 +1,167 @@
+import * as THREE from "three";
+import { describe, expect, it } from "vitest";
+import { createCharacterAnimator, nextLocoState, resolveClip, type LocoInput, type LocoState } from "../animator";
+import { ANIMATION, type ClipName } from "../config";
+
+const cfg = ANIMATION;
+const base: LocoInput = {
+  grounded: true,
+  horizontalSpeed: 0,
+  verticalVelocity: -1,
+  airTime: 0,
+  jumpedThisStep: false,
+  stateTime: 1,
+  landClipDuration: 1,
+};
+const step = (from: LocoState, over: Partial<LocoInput>) => nextLocoState(from, { ...base, ...over }, cfg);
+
+describe("nextLocoState (design 5.3)", () => {
+  it.each(["idle", "walk", "run", "land"] as const)("%s -> jump on jumpedThisStep", (from) => {
+    expect(step(from, { jumpedThisStep: true, grounded: false })).toBe("jump");
+  });
+
+  it.each(["idle", "walk", "run"] as const)("%s -> fall only after fallDelay airborne", (from) => {
+    const speed = from === "run" ? 3.5 : from === "walk" ? 1.5 : 0;
+    expect(step(from, { grounded: false, airTime: cfg.fallDelay - 0.01, horizontalSpeed: speed })).toBe(from);
+    expect(step(from, { grounded: false, airTime: cfg.fallDelay, horizontalSpeed: speed })).toBe("fall");
+  });
+
+  it("jump -> fall when the vertical velocity is not positive", () => {
+    expect(step("jump", { grounded: false, verticalVelocity: 2 })).toBe("jump");
+    expect(step("jump", { grounded: false, verticalVelocity: 0 })).toBe("fall");
+    expect(step("jump", { grounded: false, verticalVelocity: -3 })).toBe("fall");
+  });
+
+  it("fall stays fall while airborne", () => {
+    expect(step("fall", { grounded: false, airTime: 1, verticalVelocity: -5 })).toBe("fall");
+  });
+
+  it.each(["jump", "fall"] as const)("%s -> land on a hard landing", (from) => {
+    expect(step(from, { grounded: true, airTime: cfg.hardLandAirTime })).toBe("land");
+    expect(step(from, { grounded: true, airTime: 1.2 })).toBe("land");
+  });
+
+  it.each(["jump", "fall"] as const)("%s -> idle, walk or run on a soft landing by speed", (from) => {
+    const soft = cfg.hardLandAirTime - 0.01;
+    expect(step(from, { grounded: true, airTime: soft, horizontalSpeed: 0 })).toBe("idle");
+    expect(step(from, { grounded: true, airTime: soft, horizontalSpeed: cfg.idleMaxSpeed })).toBe("walk");
+    expect(step(from, { grounded: true, airTime: soft, horizontalSpeed: cfg.runEnter })).toBe("run");
+  });
+
+  it("land -> loco after 0.6 of the clip, or early when running", () => {
+    expect(step("land", { stateTime: 0.59, landClipDuration: 1 })).toBe("land");
+    expect(step("land", { stateTime: 0.6, landClipDuration: 1 })).toBe("idle");
+    expect(step("land", { stateTime: 0.6, landClipDuration: 1, horizontalSpeed: 2 })).toBe("walk");
+    expect(step("land", { stateTime: cfg.landLock - 0.01, landClipDuration: 1, horizontalSpeed: cfg.runEnter })).toBe("land");
+    expect(step("land", { stateTime: cfg.landLock, landClipDuration: 1, horizontalSpeed: cfg.runEnter })).toBe("run");
+  });
+
+  it("land ends at once when no land clip is supplied", () => {
+    expect(step("land", { stateTime: 0, landClipDuration: 0 })).toBe("idle");
+  });
+
+  it("idle <-> walk at idleMaxSpeed", () => {
+    expect(step("idle", { horizontalSpeed: cfg.idleMaxSpeed - 0.01 })).toBe("idle");
+    expect(step("idle", { horizontalSpeed: cfg.idleMaxSpeed })).toBe("walk");
+    expect(step("walk", { horizontalSpeed: cfg.idleMaxSpeed - 0.01 })).toBe("idle");
+    expect(step("walk", { horizontalSpeed: cfg.idleMaxSpeed })).toBe("walk");
+  });
+
+  it("walk -> run at runEnter, run -> walk below runExit (hysteresis)", () => {
+    expect(step("walk", { horizontalSpeed: cfg.runEnter - 0.01 })).toBe("walk");
+    expect(step("walk", { horizontalSpeed: cfg.runEnter })).toBe("run");
+    expect(step("run", { horizontalSpeed: cfg.runExit })).toBe("run");
+    expect(step("run", { horizontalSpeed: (cfg.runExit + cfg.runEnter) / 2 })).toBe("run");
+    expect(step("run", { horizontalSpeed: cfg.runExit - 0.01 })).toBe("walk");
+  });
+
+  it("is chosen from measured speed: running into a wall (speed 0) goes to idle", () => {
+    let s: LocoState = "run";
+    s = step(s, { horizontalSpeed: 0 });
+    expect(s).toBe("walk");
+    s = step(s, { horizontalSpeed: 0 });
+    expect(s).toBe("idle");
+  });
+});
+
+describe("clip fallbacks (design 5.1)", () => {
+  const mk = (name: string) => new THREE.AnimationClip(name, 1, []);
+  const only = (...names: ClipName[]) => Object.fromEntries(names.map((n) => [n, mk(n)]));
+
+  it("jump falls back to fall then idle; fall to idle; land has no fallback", () => {
+    expect(resolveClip("jump", only("jump", "fall", "idle"))?.name).toBe("jump");
+    expect(resolveClip("jump", only("fall", "idle"))?.name).toBe("fall");
+    expect(resolveClip("jump", only("idle"))?.name).toBe("idle");
+    expect(resolveClip("fall", only("idle"))?.name).toBe("idle");
+    expect(resolveClip("land", only("idle"))).toBeNull();
+    expect(resolveClip("land", only("land"))?.name).toBe("land");
+  });
+
+  it("walk and run fall back toward idle when their clips are missing", () => {
+    expect(resolveClip("run", only("walk", "idle"))?.name).toBe("walk");
+    expect(resolveClip("walk", only("idle"))?.name).toBe("idle");
+  });
+});
+
+describe("character animator", () => {
+  function makeScene() {
+    const root = new THREE.Group();
+    const bone = new THREE.Bone();
+    bone.name = "Spine";
+    root.add(bone);
+    return root;
+  }
+  const track = () => new THREE.QuaternionKeyframeTrack("Spine.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]);
+  const clip = (name: string) => new THREE.AnimationClip(name, 1, [track()]);
+  const motor = (over: Partial<Parameters<ReturnType<typeof createCharacterAnimator>["update"]>[1]>) => ({
+    position: { x: 0, y: 0, z: 0 },
+    horizontalSpeed: 0,
+    verticalVelocity: -1,
+    grounded: true,
+    airTime: 0,
+    jumpedThisStep: false,
+    landedThisStep: false,
+    respawnedThisStep: false,
+    ...over,
+  });
+
+  it("follows measured movement and clamps the playback rate", () => {
+    const a = createCharacterAnimator(makeScene(), { idle: clip("idle"), walk: clip("walk"), run: clip("run") }, cfg);
+    expect(a.state).toBe("idle");
+    a.update(1 / 60, motor({ horizontalSpeed: 1.6 }));
+    expect(a.state).toBe("walk");
+    expect(a.timeScale).toBeCloseTo(1.6 / cfg.clipSpeed.walk, 5);
+    a.update(1 / 60, motor({ horizontalSpeed: 0.2 }));
+    expect(a.timeScale).toBe(cfg.timeScaleMin);
+    a.update(1 / 60, motor({ horizontalSpeed: 3.8 }));
+    expect(a.state).toBe("run");
+    expect(a.timeScale).toBeCloseTo(3.8 / cfg.clipSpeed.run, 5);
+    a.update(1 / 60, motor({ horizontalSpeed: 20 }));
+    expect(a.timeScale).toBe(cfg.timeScaleMax);
+    a.update(1 / 60, motor({ horizontalSpeed: 0 }));
+    expect(a.state).toBe("walk"); // run exits through walk
+    a.update(1 / 60, motor({ horizontalSpeed: 0 }));
+    expect(a.state).toBe("idle");
+    a.dispose();
+  });
+
+  it("jumps and lands with only idle supplied (fallbacks) without throwing", () => {
+    const a = createCharacterAnimator(makeScene(), { idle: clip("idle") }, cfg);
+    a.update(1 / 60, motor({ jumpedThisStep: true, grounded: false, verticalVelocity: 6 }));
+    expect(a.state).toBe("jump");
+    a.update(1 / 60, motor({ grounded: false, verticalVelocity: -1, airTime: 0.5 }));
+    expect(a.state).toBe("fall");
+    a.update(1 / 60, motor({ grounded: true, airTime: 0.6, landedThisStep: true }));
+    expect(a.state).toBe("land");
+    a.update(1 / 60, motor({}));
+    expect(a.state).toBe("idle"); // no land clip: the land state ends at once
+    a.dispose();
+  });
+
+  it("dispose is idempotent and update after dispose is a no-op", () => {
+    const a = createCharacterAnimator(makeScene(), { idle: clip("idle") }, cfg);
+    a.dispose();
+    a.dispose();
+    expect(() => a.update(1 / 60, motor({ horizontalSpeed: 2 }))).not.toThrow();
+  });
+});

@@ -1,0 +1,36 @@
+{
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": ["app/**/*.{ts,tsx}", "components/avatar/**/*.{ts,tsx}", "components/site/**/*.{ts,tsx}", "lib/**/*.ts", "data/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": ["error", {
+          "patterns": [{
+            "group": ["@/components/game/*", "!@/components/game/shell", "!@/components/game/shell/*"],
+            "message": "Game code loads only through components/game/shell/gameLoader.ts (dynamic import)."
+          }]
+        }]
+      }
+    },
+    {
+      "files": ["components/game/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": ["error", {
+          "paths": [{ "name": "@/data", "importNames": ["testimonials"], "message": "Testimonials are placeholders and must not appear in the game." }]
+        }]
+      }
+    },
+    {
+      "files": ["components/game/shell/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": ["error", {
+          "paths": [{ "name": "@/data", "importNames": ["testimonials"], "message": "Testimonials are placeholders and must not appear in the game." }],
+          "patterns": [{
+            "group": ["../*", "@/components/game/*", "!@/components/game/shell/*", "@react-three/rapier", "@dimforge/*"],
+            "message": "The shell must stay tiny; load game code with import() in gameLoader.ts."
+          }]
+        }]
+      }
+    }
+  ]
+}
