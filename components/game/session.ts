@@ -1,6 +1,6 @@
 // Game session: the state machine (design 2.3), a tiny store read with useSyncExternalStore,
 // and the cleanup registry. It holds no positions or velocities and never touches React state.
-import type { PanelId } from "./config";
+import type { Interactable, PanelId } from "./config";
 import { createInputController, type InputController } from "./input";
 
 export type SessionMode = "entering" | "playing" | "paused" | "panel" | "celebrating" | "leaving" | "fault";
@@ -106,8 +106,34 @@ export function inputEnabledFor(mode: SessionMode): boolean {
   return mode === "entering" || mode === "playing";
 }
 
+/** A store with one value that the game writes and the interface reads. */
+export interface ValueStore<T> extends Store<T> {
+  set(value: T): void;
+}
+
+export function createValueStore<T>(initial: T): ValueStore<T> {
+  let value = initial;
+  const subs = new Set<() => void>();
+  return {
+    getState: () => value,
+    subscribe(fn) {
+      subs.add(fn);
+      return () => {
+        subs.delete(fn);
+      };
+    },
+    set(next) {
+      if (Object.is(next, value)) return;
+      value = next;
+      Array.from(subs).forEach((fn) => fn());
+    },
+  };
+}
+
 export interface GameHandle {
   session: SessionStore;
+  /** The interactable the player is near and facing (the prompt), written by the interaction system. */
+  focus: ValueStore<Interactable | null>;
   input: InputController;
   reducedMotion: boolean;
   readonly disposed: boolean;
@@ -118,6 +144,7 @@ export interface GameHandle {
 export function createGame(opts: { reducedMotion: boolean; storage?: Storage | null }): GameHandle {
   const input = createInputController();
   const session = createSessionStore();
+  const focus = createValueStore<Interactable | null>(null);
   const cleanups: Array<() => void> = [];
   let disposed = false;
   let lastMode: SessionMode = session.getState().mode;
@@ -130,6 +157,7 @@ export function createGame(opts: { reducedMotion: boolean; storage?: Storage | n
   });
   const handle: GameHandle = {
     session,
+    focus,
     input,
     reducedMotion: opts.reducedMotion,
     get disposed() {

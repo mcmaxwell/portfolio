@@ -15,6 +15,20 @@ export type PanelId =
         | "settings"
         | "completion";
     };
+/**
+ * Something the player can use. `prompt` is the action name shown next to the key ("View
+ * project"); the key itself (E, or the Interact button on touch) is chosen by the interface.
+ * `panel` opens an accessible panel; cells and the beacon (Milestone 4) carry no panel.
+ */
+export type Interactable = {
+  id: string;
+  kind: "project" | "all-projects" | "skills" | "experience" | "contact" | "cell" | "beacon";
+  position: Vec3; // where the player stands: feet level, in front of the display
+  radius: number; // horizontal reach in metres
+  prompt: string;
+  panel?: PanelId;
+  cellId?: CellId;
+};
 export type ClipName =
   | "idle"
   | "walk"
@@ -64,6 +78,12 @@ export const CAMERA = {
   followKVertical: 6,
   restoreK: 4,
   probeRadius: 0.2,
+  /** Radius of the thin line-of-sight probes from the avatar's torso and head to the camera. */
+  losRadius: 0.03,
+  /** Heights above the soles that must stay visible: torso and head centre. */
+  losHeights: [1.2, 1.65] as readonly number[],
+  /** Largest extra pitch the camera may add to keep minDistance next to a wall. */
+  maxLiftDeg: 80,
   lookSensitivity: 0.004,
   entrySeconds: 1.5,
 } as const;

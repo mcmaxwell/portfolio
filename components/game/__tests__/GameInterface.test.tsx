@@ -213,9 +213,9 @@ describe("HUD staging (play-transition.md 2.6)", () => {
   it("announces the start once, at the end of the entry, and takes focus on mount", () => {
     mount();
     expect(document.activeElement).toBe(document.querySelector("[data-game-overlay]"));
-    expect(screen.getByRole("status").textContent).toBe("");
+    expect(document.querySelector("[data-game-announce]")!.textContent).toBe("");
     act(() => game.session.dispatch({ type: "ENTRY_DONE" }));
-    expect(screen.getByRole("status").textContent).toBe("Game started. Escape pauses.");
+    expect(document.querySelector("[data-game-announce]")!.textContent).toBe("Game started. Escape pauses.");
   });
 
   it("renders no touch controls on a fine pointer", () => {

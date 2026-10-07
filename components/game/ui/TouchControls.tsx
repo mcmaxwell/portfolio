@@ -3,25 +3,30 @@
 // Touch controls: a left joystick, a right-half look area and a Jump button (design 2.10).
 // Each control tracks its own pointer id, so stick and look work at the same time.
 // A touch while the entry plays skips the rest of it and starts the stick at once.
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import type { InputController } from "../input";
-import type { SessionStore } from "../session";
+import type { GameHandle, SessionStore } from "../session";
+import { promptText } from "./Hud";
 
 const STICK_RADIUS = 56;
 
 export function TouchControls({
   input,
   session,
+  focus,
   shown,
 }: {
   input: InputController;
   session: SessionStore;
+  /** The interactable in reach: the Interact button shows only while there is one. */
+  focus: GameHandle["focus"];
   /** Fade state (beat F): the controls are visible. */
   shown: boolean;
 }) {
   const stick = useRef<{ id: number; cx: number; cy: number } | null>(null);
   const look = useRef<{ id: number; x: number; y: number } | null>(null);
   const knobRef = useRef<HTMLDivElement>(null);
+  const focused = useSyncExternalStore(focus.subscribe, focus.getState, focus.getState);
 
   const skipEntry = () => {
     if (session.getState().mode === "entering") session.dispatch({ type: "ENTRY_SKIP" });
@@ -119,6 +124,26 @@ export function TouchControls({
       >
         jump
       </button>
+      {/* context interact: only while an interactable is in reach, at least 48 px */}
+      {focused && (
+        <button
+          className="pointer-events-auto absolute h-16 min-w-[4rem] rounded-full border border-term-green bg-term-bg/70 px-4 text-xs text-term-green-bright"
+          style={{
+            right: "max(1.5rem, env(safe-area-inset-right))",
+            bottom: "calc(7rem + env(safe-area-inset-bottom))",
+            touchAction: "manipulation",
+            ...fade,
+          }}
+          aria-label={`Interact: ${promptText(focused)}`}
+          data-interact-button
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            input.pressTouch("interact");
+          }}
+        >
+          interact
+        </button>
+      )}
     </div>
   );
 }

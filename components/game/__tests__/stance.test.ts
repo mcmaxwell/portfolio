@@ -274,6 +274,18 @@ describe("other stance changes through the animator", () => {
     expect(Math.max(...stepsOf(s))).toBeLessThan(0.07);
   });
 
+  it("a fall cut short by touchdown does not pop the pose: the fade out of the fall starts from its weight, not from 1 (F-M3-3)", () => {
+    // Five frames of fall (the fade-in has reached a quarter), then a soft touchdown. Fading the fall out from
+    // full weight, as three's fadeOut does, drops the pelvis 0.3 m in one frame.
+    const s = run([
+      [20, {}],
+      [5, { grounded: false, verticalVelocity: -3.5, airTime: 0.3 }],
+      [60, { impactSpeed: 3.5, airTime: 0.3 }],
+    ]);
+    expect(Math.max(...s.slice(1).map((x, i) => Math.abs(x.hips - s[i].hips)))).toBeLessThan(0.05);
+    expect(Math.max(...stepsOf(s))).toBeLessThan(0.1);
+  });
+
   it("walking off a ledge (walk -> fall) lowers the pelvis smoothly, at most 0.06 m per frame", () => {
     const s = run([
       [30, { horizontalSpeed: 2.2 }],

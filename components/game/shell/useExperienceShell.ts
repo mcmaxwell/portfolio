@@ -22,10 +22,10 @@ export type StripState = "off" | "in" | "out";
 export type ShellFailure = { kind: "load" | "context-lost" | "runtime"; title: string; message: string };
 export type Flip = { y: number; animate: boolean };
 
-/** Switch to "campus" in M3 when it exists. */
-const DEFAULT_LAYOUT = "test-arena" as const;
+/** The shipped world. */
+const DEFAULT_LAYOUT = "campus" as const;
 
-/** Dev and QA: `/?arena=test` selects the test arena explicitly (also the M1 default). */
+/** Dev and QA: `/?arena=test` selects the M1 test arena; anything else is the campus. */
 export function readLayoutParam(search: string): "test-arena" | "campus" {
   const v = new URLSearchParams(search).get("arena");
   return v === "test" ? "test-arena" : DEFAULT_LAYOUT;

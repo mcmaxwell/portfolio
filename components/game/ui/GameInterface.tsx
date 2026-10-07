@@ -2,11 +2,13 @@
 
 // Game DOM overlay (design 2.10): HUD, pause menu, touch controls, Escape and visibility handlers.
 // It subscribes to the session store only and never reads positions or velocities.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { PanelId } from "../config";
 import type { GameHandle } from "../session";
 import { TIMING } from "../shell/transition";
-import { ControlsHint, HudButtons } from "./Hud";
+import { ControlsHint, HudButtons, InteractionPrompt } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
+import { PortfolioPanel } from "./panels";
 import { TouchControls } from "./TouchControls";
 import { useSession } from "./useSession";
 
@@ -15,6 +17,7 @@ const MOVE_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown
 export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () => void }) {
   const { session } = game;
   const state = useSession(session);
+  const focused = useSyncExternalStore(game.focus.subscribe, game.focus.getState, game.focus.getState);
   const reduced = game.reducedMotion;
   const rootRef = useRef<HTMLDivElement>(null);
   const [coarse] = useState(
@@ -73,6 +76,20 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
 
   const pause = useCallback(() => session.dispatch({ type: "PAUSE", reason: "user" }), [session]);
   const resume = useCallback(() => session.dispatch({ type: "RESUME" }), [session]);
+  const closePanel = useCallback(() => session.dispatch({ type: "CLOSE_PANEL" }), [session]);
+  const openPanel = useCallback((panel: PanelId) => session.dispatch({ type: "OPEN_PANEL", panel }), [session]);
+
+  // Closing a panel returns focus to the game overlay (the dialog also restores the opener, which
+  // is the page body when the panel was opened with the key), and says so for screen readers.
+  const panelOpenRef = useRef(false);
+  useEffect(() => {
+    const open = state.mode === "panel";
+    if (panelOpenRef.current && !open && state.mode === "playing") {
+      rootRef.current?.focus({ preventScroll: true });
+      setAnnounce("Panel closed. Back in the game.");
+    }
+    panelOpenRef.current = open;
+  }, [state.mode]);
 
   // Escape or P toggles pause. A dialog that handled Escape already prevented the event.
   useEffect(() => {
@@ -83,6 +100,10 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
       if (mode === "paused") {
         e.preventDefault();
         resume();
+      } else if (mode === "panel") {
+        // Focus left the dialog (a click on the backdrop): Escape still closes it.
+        e.preventDefault();
+        closePanel();
       } else if (mode === "entering" || mode === "playing" || mode === "celebrating") {
         e.preventDefault();
         pause();
@@ -90,7 +111,7 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [session, pause, resume]);
+  }, [session, pause, resume, closePanel]);
 
   // Tab hide and window blur pause; returning never resumes movement by itself.
   useEffect(() => {
@@ -109,13 +130,15 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
   const leaving = state.mode === "leaving";
   return (
     <div ref={rootRef} tabIndex={-1} className="pointer-events-none fixed inset-0 z-[60] outline-none" data-game-overlay>
-      <HudButtons shown={buttonsShown} leaving={leaving} reduced={reduced} onPause={pause} onExit={onExit} />
-      <ControlsHint shown={hintShown && !hintGone && !leaving} reduced={reduced} />
-      {coarse && <TouchControls input={game.input} session={session} shown={touchShown && !leaving} />}
-      <div role="status" aria-live="polite" className="sr-only">
+      <div role="status" aria-live="polite" className="sr-only" data-game-announce>
         {announce}
       </div>
+      <HudButtons shown={buttonsShown} leaving={leaving} blocked={state.mode === "panel"} reduced={reduced} onPause={pause} onExit={onExit} />
+      <ControlsHint shown={hintShown && !hintGone && !leaving} reduced={reduced} />
+      <InteractionPrompt item={state.mode === "playing" ? focused : null} touch={coarse} />
+      {coarse && <TouchControls input={game.input} session={session} focus={game.focus} shown={touchShown && !leaving} />}
       {state.mode === "paused" && <PauseMenu reason={state.pauseReason} onResume={resume} onExit={onExit} />}
+      {state.mode === "panel" && state.panel && <PortfolioPanel panel={state.panel} onClose={closePanel} onOpen={openPanel} />}
     </div>
   );
 }

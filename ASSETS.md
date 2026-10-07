@@ -114,3 +114,12 @@ The license file is `app/fonts/jetbrains-mono/OFL.txt` (SIL Open Font License 1.
 | `app/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2` | 400 | 21,168 bytes | `14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb` |
 | `app/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2` | 700 | 21,908 bytes | `d0d4e818808f2a0ba39b2b09d1989366f63494e295f003c7ef436697378507e8` |
 | `app/fonts/jetbrains-mono/OFL.txt` | license | - | `403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b` |
+
+## World visuals (procedural, no files)
+
+The campus look (milestone 3 visual pass) ships no image, model or font file.
+Every texture is drawn on a canvas at runtime by `components/game/world/textures.ts` and `components/game/world/materials.ts` (grass, paving, gravel, plaster, ashlar stone, standing-seam roof, steel, planks, leaves, bark, floor tile, cliff, windows, project screens, beacon pad, light pools).
+The sky is a fragment shader (`components/game/world/sky.ts`); trees, lamps, bushes, rocks, windows and trim are instanced primitives from `components/game/world/decor.ts`.
+Source and licence: written for this repository, same terms as the repository code; no third-party asset, no network fetch.
+Additional first-play bytes: 0 bytes of assets; about 11 KB gzip of game JavaScript (sum of per-chunk gzip, production build before and after: 1,291,564 to 1,302,567 bytes).
+Runtime memory: 12 tiling textures (512 x 512 and 256 x 256 with mipmaps) and 11 small canvases, roughly 10 MB of GPU memory.

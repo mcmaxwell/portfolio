@@ -4,7 +4,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { FEET_TO_CENTER, MOTOR_CONFIG, PHYSICS, type Vec3 } from "../config";
 import { cameraRelativeMove, createPlayerMotor, type MotorIntent, type PlayerMotor } from "../player";
 import { buildColliders } from "../world/colliders";
-import { getBlock, TEST_ARENA, type Layout } from "../world/layout";
+import { CAMPUS, getBlock, TEST_ARENA, type Layout } from "../world/layout";
 import { normalizeMove } from "../input";
 
 const DT = PHYSICS.dt;
@@ -21,13 +21,14 @@ const center = (feet: Vec3): Vec3 => ({ x: feet.x, y: feet.y + FEET_TO_CENTER, z
 const feetY = (m: PlayerMotor) => m.state.position.y - FEET_TO_CENTER;
 
 function rig(feet: Vec3 = TEST_ARENA.spawn, layout: Layout = TEST_ARENA) {
+  // The motor respawns at the layout's own spawn.
   const world = new RAPIER.World({ x: 0, y: 0, z: 0 });
   world.timestep = DT;
   worlds.push(world);
   buildColliders(RAPIER, world, layout);
-  const spawn = center(TEST_ARENA.spawn);
+  const spawn = center(layout.spawn);
   const motor = createPlayerMotor(RAPIER, world, spawn, MOTOR_CONFIG);
-  if (feet !== TEST_ARENA.spawn) motor.teleport(center(feet));
+  if (feet !== layout.spawn && feet !== TEST_ARENA.spawn) motor.teleport(center(feet));
   motor.capture();
   return { world, motor };
 }
@@ -326,5 +327,140 @@ describe("Rapier lifecycle (assumption A4)", () => {
       expect(world.colliders.len()).toBe(0);
       world.free();
     }
+  });
+});
+
+// Milestone 3: the same shipped motor and colliders on the campus. The scripted walk steers
+// straight at each waypoint, never jumps, and has to reach every destination and every
+// interactable radius from the spawn.
+describe("campus (M3)", () => {
+  type CampusRig = ReturnType<typeof rig>;
+  const campusRig = (feet: Vec3 = CAMPUS.spawn): CampusRig => {
+    const r = rig(feet === CAMPUS.spawn ? CAMPUS.spawn : feet, CAMPUS);
+    if (feet === CAMPUS.spawn) r.motor.teleport(center(CAMPUS.spawn));
+    r.motor.capture();
+    return r;
+  };
+  const feetOf = (m: PlayerMotor): Vec3 => ({ x: m.state.position.x, y: feetY(m), z: m.state.position.z });
+
+  type Walk = { reached: boolean; seconds: number; jumps: number; airborneSeconds: number; maxFeetY: number; respawns: number };
+  /** Walk to (x, z) at walking pace; no jump input at any time. */
+  function walkTo(r: CampusRig, x: number, z: number, within = 0.35, limit = 40, stopOnRespawn = false): Walk {
+    const out: Walk = { reached: false, seconds: 0, jumps: 0, airborneSeconds: 0, maxFeetY: -Infinity, respawns: 0 };
+    for (let t = 0; t < limit; t += DT) {
+      const p = r.motor.state.position;
+      const dx = x - p.x;
+      const dz = z - p.z;
+      const d = Math.hypot(dx, dz);
+      if (d <= within) {
+        out.reached = true;
+        break;
+      }
+      const s = r.motor.step(DT, { moveWorld: { x: dx / d, z: dz / d }, run: false, jump: false });
+      r.world.step();
+      r.motor.capture();
+      out.seconds += DT;
+      if (s.jumpedThisStep) out.jumps++;
+      if (s.respawnedThisStep) out.respawns++;
+      if (stopOnRespawn && out.respawns > 0) break;
+      if (!s.grounded) out.airborneSeconds += DT;
+      out.maxFeetY = Math.max(out.maxFeetY, feetY(r.motor));
+    }
+    return out;
+  }
+  const forecourt = (d: (typeof CAMPUS.destinations)[number]) => {
+    const dx = d.entrance.x - d.centre.x;
+    const dz = d.entrance.z - d.centre.z;
+    const len = Math.hypot(dx, dz);
+    return { x: d.entrance.x + (dx / len) * 3, z: d.entrance.z + (dz / len) * 3 };
+  };
+
+  it("spawns grounded on the plaza", () => {
+    const r = campusRig();
+    settle(r);
+    expect(r.motor.state.grounded).toBe(true);
+    expect(feetY(r.motor)).toBeCloseTo(0, 1);
+    expect(r.motor.state.position.x).toBeCloseTo(CAMPUS.spawn.x, 1);
+    expect(r.motor.state.position.z).toBeCloseTo(CAMPUS.spawn.z, 1);
+  });
+
+  for (const dest of CAMPUS.destinations) {
+    it(`walks from spawn to the ${dest.name} entrance and to every one of its interactable radii, without jumping`, () => {
+      const r = campusRig();
+      settle(r);
+      const fc = forecourt(dest);
+      // The beacon stands on the plaza axis, so the walk to the tower goes round it (3.5, 5).
+      const legs: Walk[] = [];
+      if (dest.id === "tower") legs.push(walkTo(r, 3.5, 5));
+      legs.push(walkTo(r, fc.x, fc.z), walkTo(r, dest.entrance.x, dest.entrance.z));
+      for (const leg of legs) expect(leg.reached).toBe(true);
+      const items = CAMPUS.interactables.filter((i) => Math.hypot(i.position.x - dest.centre.x, i.position.z - dest.centre.z) < 8);
+      expect(items.length).toBeGreaterThan(0);
+      // Visit them in the order of the walk through the building (nearest first).
+      const pending = [...items];
+      while (pending.length) {
+        const here = feetOf(r.motor);
+        pending.sort((a, b) => Math.hypot(a.position.x - here.x, a.position.z - here.z) - Math.hypot(b.position.x - here.x, b.position.z - here.z));
+        const item = pending.shift()!;
+        const leg = walkTo(r, item.position.x, item.position.z, item.radius * 0.8);
+        legs.push(leg);
+        expect(leg.reached, item.id).toBe(true);
+        const f = feetOf(r.motor);
+        expect(Math.hypot(f.x - item.position.x, f.z - item.position.z), item.id).toBeLessThanOrEqual(item.radius);
+        expect(Math.abs(f.y - item.position.y), item.id).toBeLessThan(0.15); // standing on the floor, not on a display
+      }
+      expect(legs.reduce((n, l) => n + l.jumps, 0)).toBe(0);
+      expect(legs.reduce((n, l) => n + l.respawns, 0)).toBe(0);
+      // The walk never leaves the ground for more than a step edge.
+      expect(Math.max(...legs.map((l) => l.airborneSeconds))).toBeLessThan(0.5);
+      expect(Math.abs(feetOf(r.motor).y - dest.entrance.y)).toBeLessThan(0.7); // inside, at the destination's floor level
+    });
+  }
+
+  it("climbs the main-route stairs and the ramp (feet end on the raised floors)", () => {
+    const r = campusRig();
+    const tower = CAMPUS.destinations.find((d) => d.id === "tower")!;
+    expect(walkTo(r, 3.5, 5).reached).toBe(true);
+    expect(walkTo(r, tower.entrance.x, tower.entrance.z - 3).reached).toBe(true);
+    expect(feetY(r.motor)).toBeCloseTo(0, 1);
+    expect(walkTo(r, tower.entrance.x, tower.entrance.z).reached).toBe(true);
+    expect(feetY(r.motor)).toBeCloseTo(0.6, 1);
+    const ws = CAMPUS.destinations.find((d) => d.id === "workshop")!;
+    const r2 = campusRig();
+    expect(walkTo(r2, ws.entrance.x, ws.entrance.z).reached).toBe(true);
+    expect(feetY(r2.motor)).toBeCloseTo(0.5, 1);
+  });
+
+  it("falling into the ravine respawns the player at the plaza spawn", () => {
+    const r = campusRig({ x: 8, y: 0, z: -22 });
+    settle(r);
+    expect(r.motor.state.grounded).toBe(true);
+    const w = walkTo(r, 16, -20, 0.2, 12, true); // out onto the void between the first two stones
+    expect(w.respawns).toBeGreaterThanOrEqual(1);
+    settle(r);
+    const f = feetOf(r.motor);
+    expect(Math.hypot(f.x - CAMPUS.spawn.x, f.z - CAMPUS.spawn.z)).toBeLessThan(0.5);
+    expect(r.motor.state.grounded).toBe(true);
+  });
+
+  it("is blocked by the boundary hedges and the building walls", () => {
+    const r = campusRig({ x: 0, y: 0, z: 27 });
+    walkTo(r, 0, 40, 0.1, 8);
+    expect(r.motor.state.position.z).toBeLessThan(30);
+    const lab = CAMPUS.destinations.find((d) => d.id === "lab")!;
+    const r2 = campusRig();
+    walkTo(r2, lab.centre.x + 8, lab.centre.z + 4, 0.1, 25); // straight through the back of the lab
+    expect(Math.hypot(r2.motor.state.position.x - (lab.centre.x + 8), r2.motor.state.position.z - (lab.centre.z + 4))).toBeGreaterThan(1);
+  });
+
+  it("stops the avatar clear of the hedge faces and building walls by the collision standoff, so a jumping head and hands stay out", () => {
+    const r = campusRig({ x: 0, y: 0, z: 27 });
+    walkTo(r, 0, 40, 0.1, 8);
+    const hedge = getBlock(CAMPUS, "edge-n");
+    const face = hedge.center.z - hedge.size.z / 2; // the visible hedge face
+    expect(hedge.standoff).toBeGreaterThanOrEqual(0.5);
+    // capsule radius 0.3 plus the standoff, within the capsule skin
+    expect(face - r.motor.state.position.z).toBeGreaterThanOrEqual(0.3 + (hedge.standoff ?? 0) - 0.02);
+    for (const b of CAMPUS.blocks) if (b.kind === "wall" || b.kind === "building") expect(b.standoff, b.id).toBeGreaterThan(0);
   });
 });

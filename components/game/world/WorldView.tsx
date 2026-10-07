@@ -2,24 +2,30 @@
 
 // World visuals built from the layout data (design 2.8). Geometry, materials and textures come
 // from world/resources.ts and outlive the mount (shared by every game session).
-import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
-import { useThree } from "@react-three/fiber";
+import { useLayoutEffect, useRef, type MutableRefObject } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { QualityPreset } from "../config";
 import { HERO } from "../shell/transition";
 import { lerp } from "../tween";
 import type { Layout } from "./layout";
-import { getWorldResources } from "./resources";
+import { readWorldResources, warmId, warmPlan } from "./resources";
+import { warmGameState } from "./warm";
+import { SKY } from "./sky";
 
 /** The world preset the entry tween ends on (k = 1); k = 0 is the hero look (HERO.lights). */
 const WORLD_LOOK = {
   background: "#050807",
-  fog: { near: 20, far: 60 },
+  fog: { near: 26, far: 100, color: SKY.horizon },
   fogHero: { near: 5.5, far: 7 },
-  ambient: 0.8,
-  hemisphere: 0.6,
-  key: { position: [8, 14, 6] as const, intensity: 1.5 },
-  fill: { intensity: 0 },
+  // Dusk: a low warm sun behind the spawn view, a cool sky fill from the opposite side.
+  ambient: { intensity: 0.7, color: "#9db0d6" },
+  hemisphere: { intensity: 0.65, sky: "#87a6dc", ground: "#1f3a2c" },
+  key: { position: [-9, 10, -13] as const, intensity: 1.9, color: "#ffd8b6" },
+  fill: { position: [11, 6, 9] as const, intensity: 0.55, color: "#6f94e8" },
+  /** Half-extent of the shadow window around the player, in metres. */
+  shadowHalf: 16,
 } as const;
 
 /**
@@ -32,6 +38,8 @@ export type WorldHandle = {
   apply(k: number, heroYaw: number): void;
   /** Compile every world shader program once, off screen, so the first visible frame does not hitch. */
   warm(): Promise<void>;
+  /** The player's ground position: the shadow window follows it (snapped to shadow texels). */
+  follow(x: number, z: number): void;
 };
 
 export function WorldView({
@@ -39,23 +47,61 @@ export function WorldView({
   quality,
   active,
   handleRef,
+  avatarUrl,
 }: {
   layout: Layout;
   quality: QualityPreset;
   /** False while the game warms up behind the hero: the world is mounted but invisible. */
   active: boolean;
   handleRef: MutableRefObject<WorldHandle | null>;
+  /** The avatar the game will show, so its shadow programs compile with the world's. */
+  avatarUrl: string;
 }) {
   const { scene, gl, camera } = useThree();
+  const avatar = useGLTF(avatarUrl, true, false).scene;
   const meshesRef = useRef<THREE.Group>(null);
   const lightsRef = useRef<THREE.Group>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const hemiRef = useRef<THREE.HemisphereLight>(null);
   const keyRef = useRef<THREE.DirectionalLight>(null);
   const fillRef = useRef<THREE.DirectionalLight>(null);
+  // Shadow window state: where the key light looks, and the direction toward it.
+  const focus = useRef(new THREE.Vector3());
+  const keyDir = useRef(new THREE.Vector3(0, 1, 0));
 
   // Shared for the page's lifetime (world/resources.ts): never disposed per mount.
-  const resources = useMemo(() => getWorldResources(layout), [layout]);
+  // Suspends (renders nothing, the hero stays) until the textures are drawn, in pieces.
+  const resources = readWorldResources(layout);
+
+  // Soft shadows (PCF soft) belong to the game; the renderer setting is restored on unmount. It is
+  // switched on at mount, before the warm-up compile, so the programs compiled behind the hero are
+  // the ones the game draws with and nothing recompiles at the swap.
+  useLayoutEffect(() => {
+    const key = keyRef.current;
+    // The light target must be in the scene for the shadow window to follow it.
+    if (key) scene.add(key.target);
+    const was = { enabled: gl.shadowMap.enabled, type: gl.shadowMap.type };
+    gl.shadowMap.enabled = quality.shadows;
+    gl.shadowMap.type = THREE.PCFSoftShadowMap;
+    for (const b of resources.batches) {
+      b.castShadow = quality.shadows && b.userData.cast === true;
+      b.receiveShadow = quality.shadows && b.userData.receive === true;
+    }
+    return () => {
+      if (key) scene.remove(key.target);
+      gl.shadowMap.enabled = was.enabled;
+      gl.shadowMap.type = was.type;
+    };
+  }, [gl, scene, quality.shadows, resources]);
+
+  // The dome follows the camera: it is the far backdrop, never reached.
+  useFrame(({ camera: cam }) => {
+    resources.sky.position.copy(cam.position);
+    // The Canvas re-applies its own (off) shadow setting whenever its props change, e.g. on a
+    // pause or resize, so the game asserts its setting each frame; it is a plain assignment.
+    if (gl.shadowMap.enabled !== quality.shadows) gl.shadowMap.enabled = quality.shadows;
+    if (gl.shadowMap.type !== THREE.PCFSoftShadowMap) gl.shadowMap.type = THREE.PCFSoftShadowMap;
+  });
 
   // Fog and the canvas clear colour belong to the game while it is active. Layout effects, so the
   // cleanup runs in the same commit as the hero remount and before the hero fog attaches again.
@@ -77,53 +123,108 @@ export function WorldView({
     };
   }, [active, scene, gl]);
 
+  // The swap: three.js runs a scene's shadow pass with the light state of its previous frame, which
+  // after the hero is the hero's (no shadow light). A compile of the live scene, in the commit that
+  // turns the game on and before its first frame, sets the state the game draws with, so the
+  // depth programs warmed in that state are the ones the first frame needs. Every program is
+  // already built, so this only walks the scene (a millisecond or two).
+  useLayoutEffect(() => {
+    if (!active || !quality.shadows) return;
+    // The Canvas resets the shadow setting whenever its props change, as they do at the swap; the
+    // frame loop sets it again before each frame, and so does this, for the compile.
+    gl.shadowMap.enabled = true;
+    gl.shadowMap.type = THREE.PCFSoftShadowMap;
+    gl.compile(scene, camera);
+  }, [active, gl, scene, camera, quality.shadows]);
+
   useLayoutEffect(() => {
     const keyHero = new THREE.Vector3(...HERO.lights.key.position);
     const keyWorld = new THREE.Vector3(...WORLD_LOOK.key.position);
     const fillHero = new THREE.Vector3(...HERO.lights.fill.position);
+    const fillWorld = new THREE.Vector3(...WORLD_LOOK.fill.position);
+    const white = new THREE.Color(0xffffff);
+    const heroGround = new THREE.Color(0x1a2a1f);
+    const fogHeroColor = new THREE.Color(WORLD_LOOK.background);
+    const fogWorldColor = new THREE.Color(WORLD_LOOK.fog.color);
+    const cAmbient = new THREE.Color(WORLD_LOOK.ambient.color);
+    const cSky = new THREE.Color(WORLD_LOOK.hemisphere.sky);
+    const cGround = new THREE.Color(WORLD_LOOK.hemisphere.ground);
+    const cKey = new THREE.Color(WORLD_LOOK.key.color);
+    const cFill = new THREE.Color(WORLD_LOOK.fill.color);
     const tmp = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    const look = new THREE.Vector3();
+    const snapped = new THREE.Vector3();
+    const texel = quality.shadows ? (2 * WORLD_LOOK.shadowHalf) / Math.max(1, quality.shadowMapSize) : 0.01;
+    const placeKey = () => {
+      const key = keyRef.current;
+      if (!key) return;
+      // Snap the window centre to whole shadow texels in light space, so shadows do not shimmer.
+      look.copy(keyDir.current).negate();
+      right.crossVectors(look, Y_AXIS);
+      if (right.lengthSq() < 1e-6) right.set(1, 0, 0);
+      right.normalize();
+      up.crossVectors(right, look).normalize();
+      const f = focus.current;
+      const pr = Math.round(f.dot(right) / texel) * texel;
+      const pu = Math.round(f.dot(up) / texel) * texel;
+      snapped.copy(right).multiplyScalar(pr).addScaledVector(up, pu).addScaledVector(look, f.dot(look));
+      key.target.position.copy(snapped);
+      key.position.copy(snapped).addScaledVector(keyDir.current, 36);
+      key.target.updateMatrixWorld();
+    };
     const handle: WorldHandle = {
       apply(k, heroYaw) {
         const fog = fogRef.current;
         if (fog) {
           fog.near = lerp(WORLD_LOOK.fogHero.near, WORLD_LOOK.fog.near, k);
           fog.far = lerp(WORLD_LOOK.fogHero.far, WORLD_LOOK.fog.far, k);
+          fog.color.lerpColors(fogHeroColor, fogWorldColor, k);
         }
         if (active) gl.setClearAlpha(k);
-        for (const m of resources.materials) m.opacity = k;
-        if (ambientRef.current) ambientRef.current.intensity = lerp(HERO.lights.ambient, WORLD_LOOK.ambient, k);
-        if (hemiRef.current) hemiRef.current.intensity = lerp(HERO.lights.hemisphere, WORLD_LOOK.hemisphere, k);
+        resources.reveal(k);
+        const amb = ambientRef.current;
+        if (amb) {
+          amb.intensity = lerp(HERO.lights.ambient, WORLD_LOOK.ambient.intensity, k);
+          amb.color.lerpColors(white, cAmbient, k);
+        }
+        const hemi = hemiRef.current;
+        if (hemi) {
+          hemi.intensity = lerp(HERO.lights.hemisphere, WORLD_LOOK.hemisphere.intensity, k);
+          hemi.color.lerpColors(white, cSky, k);
+          hemi.groundColor.lerpColors(heroGround, cGround, k);
+        }
         const key = keyRef.current;
         if (key) {
           key.intensity = lerp(HERO.lights.key.intensity, WORLD_LOOK.key.intensity, k);
+          key.color.lerpColors(white, cKey, k);
           // Hero key light carried into game coordinates, blended to the world key direction.
           tmp.copy(keyHero).applyAxisAngle(Y_AXIS, heroYaw).lerp(keyWorld, k);
-          key.position.copy(tmp);
+          keyDir.current.copy(tmp).normalize();
+          placeKey();
         }
         const fill = fillRef.current;
         if (fill) {
           fill.intensity = lerp(HERO.lights.fill.intensity, WORLD_LOOK.fill.intensity, k);
-          fill.position.copy(fillHero).applyAxisAngle(Y_AXIS, heroYaw);
+          fill.color.lerpColors(white, cFill, k);
+          tmp.copy(fillHero).applyAxisAngle(Y_AXIS, heroYaw).lerp(fillWorld, k);
+          fill.position.copy(tmp);
         }
       },
+      follow(x, z) {
+        focus.current.set(x, 0, z);
+        placeKey();
+      },
       async warm() {
-        const group = meshesRef.current;
-        if (!group) return;
-        // Compile with the meshes visible for the synchronous collection step only; the scene
-        // never renders in between, so nothing shows.
-        group.visible = true;
-        const done = gl.compileAsync(scene, camera);
-        group.visible = false;
-        // Cap the wait (play-transition.md 7.3); the timer is cleared as soon as the compile ends.
-        let cap: ReturnType<typeof setTimeout> | undefined;
-        const capped = new Promise((r) => {
-          cap = setTimeout(r, 2000);
+        // Programs and textures are prepared in a private scene that mimics the game's state, in
+        // small pieces over hero frames (world/warm.ts); the live scene is not touched. Capped
+        // (play-transition.md 7.3): whatever is left then compiles later instead of holding the load.
+        await warmGameState(gl, camera, warmId(layout.name, quality.shadows), warmPlan(resources, avatar), {
+          shadows: quality.shadows,
+          shadowMapSize: quality.shadowMapSize,
+          capMs: 2000,
         });
-        try {
-          await Promise.race([done, capped]);
-        } finally {
-          clearTimeout(cap);
-        }
       },
     };
     handleRef.current = handle;
@@ -131,8 +232,9 @@ export function WorldView({
     return () => {
       if (handleRef.current === handle) handleRef.current = null;
     };
-  }, [active, gl, scene, camera, resources, handleRef]);
+  }, [active, gl, camera, resources, handleRef, quality.shadows, quality.shadowMapSize, avatar, layout.name]);
 
+  const half = WORLD_LOOK.shadowHalf;
   return (
     <group>
       {/* Same four-light structure as the hero scene (ambient, hemisphere, two directional), so the
@@ -146,26 +248,20 @@ export function WorldView({
           intensity={HERO.lights.key.intensity}
           castShadow={quality.shadows}
           shadow-mapSize={[quality.shadowMapSize || 1, quality.shadowMapSize || 1]}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
+          shadow-camera-left={-half}
+          shadow-camera-right={half}
+          shadow-camera-top={half}
+          shadow-camera-bottom={-half}
+          shadow-camera-near={1}
+          shadow-camera-far={90}
+          shadow-bias={-0.0004}
+          shadow-normalBias={0.04}
         />
         <directionalLight ref={fillRef} position={[...HERO.lights.fill.position]} intensity={HERO.lights.fill.intensity} />
       </group>
       <group ref={meshesRef} visible={active}>
-      {resources.items.map(({ block, material, q }) => (
-        <mesh
-          key={block.id}
-          geometry={resources.geometry}
-          material={material}
-          position={[block.center.x, block.center.y, block.center.z]}
-          quaternion={[q.x, q.y, q.z, q.w]}
-          scale={[block.size.x, block.size.y, block.size.z]}
-          castShadow={quality.shadows && block.kind !== "ground"}
-          receiveShadow={quality.shadows}
-        />
-      ))}
+        <primitive object={resources.root} dispose={null} />
+        <primitive object={resources.sky} dispose={null} />
       </group>
     </group>
   );

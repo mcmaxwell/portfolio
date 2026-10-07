@@ -1,7 +1,13 @@
 // World data: one file drives both the visuals and the colliders (design 2.8).
 // TEST_ARENA (M1) is a flat 30 x 30 m ground with a wall, ramps, steps, a ledge and a pit.
-// All sizes are full extents in metres. Ground tops sit at y = 0.
-import type { Vec3 } from "../config";
+// CAMPUS (M3) is the 60 x 60 m technology campus. All sizes are full extents in metres. Ground
+// tops sit at y = 0. Geometry (blocks), signs, rooms and interactables are plain data: the
+// colliders, the visuals and the tests all read the same lists.
+import type { Interactable, Vec3 } from "../config";
+import { ramp, v } from "./builders";
+import { buildCampus } from "./campus";
+
+export type { Interactable };
 
 export type Block = {
   id: string;
@@ -10,13 +16,57 @@ export type Block = {
   size: Vec3;
   yawDeg?: number;
   pitchDeg?: number; // ramps rise toward +z before the yaw is applied
-  material: "ground" | "path" | "stone" | "metal" | "accent-green" | "accent-cyan";
+  material: Material;
+  /** True: the follow camera may not pass through it (walls, roofs, every walkable surface). */
   blocksCamera: boolean;
   route?: "main" | "optional";
+  /** False: visual only, no collider (paving, canopies, trim). Absent means it collides. */
+  collide?: boolean;
+  /**
+   * Extra collision margin (m) added on every side of the collider, none to the visual: the
+   * avatar's head, shoulders and hands reach past its capsule, and this keeps them out of a
+   * wall they are walked or jumped against (the boundary hedge). The camera blocker follows it.
+   */
+  standoff?: number;
+  /** Steps: the riser height this tread adds over what is in front of it (checked by layout.test). */
+  rise?: number;
 };
 
-/** Placeholder until the interaction system arrives in M3. */
-export type Interactable = { id: string; position: Vec3 };
+export type Material =
+  | "ground"
+  | "path"
+  | "stone"
+  | "metal"
+  | "accent-green"
+  | "accent-cyan"
+  | "paving"
+  | "wood"
+  | "foliage"
+  | "glow-green"
+  | "glow-cyan";
+
+/** A readable label board. The visual pass draws `text` on a plane facing `yawDeg`. */
+export type Sign = {
+  id: string;
+  text: string;
+  center: Vec3;
+  yawDeg: number; // the plane faces (sin yaw, cos yaw)
+  width: number;
+  height: number;
+  accent: "green" | "cyan";
+};
+
+export type DestinationId = "lab" | "workshop" | "tower";
+export type Destination = {
+  id: DestinationId;
+  name: string;
+  /** Feet position on the threshold, where the walkable route enters. */
+  entrance: Vec3;
+  centre: Vec3;
+};
+
+/** An oriented interior volume (a building's inside). The camera must not sit in one unless the avatar does. */
+export type Room = { id: string; center: Vec3; size: Vec3; yawDeg: number };
 
 export type Layout = {
   name: "test-arena" | "campus";
@@ -26,40 +76,10 @@ export type Layout = {
   killPlaneY: number;
   interactables: readonly Interactable[];
   beacon: Vec3 | null;
+  signs: readonly Sign[];
+  destinations: readonly Destination[];
+  rooms: readonly Room[];
 };
-
-const v = (x: number, y: number, z: number): Vec3 => ({ x, y, z });
-
-/**
- * A slab that rises toward +z at `pitchDeg`, with the top surface touching the ground
- * (y = 0) at z = z0. The lower end dips into the ground block, so there is no gap.
- */
-function ramp(
-  id: string,
-  x: number,
-  z0: number,
-  length: number,
-  width: number,
-  pitchDeg: number,
-  thickness = 0.5
-): Block {
-  const th = (pitchDeg * Math.PI) / 180;
-  // d: up-slope direction; n: top-surface normal.
-  const dy = Math.sin(th);
-  const dz = Math.cos(th);
-  const ny = Math.cos(th);
-  const nz = -Math.sin(th);
-  return {
-    id,
-    kind: "ramp",
-    center: v(x, (length / 2) * dy - (thickness / 2) * ny, z0 + (length / 2) * dz - (thickness / 2) * nz),
-    size: v(width, thickness, length),
-    pitchDeg,
-    material: "metal",
-    blocksCamera: true,
-    route: "optional",
-  };
-}
 
 export const TEST_ARENA: Layout = {
   name: "test-arena",
@@ -81,14 +101,16 @@ export const TEST_ARENA: Layout = {
   spawnYawDeg: 0,
   interactables: [],
   beacon: null,
+  signs: [],
+  destinations: [],
+  rooms: [],
 };
 
-// CAMPUS arrives in M3.
+export const CAMPUS: Layout = buildCampus();
 
-/** Until CAMPUS exists every name resolves to the test arena. */
+/** The campus is the shipped world; the test arena stays reachable for QA with `?arena=test`. */
 export function resolveLayout(name?: Layout["name"]): Layout {
-  void name;
-  return TEST_ARENA;
+  return name === "test-arena" ? TEST_ARENA : CAMPUS;
 }
 
 export function getBlock(layout: Layout, id: string): Block {
@@ -107,4 +129,32 @@ export function blockQuaternion(b: Block): { x: number; y: number; z: number; w:
   const sy = Math.sin(yaw / 2);
   const cy = Math.cos(yaw / 2);
   return { x: cy * sx, y: sy * cx, z: -sy * sx, w: cy * cx };
+}
+
+/**
+ * Height of the highest collidable top surface under (x, z), or null over a void. Flat blocks and
+ * ramps are handled (pitch about X, then yaw). `maxY` ignores anything above it (a roof over a
+ * floor). Used by the tests and by layout checks.
+ */
+export function surfaceHeightAt(layout: Layout, x: number, z: number, opts: { exclude?: (b: Block) => boolean; maxY?: number } = {}): number | null {
+  const { exclude, maxY = Infinity } = opts;
+  let best: number | null = null;
+  for (const b of layout.blocks) {
+    if (b.collide === false || exclude?.(b)) continue;
+    const q = blockQuaternion(b);
+    // Top-face normal = q * (0, 1, 0).
+    const ny = 1 - 2 * (q.x * q.x + q.z * q.z);
+    const nx = 2 * (q.x * q.y - q.w * q.z);
+    const nz = 2 * (q.y * q.z + q.w * q.x);
+    if (ny < 0.2) continue; // a wall face, not a floor
+    const py = (nx * (b.center.x + nx * (b.size.y / 2)) + ny * (b.center.y + ny * (b.size.y / 2)) + nz * (b.center.z + nz * (b.size.y / 2)) - nx * x - nz * z) / ny;
+    // Footprint test in the block's own frame (inverse rotation of the point on the top plane).
+    const dx = x - b.center.x;
+    const dy = py - b.center.y;
+    const dz = z - b.center.z;
+    const lx = (1 - 2 * (q.y * q.y + q.z * q.z)) * dx + 2 * (q.x * q.y + q.w * q.z) * dy + 2 * (q.x * q.z - q.w * q.y) * dz;
+    const lz = 2 * (q.x * q.z + q.w * q.y) * dx + 2 * (q.y * q.z - q.w * q.x) * dy + (1 - 2 * (q.x * q.x + q.y * q.y)) * dz;
+    if (Math.abs(lx) <= b.size.x / 2 + 1e-9 && Math.abs(lz) <= b.size.z / 2 + 1e-9 && py <= maxY && (best === null || py > best)) best = py;
+  }
+  return best;
 }

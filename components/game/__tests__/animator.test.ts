@@ -49,6 +49,17 @@ describe("nextLocoState (design 5.3)", () => {
     expect(step(from, { grounded: true, impactSpeed: soft, horizontalSpeed: cfg.runEnter })).toBe("run");
   });
 
+  it("a hard landing without room plays the soft landing, and a crouch that loses its room is cut short", () => {
+    const from: LocoState = "fall";
+    const hard = { grounded: true, impactSpeed: cfg.hardLandSpeed + 1, airTime: 0.9 };
+    expect(step(from, { ...hard, hardLandAllowed: true })).toBe("land");
+    expect(step(from, { ...hard })).toBe("land"); // no verdict from the body pass means room
+    expect(step(from, { ...hard, hardLandAllowed: false })).toBe("idle");
+    expect(step(from, { ...hard, hardLandAllowed: false, horizontalSpeed: 1 })).toBe("walk");
+    expect(step("land", { grounded: true, stateTime: 0.1, landClipDuration: 1.8, hardLandAllowed: false })).toBe("idle");
+    expect(step("land", { grounded: true, stateTime: 0.1, landClipDuration: 1.8, hardLandAllowed: true })).toBe("land");
+  });
+
   it("a normal jump lands softly but a drop from above the jump height lands hard", () => {
     const impact = (h: number) => Math.sqrt(2 * MOVEMENT.gravity * h);
     expect(impact(MOVEMENT.jumpHeight)).toBeLessThan(cfg.hardLandSpeed);

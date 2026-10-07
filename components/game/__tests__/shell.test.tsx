@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createGame } from "../session";
 import type { GameModule, LoaderDeps } from "../shell/gameLoader";
 import { LoadingStrip } from "../shell/LoadingOverlay";
-import { useExperienceShell, type ExperienceShell } from "../shell/useExperienceShell";
+import { readLayoutParam, useExperienceShell, type ExperienceShell } from "../shell/useExperienceShell";
 
 type Rig = {
   shell: () => ExperienceShell;
@@ -716,6 +716,12 @@ describe("reduced motion", () => {
 describe("prefetch and early shader compile", () => {
   const canvasState = { gl: {}, scene: {}, camera: {} };
 
+  it("the campus is the default world and ?arena=test selects the M1 test arena", () => {
+    expect(readLayoutParam("")).toBe("campus");
+    expect(readLayoutParam("?arena=campus")).toBe("campus");
+    expect(readLayoutParam("?x=1&arena=test")).toBe("test-arena");
+  });
+
   it("hover imports the game once, then compiles the world once on a fine pointer", async () => {
     const rig = setup();
     rig.shell().onCanvasCreated(canvasState);
@@ -725,7 +731,7 @@ describe("prefetch and early shader compile", () => {
     await flush();
     expect(rig.importGame).toHaveBeenCalledTimes(1);
     expect(rig.mod.prewarmWorld).toHaveBeenCalledTimes(1);
-    expect(rig.mod.prewarmWorld).toHaveBeenCalledWith(canvasState, "test-arena");
+    expect(rig.mod.prewarmWorld).toHaveBeenCalledWith(canvasState, "campus");
     expect(rig.mod.loadGameAssets).toHaveBeenCalled(); // fine pointer: clips too
     expect(rig.shell().load.kind).toBe("idle"); // nothing shown
     expect(rig.shell().game).toBeNull(); // nothing mounted

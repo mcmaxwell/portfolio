@@ -15,6 +15,8 @@ export type LocoInput = {
   jumpedThisStep: boolean;
   stateTime: number;
   landClipDuration: number;
+  /** False where a hard landing has no room (a wall within reach of the crouch): the soft landing plays. Default true. */
+  hardLandAllowed?: boolean;
 };
 
 type Grounded = "idle" | "walk" | "run";
@@ -44,13 +46,15 @@ export function nextLocoState(current: LocoState, i: LocoInput, cfg: AnimationCo
     case "jump":
     case "fall": {
       if (i.grounded) {
-        return i.impactSpeed >= cfg.hardLandSpeed ? "land" : bySpeed(i.horizontalSpeed, cfg);
+        return i.impactSpeed >= cfg.hardLandSpeed && i.hardLandAllowed !== false ? "land" : bySpeed(i.horizontalSpeed, cfg);
       }
       if (current === "jump" && i.verticalVelocity <= 0) return "fall";
       return current;
     }
     case "land": {
       if (i.jumpedThisStep) return "jump";
+      // The crouch has no room any more (the avatar walked toward a wall): get up now.
+      if (i.hardLandAllowed === false) return bySpeed(i.horizontalSpeed, cfg);
       if (!i.grounded && i.airTime >= cfg.fallDelay) return "fall";
       if (
         i.stateTime >= 0.6 * i.landClipDuration ||
@@ -67,7 +71,7 @@ export interface CharacterAnimator {
   readonly state: LocoState;
   /** Playback rate of the active locomotion action (1 for non-locomotion states). */
   readonly timeScale: number;
-  update(dt: number, motor: MotorState): void;
+  update(dt: number, motor: MotorState, opts?: { hardLandAllowed?: boolean }): void;
   playCelebration(): Promise<void>;
   dispose(): void;
 }
@@ -145,6 +149,25 @@ export function createCharacterAnimator(
     return a;
   };
 
+  // Crossfades are driven here, not with fadeIn/fadeOut: those always start from weight 1 and 0, so a
+  // fade interrupted halfway (a short fall, a quick stop) makes the pose jump to the fading clip at full weight.
+  const fades = new Map<THREE.AnimationAction, { to: number; rate: number }>();
+  const fadeTo = (a: THREE.AnimationAction, to: number, duration: number) => {
+    fades.set(a, { to, rate: duration > 0 ? 1 / duration : Infinity });
+  };
+  const stepFades = (dt: number) => {
+    fades.forEach((f, a) => {
+      const w = a.weight;
+      const step = f.rate === Infinity ? Infinity : f.rate * dt;
+      const nw = w < f.to ? Math.min(f.to, w + step) : Math.max(f.to, w - step);
+      a.setEffectiveWeight(nw);
+      if (nw === f.to) {
+        fades.delete(a);
+        if (f.to === 0) a.enabled = false;
+      }
+    });
+  };
+
   const footFloor = createFootFloor(scene);
   const hipsClips: THREE.AnimationAction[] = [];
   for (const n of HIPS_MOTION_CLIPS) {
@@ -174,18 +197,21 @@ export function createCharacterAnimator(
       const oneShot = to === "jump" || to === "land";
       next.setLoop(oneShot ? THREE.LoopOnce : THREE.LoopRepeat, oneShot ? 1 : Infinity);
       next.clampWhenFinished = oneShot;
-      next.reset();
+      // A looping clip that is still fading out keeps playing and fades back in from where it is.
+      const carried = !oneShot && prev !== null && next.isScheduled() && next.enabled && next.weight > 1e-3 ? next.weight : 0;
+      if (carried === 0) next.reset();
       next.setEffectiveTimeScale(1);
-      next.setEffectiveWeight(1);
+      next.setEffectiveWeight(prev ? carried : 1);
+      fades.delete(next);
       // Walk and run share a gait: keep the phase to avoid a foot pop.
       if (prev && activeName && (to === "walk" || to === "run") && (activeName === "walk" || activeName === "run")) {
         next.time = (prev.time / prev.getClip().duration) * target.clip.duration;
       }
       // The very first action (idle at creation) starts at full weight: a fade-in from nothing
       // would show the bind pose (a T-pose) for a quarter of a second.
-      if (prev) next.fadeIn(fadeFor(to));
+      if (prev) fadeTo(next, 1, fadeFor(to));
       next.play();
-      if (prev) prev.fadeOut(fadeFor(to));
+      if (prev) fadeTo(prev, 0, fadeFor(to));
       active = next;
       activeName = target.name;
     }
@@ -202,7 +228,7 @@ export function createCharacterAnimator(
     get timeScale() {
       return active ? active.getEffectiveTimeScale() : 1;
     },
-    update(dt, motor) {
+    update(dt, motor, opts) {
       if (disposed) return;
       stateTime += dt;
       const landClip = clips.land;
@@ -217,6 +243,7 @@ export function createCharacterAnimator(
           jumpedThisStep: motor.jumpedThisStep,
           stateTime,
           landClipDuration: landClip ? landClip.duration : 0,
+          hardLandAllowed: opts?.hardLandAllowed,
         },
         cfg
       );
@@ -230,6 +257,7 @@ export function createCharacterAnimator(
           matched ? clamp(motor.horizontalSpeed / base, cfg.timeScaleMin, cfg.timeScaleMax) : 1
         );
       }
+      stepFades(dt);
       mixer.update(dt);
       // Only while a clip that moves the Hips (fall, land) still has weight: the other clips
       // keep the pelvis at standing height and are left exactly as authored.
@@ -242,7 +270,7 @@ export function createCharacterAnimator(
         const action = actionFor(clip);
         action.reset().setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = false;
-        if (active) active.fadeOut(0.2);
+        if (active) fadeTo(active, 0, 0.2);
         action.fadeIn(0.2).play();
         const onDone = (e: { action?: THREE.AnimationAction }) => {
           if (e.action !== action) return;

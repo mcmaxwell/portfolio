@@ -19,11 +19,14 @@ export function Dialog({
   onClose,
   children,
   initialFocusRef,
+  wide = false,
 }: {
   labelledBy: string;
   onClose: () => void;
   children: ReactNode;
   initialFocusRef?: RefObject<HTMLElement>;
+  /** A content panel: wider and scrollable inside the viewport (the default is the small menu card). */
+  wide?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
@@ -81,7 +84,15 @@ export function Dialog({
       onKeyDown={onKeyDown}
       className="pointer-events-auto fixed inset-0 z-[70] flex items-center justify-center bg-term-bg/70 px-4 outline-none backdrop-blur-sm"
     >
-      <div className="w-full max-w-sm border border-term-green bg-term-panel p-6 text-sm text-term-fg box-glow">{children}</div>
+      <div
+        className={
+          wide
+            ? "max-h-[88vh] w-full max-w-2xl overflow-y-auto overscroll-contain border border-term-green bg-term-panel p-5 text-sm text-term-fg box-glow md:p-6"
+            : "w-full max-w-sm border border-term-green bg-term-panel p-6 text-sm text-term-fg box-glow"
+        }
+      >
+        {children}
+      </div>
     </div>
   );
 }

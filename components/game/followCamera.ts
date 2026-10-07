@@ -1,5 +1,16 @@
-// Follow camera with obstacle pull-in (design 2.7). The optional ObstacleQuery is a sphere cast
-// from the pivot toward the wanted camera position; the camera never ends past the first hit.
+// Follow camera with obstacle handling (design 2.7). The optional ObstacleQuery is a sphere cast;
+// the camera is resolved every frame from the avatar's true position (not from the lagging
+// pivot) against five rules:
+//   1. the path from the avatar to the camera is clear (sphere of probeRadius),
+//   2. the head and the torso are in line of sight of the camera (thin rays),
+//   3. the camera is never below the floor under the avatar (pitch can not dig it into the ground),
+//   4. the camera is never closer than minDistance to the avatar: next to a wall it climbs to a
+//      higher pitch (the "lift"), and in a pocket no lift clears (a corner, a dead end, a narrow
+//      passage) it also swings sideways round the avatar (the "swing", smallest first) instead of
+//      sinking into the avatar or the wall. The camera is never forced past the clear distance:
+//      a position inside a collider is never an option,
+//   5. with the avatar outside a building (not in its doorway) the camera stays outside it too.
+// It pulls in at once and restores smoothly.
 import * as THREE from "three";
 import { HERO } from "./shell/transition";
 import { FEET_TO_CENTER, type CameraConfig, type Vec3 } from "./config";
@@ -11,6 +22,29 @@ import { easeInOutCubic, easeOutCubic } from "./tween";
  * (that would trap the camera at the pivot): implementations let it exit (see cameraProbe.ts).
  */
 export type ObstacleQuery = (from: Vec3, to: Vec3, radius: number) => number | null;
+
+/**
+ * An oriented interior volume (a building's inside). While the avatar is outside it, the camera
+ * stays outside it too, so a doorway never lets the camera look at the avatar from inside a
+ * building, in particular not from inside the narrowest passage.
+ */
+export type CameraZone = { center: Vec3; size: Vec3; yawDeg: number };
+
+/** The avatar this close to a zone counts as in its doorway: the camera may follow it in. */
+export const ZONE_DOORWAY = 1.0;
+
+function insideZone(z: CameraZone, p: { x: number; y: number; z: number }, shrink: number): boolean {
+  const yaw = (z.yawDeg * Math.PI) / 180;
+  const dx = p.x - z.center.x;
+  const dz = p.z - z.center.z;
+  const lx = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+  const lz = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+  return (
+    Math.abs(lx) < z.size.x / 2 - shrink &&
+    Math.abs(lz) < z.size.z / 2 - shrink &&
+    Math.abs(p.y - z.center.y) < z.size.y / 2 - shrink
+  );
+}
 
 export interface FollowCamera {
   readonly yaw: number;
@@ -76,7 +110,8 @@ const smooth = (k: number, dt: number) => 1 - Math.exp(-k * dt);
 export function createFollowCamera(
   camera: THREE.PerspectiveCamera,
   query: ObstacleQuery | null,
-  cfg: CameraConfig
+  cfg: CameraConfig,
+  zones: readonly CameraZone[] = []
 ): FollowCamera {
   const snapshot = {
     position: camera.position.clone(),
@@ -99,6 +134,20 @@ export function createFollowCamera(
   // Fraction (0..1) of the pivot-to-desired segment the camera may use; shrinks at once,
   // eases back out so the camera does not pop when the blocker is passed.
   let reach = 1;
+  // Extra pitch (radians) added next to a wall to keep minDistance; rises at once, decays smoothly.
+  let lift = 0;
+  // Extra yaw (radians, signed) the camera swings round the avatar in a pocket; set at once, decays smoothly.
+  let swing = 0;
+  // Floor tracking: feet height of the last grounded frame (the camera floor follows a fall down).
+  let lastGroundFeet = 0;
+  let feetNow = 0;
+  const anchor = new THREE.Vector3(); // the avatar's true upper body, the origin of every cast
+  const anchorVec: Vec3 = { x: 0, y: 0, z: 0 };
+  const probeVec: Vec3 = { x: 0, y: 0, z: 0 };
+  const endVec: Vec3 = { x: 0, y: 0, z: 0 };
+  const dir = new THREE.Vector3();
+  const resolved = new THREE.Vector3();
+  const MAX_PITCH = 85 * (Math.PI / 180);
 
   type Blend = {
     kind: "entry" | "exit";
@@ -129,14 +178,14 @@ export function createFollowCamera(
   camera.far = 200;
   camera.updateProjectionMatrix();
 
-  const place = () => {
-    const cp = Math.cos(pitch);
-    // Camera sits behind the pivot along -forward, plus a shoulder offset to the right.
-    const fx = Math.sin(yaw) * cp;
-    const fy = -Math.sin(pitch);
-    const fz = Math.cos(yaw) * cp;
-    const rx = -Math.cos(yaw);
-    const rz = Math.sin(yaw);
+  // The wanted camera position for `pitchRad`: behind the (smoothed) pivot, shoulder to the right.
+  const place = (pitchRad: number, yawRad: number) => {
+    const cp = Math.cos(pitchRad);
+    const fx = Math.sin(yawRad) * cp;
+    const fy = -Math.sin(pitchRad);
+    const fz = Math.cos(yawRad) * cp;
+    const rx = -Math.cos(yawRad);
+    const rz = Math.sin(yawRad);
     desired.set(
       pivot.x - fx * cfg.distance + rx * cfg.shoulder,
       pivot.y - fy * cfg.distance,
@@ -144,28 +193,193 @@ export function createFollowCamera(
     );
   };
 
-  const pullIn = (dt: number, instant: boolean) => {
-    let allowed = 1;
-    if (query) {
-      pivotVec.x = pivot.x;
-      pivotVec.y = pivot.y;
-      pivotVec.z = pivot.z;
-      desiredVec.x = desired.x;
-      desiredVec.y = desired.y;
-      desiredVec.z = desired.z;
-      const len = desired.distanceTo(pivot);
-      const hit = len > 1e-6 ? query(pivotVec, desiredVec, cfg.probeRadius) : null;
-      if (hit !== null) allowed = Math.min(1, Math.max(0, hit) / len);
+  const blocked = (fromY: number, to: THREE.Vector3): boolean => {
+    probeVec.x = anchor.x;
+    probeVec.y = fromY;
+    probeVec.z = anchor.z;
+    endVec.x = to.x;
+    endVec.y = to.y;
+    endVec.z = to.z;
+    return query!(probeVec, endVec, cfg.losRadius) !== null;
+  };
+
+  type Solution = { t: number; dist: number };
+  /**
+   * Rules 1 to 3 for a given extra pitch: how far along avatar -> wanted position the camera may
+   * go (fraction t of the segment) and the distance that is.
+   */
+  const solve = (liftRad: number, swingRad: number, out: Solution): Solution => {
+    place(Math.min(pitch + liftRad, MAX_PITCH), yaw + swingRad);
+    dir.copy(desired).sub(anchor);
+    const len = dir.length();
+    let t = 1;
+    if (len < 1e-6) {
+      out.t = 0;
+      out.dist = 0;
+      return out;
     }
-    if (instant || allowed < reach) reach = allowed;
-    else reach = Math.min(allowed, reach + (allowed - reach) * smooth(cfg.restoreK, dt));
-    if (reach < 1) desired.sub(pivot).multiplyScalar(reach).add(pivot);
+    if (query) {
+      anchorVec.x = anchor.x;
+      anchorVec.y = anchor.y;
+      anchorVec.z = anchor.z;
+      endVec.x = desired.x;
+      endVec.y = desired.y;
+      endVec.z = desired.z;
+      const hit = query(anchorVec, endVec, cfg.probeRadius);
+      if (hit !== null) t = Math.min(1, Math.max(0, hit) / len);
+    }
+    // Rule 3: not below the floor under the avatar (plus the probe radius).
+    const floor = Math.min(lastGroundFeet, feetNow) + cfg.probeRadius;
+    if (desired.y < floor) {
+      const room = anchor.y - floor;
+      t = Math.min(t, room > 1e-6 ? room / (anchor.y - desired.y) : 0);
+    }
+    // Rule 5: with the avatar outside a building (and not in its doorway), the camera stays outside.
+    for (const z of zones) {
+      if (insideZone(z, anchor, -ZONE_DOORWAY)) continue; // the avatar is in or at the zone
+      resolved.copy(dir).multiplyScalar(t).add(anchor);
+      if (!insideZone(z, resolved, 0)) continue;
+      let lo = 0;
+      let hi = t;
+      for (let i = 0; i < 10; i++) {
+        const mid = (lo + hi) / 2;
+        resolved.copy(dir).multiplyScalar(mid).add(anchor);
+        if (insideZone(z, resolved, 0)) hi = mid;
+        else lo = mid;
+      }
+      t = lo;
+    }
+    // Rule 2: head and torso in line of sight. Bisect to the farthest clear point.
+    if (query) {
+      for (const h of cfg.losHeights) {
+        const fromY = feetNow + h;
+        resolved.copy(dir).multiplyScalar(t).add(anchor);
+        if (!blocked(fromY, resolved)) continue;
+        let lo = 0;
+        let hi = t;
+        for (let i = 0; i < 8; i++) {
+          const mid = (lo + hi) / 2;
+          resolved.copy(dir).multiplyScalar(mid).add(anchor);
+          if (blocked(fromY, resolved)) hi = mid;
+          else lo = mid;
+        }
+        t = lo;
+      }
+    }
+    out.t = t;
+    out.dist = t * len;
+    return out;
+  };
+
+  const sol: Solution = { t: 1, dist: 0 };
+  const probeSol: Solution = { t: 1, dist: 0 };
+
+  const enough = (d: number) => d >= cfg.minDistance - 1e-6;
+
+  /**
+   * The smallest lift in [from, maxLift] (continuous: 4 degree steps, then bisected) at which the
+   * clear distance for `swingRad` is at least minDistance, or -1 when no lift gets there.
+   */
+  const findLift = (from: number, swingRad: number, stepRad: number): number => {
+    const maxLift = cfg.maxLiftDeg * DEG;
+    let lo = from;
+    let found = -1;
+    for (let l = from + stepRad; l <= maxLift + 1e-9; l += stepRad) {
+      if (enough(solve(l, swingRad, probeSol).dist)) {
+        found = l;
+        break;
+      }
+      lo = l;
+    }
+    if (found < 0) return -1;
+    let hi = found;
+    for (let i = 0; i < 6; i++) {
+      const mid = (lo + hi) / 2;
+      if (enough(solve(mid, swingRad, probeSol).dist)) hi = mid;
+      else lo = mid;
+    }
+    return hi;
+  };
+
+  /** Closest the camera ever gets to the avatar's upper body: just outside the 0.3 m capsule. */
+  const HARD_MIN = 0.45;
+  const SWING_STEP = 15 * DEG;
+  const SWING_MAX = 180 * DEG;
+
+  /**
+   * Places `desired` (and so the camera) for this frame. `instant` skips the smooth restore.
+   * Rule 4: if the clear distance is under minDistance, find the smallest lift that restores it;
+   * if no lift does, the smallest swing (nearest the player's own yaw) with its smallest lift;
+   * if nothing does, the roomiest direction found. The camera never goes past the clear distance.
+   */
+  const pullIn = (dt: number, instant: boolean) => {
+    const maxLift = cfg.maxLiftDeg * DEG;
+    const decay = Math.exp(-cfg.restoreK * dt);
+    lift = instant ? 0 : lift * decay;
+    swing = instant ? 0 : swing * decay;
+    if (Math.abs(swing) < 1e-3) swing = 0;
+    solve(lift, swing, sol);
+    if (!enough(sol.dist)) {
+      let l = findLift(lift, swing, 4 * DEG);
+      if (l >= 0) {
+        lift = l;
+      } else {
+        // A pocket the lift alone cannot clear: swing round the avatar, the smallest swing first.
+        let bestSwing = swing;
+        let bestLift = lift;
+        let bestDist = -1;
+        let cleared = false;
+        const prefer = swing >= 0 ? 1 : -1; // on a tie keep the side the camera is already on
+        for (let k = 0; k * SWING_STEP <= SWING_MAX + 1e-9 && !cleared; k++) {
+          for (const sign of k === 0 ? [1] : [prefer, -prefer]) {
+            const sw = sign * k * SWING_STEP;
+            l = findLift(0, sw, 8 * DEG);
+            if (l >= 0) {
+              swing = sw;
+              lift = l;
+              cleared = true;
+              break;
+            }
+            // Remember the roomiest direction in case nothing clears.
+            for (let ll = 0; ll <= maxLift + 1e-9; ll += 8 * DEG) {
+              const d = solve(ll, sw, probeSol).dist;
+              if (d > bestDist) {
+                bestDist = d;
+                bestSwing = sw;
+                bestLift = ll;
+              }
+            }
+          }
+        }
+        if (!cleared) {
+          swing = bestSwing;
+          lift = bestLift;
+        }
+      }
+      solve(lift, swing, sol);
+    }
+    if (instant || sol.t < reach) reach = sol.t;
+    else reach = Math.min(sol.t, reach + (sol.t - reach) * smooth(cfg.restoreK, dt));
+    // The easing back out never leaves the camera nearer than minDistance, and never goes past the
+    // solved clear distance (reach <= sol.t): minDistance is a goal that yields to the collider.
+    const len = dir.length();
+    const floor = len > 1e-6 ? Math.min(sol.t, cfg.minDistance / len) : sol.t;
+    // Only a fully sealed pocket (no direction has room, never the case on the campus) can leave the
+    // clear distance under HARD_MIN; then the camera stays out of the avatar's own body.
+    const t = Math.max(reach, floor, len > 1e-6 ? Math.min(1, HARD_MIN / len) : 1);
+    resolved.copy(dir).multiplyScalar(t).add(anchor);
+    desired.copy(resolved);
   };
 
   const apply = () => {
     camera.position.copy(desired);
     look.set(pivot.x, pivot.y, pivot.z);
     camera.lookAt(look);
+  };
+
+  const setAnchor = (target: Vec3) => {
+    anchor.set(target.x, target.y + cfg.pivotHeight, target.z);
+    feetNow = target.y - FEET_TO_CENTER;
   };
 
   const applyBlend = (b: Blend, endPos: THREE.Vector3, endLook: THREE.Vector3, kPos: number, kFov: number) => {
@@ -193,6 +407,10 @@ export function createFollowCamera(
       lastGroundY = pivot.y;
       initialised = true;
       reach = 1;
+      lift = 0;
+      swing = 0;
+      setAnchor(target);
+      lastGroundFeet = feetNow;
       exitDone = false;
       blend = {
         kind: "entry",
@@ -214,7 +432,8 @@ export function createFollowCamera(
         blend = null;
         pivot.set(target.x, target.y + cfg.pivotHeight, target.z);
         lastGroundY = pivot.y;
-        place();
+        setAnchor(target);
+        lastGroundFeet = feetNow;
         pullIn(0, true);
         apply();
         setFov(cfg.fov);
@@ -256,6 +475,8 @@ export function createFollowCamera(
         yaw = characterYaw;
         pivot.set(target.x, target.y + cfg.pivotHeight, target.z);
         lastGroundY = pivot.y;
+        setAnchor(target);
+        lastGroundFeet = feetNow;
         initialised = true;
       }
       yaw -= input.dx * cfg.lookSensitivity;
@@ -283,7 +504,8 @@ export function createFollowCamera(
       pivot.x += (target.x - pivot.x) * kh;
       pivot.z += (target.z - pivot.z) * kh;
       pivot.y += (wantY - pivot.y) * kv;
-      place();
+      setAnchor(target);
+      if (grounded) lastGroundFeet = feetNow;
       pullIn(dt, false);
       if (blend && blend.kind === "entry") {
         blend.t += dt;
@@ -302,7 +524,8 @@ export function createFollowCamera(
       pivot.set(target.x, target.y + cfg.pivotHeight, target.z);
       lastGroundY = pivot.y;
       initialised = true;
-      place();
+      setAnchor(target);
+      lastGroundFeet = feetNow;
       pullIn(0, true);
       apply();
     },

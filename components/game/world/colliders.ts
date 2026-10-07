@@ -12,13 +12,16 @@ export const GROUP_PLAYER = 0x0004;
 export function buildColliders(rapier: Rapier, world: RAPIER.World, layout: Layout): () => void {
   const bodies: RAPIER.RigidBody[] = [];
   for (const b of layout.blocks) {
+    // A block that does not collide may still block the camera (tree crowns): a camera-only collider.
+    const membership = (b.collide === false ? 0 : GROUP_WORLD) | (b.blocksCamera ? GROUP_CAMERA_BLOCKER : 0);
+    if (membership === 0) continue; // visual only
     const body = world.createRigidBody(
       rapier.RigidBodyDesc.fixed().setTranslation(b.center.x, b.center.y, b.center.z).setRotation(blockQuaternion(b))
     );
     bodies.push(body);
-    const membership = GROUP_WORLD | (b.blocksCamera ? GROUP_CAMERA_BLOCKER : 0);
+    const m = b.standoff ?? 0;
     world.createCollider(
-      rapier.ColliderDesc.cuboid(b.size.x / 2, b.size.y / 2, b.size.z / 2).setCollisionGroups(
+      rapier.ColliderDesc.cuboid(b.size.x / 2 + m, b.size.y / 2, b.size.z / 2 + m).setCollisionGroups(
         (membership << 16) | (GROUP_WORLD | GROUP_PLAYER)
       ),
       body

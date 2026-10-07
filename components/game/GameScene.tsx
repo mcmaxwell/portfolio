@@ -9,24 +9,26 @@
 // compiles its shaders, then reports ready. At the swap `active` turns true: the avatar
 // appears at the spawn point facing the camera, the camera starts from the hero pose and the
 // frame driver runs the entry (turn, walk, camera slide, world reveal). Exit runs it backwards.
-import { Component, Suspense, useEffect, useLayoutEffect, useRef, type MutableRefObject, type ReactNode } from "react";
+import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Physics, useRapier } from "@react-three/rapier";
 import * as THREE from "three";
 import type { CharacterAnimator } from "./animator";
+import { solidsOf, type BodyClearance } from "./bodyClearance";
 import type { GameAssets } from "./clips";
-import { CAMERA, FEET_TO_CENTER, MOTOR_CONFIG, MOVEMENT, PHYSICS, QUALITY, type Vec3 } from "./config";
+import { CAMERA, FEET_TO_CENTER, MOTOR_CONFIG, MOVEMENT, PHYSICS, resolveQuality, type Vec3 } from "./config";
 import { createFixedStepper, type FixedStepper } from "./fixedStep";
 import { createObstacleQuery } from "./cameraProbe";
 import { createFollowCamera, type FollowCamera } from "./followCamera";
 import { GameAvatar } from "./GameAvatar";
+import { createInteractionSystem, type InteractionSystem } from "./interactions";
 import type { PoseBlend } from "./poseBlend";
 import { cameraRelativeMove, createPlayerMotor, type MotorIntent, type MotorState, type PlayerMotor } from "./player";
 import type { GameHandle } from "./session";
 import { TIMING } from "./shell/transition";
 import { createYawTween, easeInCubic, easeOutCubic, lerp, shortestAngle, stepYawTween, yawTweenDone, type YawTween } from "./tween";
 import { buildColliders } from "./world/colliders";
-import { resolveLayout, type Layout } from "./world/layout";
+import { resolveLayout, surfaceHeightAt, type Layout } from "./world/layout";
 import { WorldView, type WorldHandle } from "./world/WorldView";
 
 export type GameSceneProps = {
@@ -65,6 +67,11 @@ class GameErrorBoundary extends Component<
   render() {
     return this.state.failed ? null : this.props.children;
   }
+}
+
+/** The quality preset in force: "auto" (shadows on desktop-class devices) until the settings panel sets it. */
+function useQuality() {
+  return useMemo(() => resolveQuality("auto"), []);
 }
 
 /**
@@ -124,6 +131,7 @@ type Runtime = {
   motor: PlayerMotor;
   stepper: FixedStepper;
   cam: FollowCamera;
+  interactions: InteractionSystem;
   intent: MotorIntent;
   frame: MotorState;
   tmp: Vec3;
@@ -160,12 +168,14 @@ function ActiveGame({
   const groupRef = useRef<THREE.Group | null>(null);
   const animatorRef = useRef<CharacterAnimator | null>(null);
   const poseBlendRef = useRef<PoseBlend | null>(null);
+  const clearanceRef = useRef<BodyClearance | null>(null);
   const runtime = useRef<Runtime | null>(null);
   const layout = layoutFor(layoutName);
+  const solids = useMemo(() => solidsOf(layout), [layout]);
+  const floorAt = useCallback((x: number, z: number, maxY: number) => surfaceHeightAt(layout, x, z, { maxY }), [layout]);
   const doneRef = useRef(onExitLegDone);
   doneRef.current = onExitLegDone;
-  // Shadows need renderer setup that belongs to M5 (quality presets); M1 renders without.
-  const quality = QUALITY.low;
+  const quality = useQuality();
 
   // A layout effect: the runtime, the avatar placement and the entry camera pose exist before the
   // first game render, so the first game frame equals the last hero frame.
@@ -174,7 +184,7 @@ function ActiveGame({
     const removeColliders = buildColliders(rapier, world, layout);
     const spawnCenter = { x: layout.spawn.x, y: layout.spawn.y + FEET_TO_CENTER, z: layout.spawn.z };
     const motor = createPlayerMotor(rapier, world, spawnCenter, MOTOR_CONFIG);
-    const cam = createFollowCamera(camera as THREE.PerspectiveCamera, createObstacleQuery(rapier, world), CAMERA);
+    const cam = createFollowCamera(camera as THREE.PerspectiveCamera, createObstacleQuery(rapier, world), CAMERA, layout.rooms);
     const spawnYaw = (layout.spawnYawDeg * Math.PI) / 180;
     const reduced = game.reducedMotion;
     // The avatar starts facing the camera (the hero pose) and turns away to face the spawn heading.
@@ -186,6 +196,7 @@ function ActiveGame({
       motor,
       stepper: createFixedStepper(PHYSICS),
       cam,
+      interactions: createInteractionSystem(layout.interactables, game),
       intent: { moveWorld: { x: 0, z: 0 }, run: false, jump: false },
       frame: { ...motor.state, position: { ...motor.state.position } },
       tmp: { x: 0, y: 0, z: 0 },
@@ -226,6 +237,7 @@ function ActiveGame({
       if (done) return;
       done = true;
       runtime.current = null;
+      rt.interactions.dispose();
       game.input.detach();
       cam.dispose();
       motor.dispose();
@@ -388,8 +400,14 @@ function ActiveGame({
       if (k >= 1) rt.env = null;
     }
 
-    animatorRef.current?.update(dtc, rt.frame);
+    // A hard landing without room (a wall within reach of the crouch) plays the soft landing instead.
+    animatorRef.current?.update(dtc, rt.frame, { hardLandAllowed: clearanceRef.current?.hardLandOk ?? true });
     poseBlendRef.current?.apply(dtc); // hero pose into the game idle, after the mixer wrote this frame
+    // Last: whatever pose the clips and the blends produced, keep the visible body out of the level.
+    if (g) clearanceRef.current?.apply(g, dtc, { grounded: s.grounded, verticalVelocity: s.verticalVelocity, landing: animatorRef.current?.state === "land" });
+
+    // The key light's shadow window follows the avatar.
+    worldRef.current?.follow(pos.x, pos.z);
 
     // Camera.
     const look = live ? snap.look : { dx: 0, dy: 0 };
@@ -397,6 +415,9 @@ function ActiveGame({
     else if (mode === "leaving" && game.reducedMotion) {
       // Reduced motion: no camera leg; the pose is held for the short HUD fade.
     } else rt.cam.update(dtc, pos, s.grounded, rt.charYaw, look, snap.recenter && live);
+
+    // Interactions: the focus (prompt) follows the player; E opens the panel of the focused item.
+    rt.interactions.update({ x: pos.x, y: pos.y - FEET_TO_CENTER, z: pos.z }, rt.charYaw, snap.interact);
 
     // Session progress.
     if (mode === "entering") {
@@ -426,6 +447,9 @@ function ActiveGame({
       groupRef={groupRef}
       animatorRef={animatorRef}
       poseBlendRef={poseBlendRef}
+      solids={solids}
+      floorAt={floorAt}
+      clearanceRef={clearanceRef}
       blendPose={!game.reducedMotion}
       castShadow={quality.shadows}
     />
@@ -440,7 +464,7 @@ export function GameScene({ game, assets, active, avatarUrl, layout, onPhysics, 
   const activeRef = useRef(active);
   activeRef.current = active;
   const worldRef = useRef<WorldHandle | null>(null);
-  const quality = QUALITY.low;
+  const quality = useQuality();
   const layoutData = layoutFor(layout);
   return (
     <GameErrorBoundary
@@ -452,7 +476,7 @@ export function GameScene({ game, assets, active, avatarUrl, layout, onPhysics, 
     >
       <ContextGuard onLost={() => faultCb.current("context-lost")} />
       <Suspense fallback={null}>
-        <WorldView layout={layoutData} quality={quality} active={active} handleRef={worldRef} />
+        <WorldView layout={layoutData} quality={quality} active={active} handleRef={worldRef} avatarUrl={avatarUrl} />
         <Physics paused gravity={[0, 0, 0]} colliders={false}>
           <WarmUp worldRef={worldRef} gate={warmGate} onReady={() => cb.current("ready")} />
           {active && (
