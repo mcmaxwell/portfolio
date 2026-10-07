@@ -139,3 +139,34 @@ describe("input controller", () => {
     expect(input.sample().move.x).toBe(1);
   });
 });
+
+describe("input controller while disabled (session paused, leaving or fault)", () => {
+  it("ignores keys, pointer drags, touch stick, touch look and touch buttons, and keeps nothing latched", () => {
+    setup();
+    input.setEnabled(false);
+    key("keydown", "KeyW");
+    key("keydown", "Space");
+    input.setTouchMove(1, 1);
+    input.addTouchLook(10, 10);
+    input.pressTouch("jump");
+    input.pressTouch("interact");
+    canvas.dispatchEvent(new PointerEvent("pointerdown", { pointerId: 1 }));
+    canvas.dispatchEvent(new PointerEvent("pointermove", { pointerId: 1, movementX: 5, movementY: 5 }));
+    const s = input.sample();
+    expect(s.move).toEqual({ x: 0, y: 0 });
+    expect(s.jump).toBe(false);
+    expect(s.interact).toBe(false);
+    expect(s.look).toEqual({ dx: 0, dy: 0 });
+    input.setEnabled(true);
+    key("keydown", "KeyW");
+    expect(input.sample().move.y).toBe(1); // live again after resume
+  });
+
+  it("does not call preventDefault on mapped keys while disabled (the browser keeps Space and arrows)", () => {
+    setup();
+    input.setEnabled(false);
+    const e = new KeyboardEvent("keydown", { code: "Space", cancelable: true });
+    window.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(false);
+  });
+});

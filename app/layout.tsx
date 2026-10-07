@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 
 import "./globals.css";
@@ -12,8 +12,13 @@ const TITLE = `${owner.name} — ${owner.role}`;
 const DESCRIPTION =
   "Maksym Liutsko — AI Automation Engineer & Product Builder. Co-founder & CTO of XecSuite, co-founder of Apex Mind Automation. I build AI-integrated products, autonomous agents and end-to-end automation with React, TypeScript and LLMs.";
 
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
+// Self-hosted so the build needs no network. Weights 400 and 700 are the only
+// ones the site uses (default text and font-bold). Provenance: ASSETS.md.
+const mono = localFont({
+  src: [
+    { path: "./fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-mono",
   display: "swap",
 });

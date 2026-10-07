@@ -1,6 +1,5 @@
 // Game loader: the ONE dynamic import of the game entry in the codebase (ADR-006).
-// M1 scope: state, generation counter, physics timeout, cancel and retry; the
-// progress UI (LoadingOverlay) arrives in M2.
+// State, generation counter, physics timeout, cancel, retry, and the Play prefetch.
 
 // A type query is erased at build time and is not an import declaration, so the
 // shell stays free of static game imports.
@@ -11,14 +10,38 @@ export type LoadState =
   | { kind: "idle" }
   | { kind: "loading"; step: "code" | "assets"; progress: number } // 0..1
   | { kind: "ready" }
-  | { kind: "failed"; reason: "network" | "physics" | "timeout"; message: string };
+  // `message` is a plain sentence for the user; `detail` is the technical text, for developers.
+  | { kind: "failed"; reason: "network" | "physics" | "timeout"; message: string; detail: string };
+
+export type PrefetchMode = "code" | "code+assets";
 
 export type LoaderDeps = {
   importGame: () => Promise<GameModule>;
   physicsTimeoutMs: number;
+  prefetchMode: () => PrefetchMode;
 };
 
+/**
+ * Touch devices and Save-Data connections prefetch only the game code; a fine pointer on an
+ * unrestricted connection also prefetches the first-play clips (play-transition.md 3.3).
+ */
+export function prefetchModeFor(env: { coarsePointer: boolean; saveData: boolean }): PrefetchMode {
+  return env.coarsePointer || env.saveData ? "code" : "code+assets";
+}
+
+function detectPrefetchMode(): PrefetchMode {
+  if (typeof window === "undefined") return "code";
+  const coarsePointer = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  return prefetchModeFor({ coarsePointer, saveData: !!conn?.saveData });
+}
+
 export interface GameLoader {
+  /**
+   * Hover, focus or pointerdown on Play: fetch bytes, mount nothing, show nothing, swallow errors.
+   * `afterCode` runs once the game module has loaded (the shell uses it to compile shaders early).
+   */
+  prefetch(afterCode?: (mod: GameModule) => void): void;
   start(onCode: (mod: GameModule) => void): void;
   reportPhysics(result: "ready" | Error): void;
   cancel(): void; // idempotent; clears timers; late results ignored
@@ -28,6 +51,12 @@ export interface GameLoader {
   subscribe(fn: () => void): () => void;
 }
 
+const FAILURE_COPY = {
+  network: "The game could not be downloaded. Check your connection, then retry, or go back to the portfolio.",
+  physics: "The game engine could not start in this browser. Retry, or go back to the portfolio.",
+  timeout: "The game took too long to start. Retry, or go back to the portfolio.",
+} as const;
+
 const W_CODE = 0.2;
 const W_ASSETS = 0.7;
 const W_PHYSICS = 0.1;
@@ -35,6 +64,21 @@ const W_PHYSICS = 0.1;
 export function createGameLoader(deps: Partial<LoaderDeps> = {}): GameLoader {
   const importGame = deps.importGame ?? (() => import("@/components/game/entry"));
   const physicsTimeoutMs = deps.physicsTimeoutMs ?? 20000;
+  const prefetchMode = deps.prefetchMode ?? detectPrefetchMode;
+
+  // One import promise shared by prefetch() and start(), so Play never downloads twice. A
+  // rejected import is forgotten so the next call (Retry, or the real click) tries again.
+  let codePromise: Promise<GameModule> | null = null;
+  const loadCode = (): Promise<GameModule> => {
+    if (!codePromise) {
+      const p = importGame();
+      codePromise = p;
+      p.catch(() => {
+        if (codePromise === p) codePromise = null;
+      });
+    }
+    return codePromise;
+  };
 
   let state: LoadState = { kind: "idle" };
   const subs = new Set<() => void>();
@@ -46,6 +90,7 @@ export function createGameLoader(deps: Partial<LoaderDeps> = {}): GameLoader {
   let assetsDone = false;
   let physicsDone = false;
   let assetFraction = 0;
+  let peak = 0; // the reported progress never goes backwards within a run
 
   const set = (next: LoadState) => {
     state = next;
@@ -57,8 +102,11 @@ export function createGameLoader(deps: Partial<LoaderDeps> = {}): GameLoader {
       timer = null;
     }
   };
-  const progress = () =>
-    (codeDone ? W_CODE : 0) + W_ASSETS * (assetsDone ? 1 : assetFraction) + (physicsDone ? W_PHYSICS : 0);
+  const progress = () => {
+    const raw = (codeDone ? W_CODE : 0) + W_ASSETS * (assetsDone ? 1 : assetFraction) + (physicsDone ? W_PHYSICS : 0);
+    peak = Math.max(peak, raw);
+    return peak;
+  };
   const update = () => {
     if (codeDone && assetsDone && physicsDone) {
       clearTimer();
@@ -67,10 +115,12 @@ export function createGameLoader(deps: Partial<LoaderDeps> = {}): GameLoader {
       set({ kind: "loading", step: codeDone ? "assets" : "code", progress: progress() });
     }
   };
-  const fail = (reason: "network" | "physics" | "timeout", message: string) => {
+  const fail = (reason: "network" | "physics" | "timeout", detail: string) => {
     clearTimer();
     gen++; // ignore everything still in flight
-    set({ kind: "failed", reason, message });
+    // The technical text (a chunk URL, a WebAssembly error) is for the console, never the dialog.
+    console.warn(`[game] load failed (${reason}): ${detail}`);
+    set({ kind: "failed", reason, message: FAILURE_COPY[reason], detail });
   };
 
   const run = (onCode: (mod: GameModule) => void) => {
@@ -78,10 +128,11 @@ export function createGameLoader(deps: Partial<LoaderDeps> = {}): GameLoader {
     lastOnCode = onCode;
     codeDone = assetsDone = physicsDone = false;
     assetFraction = 0;
+    peak = 0;
     assets = null;
     clearTimer();
     set({ kind: "loading", step: "code", progress: 0 });
-    importGame().then(
+    loadCode().then(
       (mod) => {
         if (mine !== gen) return;
         codeDone = true;
@@ -115,6 +166,20 @@ export function createGameLoader(deps: Partial<LoaderDeps> = {}): GameLoader {
   };
 
   return {
+    prefetch(afterCode) {
+      const mode = prefetchMode();
+      loadCode().then(
+        (mod) => {
+          if (mode === "code+assets") mod.loadGameAssets(() => {}).catch(() => {});
+          try {
+            afterCode?.(mod);
+          } catch {
+            // a failed pre-warm must never surface; the real click retries everything
+          }
+        },
+        () => {}
+      );
+    },
     start(onCode) {
       if (state.kind === "loading") return;
       run(onCode);

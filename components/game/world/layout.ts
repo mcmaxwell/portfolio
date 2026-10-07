@@ -85,6 +85,12 @@ export const TEST_ARENA: Layout = {
 
 // CAMPUS arrives in M3.
 
+/** Until CAMPUS exists every name resolves to the test arena. */
+export function resolveLayout(name?: Layout["name"]): Layout {
+  void name;
+  return TEST_ARENA;
+}
+
 export function getBlock(layout: Layout, id: string): Block {
   const b = layout.blocks.find((x) => x.id === id);
   if (!b) throw new Error(`layout ${layout.name} has no block ${id}`);

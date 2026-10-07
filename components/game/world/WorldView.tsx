@@ -1,103 +1,159 @@
 "use client";
 
-// World visuals built from the layout data (design 2.8). One shared box geometry,
-// shared materials, created once per mount and disposed on unmount.
-import { useEffect, useMemo } from "react";
+// World visuals built from the layout data (design 2.8). Geometry, materials and textures come
+// from world/resources.ts and outlive the mount (shared by every game session).
+import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { QualityPreset } from "../config";
-import { blockQuaternion, type Block, type Layout } from "./layout";
+import { HERO } from "../shell/transition";
+import { lerp } from "../tween";
+import type { Layout } from "./layout";
+import { getWorldResources } from "./resources";
 
-const COLORS: Record<Block["material"], string> = {
-  ground: "#16271d",
-  path: "#24402f",
-  stone: "#43524b",
-  metal: "#5b6c72",
-  "accent-green": "#2fe58a",
-  "accent-cyan": "#35d0e8",
+/** The world preset the entry tween ends on (k = 1); k = 0 is the hero look (HERO.lights). */
+const WORLD_LOOK = {
+  background: "#050807",
+  fog: { near: 20, far: 60 },
+  fogHero: { near: 5.5, far: 7 },
+  ambient: 0.8,
+  hemisphere: 0.6,
+  key: { position: [8, 14, 6] as const, intensity: 1.5 },
+  fill: { intensity: 0 },
+} as const;
+
+/**
+ * Imperative handle for the entry and exit legs. `apply(k, heroYaw)` blends the whole look from
+ * the hero stage (k = 0) to the world (k = 1): fog, lights, ground reveal and canvas clear
+ * alpha. The ground reveal is the material opacity. `heroYaw` is the facing of the avatar, so the hero light rig keeps its direction
+ * relative to the avatar (the avatar is lit the same way as in the hero scene).
+ */
+export type WorldHandle = {
+  apply(k: number, heroYaw: number): void;
+  /** Compile every world shader program once, off screen, so the first visible frame does not hitch. */
+  warm(): Promise<void>;
 };
 
-/** A 2 x 2 texel checker; with RepeatWrapping each texel pair is one metre. */
-function checkerTexture(): THREE.DataTexture {
-  const data = new Uint8Array([
-    255, 255, 255, 255, 190, 190, 190, 255,
-    190, 190, 190, 255, 255, 255, 255, 255,
-  ]);
-  const t = new THREE.DataTexture(data, 2, 2, THREE.RGBAFormat);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.NearestFilter;
-  t.needsUpdate = true;
-  return t;
-}
+export function WorldView({
+  layout,
+  quality,
+  active,
+  handleRef,
+}: {
+  layout: Layout;
+  quality: QualityPreset;
+  /** False while the game warms up behind the hero: the world is mounted but invisible. */
+  active: boolean;
+  handleRef: MutableRefObject<WorldHandle | null>;
+}) {
+  const { scene, gl, camera } = useThree();
+  const meshesRef = useRef<THREE.Group>(null);
+  const lightsRef = useRef<THREE.Group>(null);
+  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const hemiRef = useRef<THREE.HemisphereLight>(null);
+  const keyRef = useRef<THREE.DirectionalLight>(null);
+  const fillRef = useRef<THREE.DirectionalLight>(null);
 
-export function WorldView({ layout, quality }: { layout: Layout; quality: QualityPreset }) {
-  const { scene } = useThree();
+  // Shared for the page's lifetime (world/resources.ts): never disposed per mount.
+  const resources = useMemo(() => getWorldResources(layout), [layout]);
 
-  const resources = useMemo(() => {
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const checker = checkerTexture();
-    const shared = new Map<Block["material"], THREE.MeshStandardMaterial>();
-    const textures: THREE.Texture[] = [checker];
-    const materials: THREE.Material[] = [];
-    const materialFor = (b: Block): THREE.MeshStandardMaterial => {
-      if (b.kind === "ground") {
-        // Ground blocks get their own texture clone so the repeat matches the block size.
-        const map = checker.clone();
-        map.needsUpdate = true;
-        map.repeat.set(b.size.x / 2, b.size.z / 2);
-        textures.push(map);
-        const m = new THREE.MeshStandardMaterial({ color: COLORS[b.material], map, roughness: 1 });
-        materials.push(m);
-        return m;
-      }
-      let m = shared.get(b.material);
-      if (!m) {
-        m = new THREE.MeshStandardMaterial({ color: COLORS[b.material], roughness: 0.85, metalness: b.material === "metal" ? 0.3 : 0 });
-        shared.set(b.material, m);
-        materials.push(m);
-      }
-      return m;
-    };
-    const items = layout.blocks.map((b) => ({ block: b, material: materialFor(b), q: blockQuaternion(b) }));
-    return { geometry, items, textures, materials };
-  }, [layout]);
-
-  useEffect(
-    () => () => {
-      resources.geometry.dispose();
-      resources.materials.forEach((m) => m.dispose());
-      resources.textures.forEach((t) => t.dispose());
-    },
-    [resources]
-  );
-
-  // Background and fog belong to the game while it is mounted.
-  useEffect(() => {
-    const prevBackground = scene.background;
+  // Fog and the canvas clear colour belong to the game while it is active. Layout effects, so the
+  // cleanup runs in the same commit as the hero remount and before the hero fog attaches again.
+  const fogRef = useRef<THREE.Fog | null>(null);
+  useLayoutEffect(() => {
+    if (!active) return;
     const prevFog = scene.fog;
-    scene.background = new THREE.Color("#05080a");
-    scene.fog = new THREE.Fog("#05080a", 22, 60);
+    const prevColor = new THREE.Color();
+    gl.getClearColor(prevColor);
+    const prevAlpha = gl.getClearAlpha();
+    const fog = new THREE.Fog(WORLD_LOOK.background, WORLD_LOOK.fogHero.near, WORLD_LOOK.fogHero.far);
+    fogRef.current = fog;
+    scene.fog = fog;
+    gl.setClearColor(WORLD_LOOK.background, 0);
     return () => {
-      scene.background = prevBackground;
+      fogRef.current = null;
       scene.fog = prevFog;
+      gl.setClearColor(prevColor, prevAlpha);
     };
-  }, [scene]);
+  }, [active, scene, gl]);
+
+  useLayoutEffect(() => {
+    const keyHero = new THREE.Vector3(...HERO.lights.key.position);
+    const keyWorld = new THREE.Vector3(...WORLD_LOOK.key.position);
+    const fillHero = new THREE.Vector3(...HERO.lights.fill.position);
+    const tmp = new THREE.Vector3();
+    const handle: WorldHandle = {
+      apply(k, heroYaw) {
+        const fog = fogRef.current;
+        if (fog) {
+          fog.near = lerp(WORLD_LOOK.fogHero.near, WORLD_LOOK.fog.near, k);
+          fog.far = lerp(WORLD_LOOK.fogHero.far, WORLD_LOOK.fog.far, k);
+        }
+        if (active) gl.setClearAlpha(k);
+        for (const m of resources.materials) m.opacity = k;
+        if (ambientRef.current) ambientRef.current.intensity = lerp(HERO.lights.ambient, WORLD_LOOK.ambient, k);
+        if (hemiRef.current) hemiRef.current.intensity = lerp(HERO.lights.hemisphere, WORLD_LOOK.hemisphere, k);
+        const key = keyRef.current;
+        if (key) {
+          key.intensity = lerp(HERO.lights.key.intensity, WORLD_LOOK.key.intensity, k);
+          // Hero key light carried into game coordinates, blended to the world key direction.
+          tmp.copy(keyHero).applyAxisAngle(Y_AXIS, heroYaw).lerp(keyWorld, k);
+          key.position.copy(tmp);
+        }
+        const fill = fillRef.current;
+        if (fill) {
+          fill.intensity = lerp(HERO.lights.fill.intensity, WORLD_LOOK.fill.intensity, k);
+          fill.position.copy(fillHero).applyAxisAngle(Y_AXIS, heroYaw);
+        }
+      },
+      async warm() {
+        const group = meshesRef.current;
+        if (!group) return;
+        // Compile with the meshes visible for the synchronous collection step only; the scene
+        // never renders in between, so nothing shows.
+        group.visible = true;
+        const done = gl.compileAsync(scene, camera);
+        group.visible = false;
+        // Cap the wait (play-transition.md 7.3); the timer is cleared as soon as the compile ends.
+        let cap: ReturnType<typeof setTimeout> | undefined;
+        const capped = new Promise((r) => {
+          cap = setTimeout(r, 2000);
+        });
+        try {
+          await Promise.race([done, capped]);
+        } finally {
+          clearTimeout(cap);
+        }
+      },
+    };
+    handleRef.current = handle;
+    handle.apply(0, 0);
+    return () => {
+      if (handleRef.current === handle) handleRef.current = null;
+    };
+  }, [active, gl, scene, camera, resources, handleRef]);
 
   return (
     <group>
-      <ambientLight intensity={0.8} />
-      <hemisphereLight args={[0xffffff, 0x1a2a1f, 0.6]} />
-      <directionalLight
-        position={[8, 14, 6]}
-        intensity={1.5}
-        castShadow={quality.shadows}
-        shadow-mapSize={[quality.shadowMapSize || 1, quality.shadowMapSize || 1]}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
-      />
+      {/* Same four-light structure as the hero scene (ambient, hemisphere, two directional), so the
+          avatar's shader programs are identical in both scenes and nothing recompiles at the swap. */}
+      <group ref={lightsRef} visible={active}>
+        <ambientLight ref={ambientRef} intensity={HERO.lights.ambient} />
+        <hemisphereLight ref={hemiRef} args={[0xffffff, 0x1a2a1f, HERO.lights.hemisphere]} />
+        <directionalLight
+          ref={keyRef}
+          position={[...HERO.lights.key.position]}
+          intensity={HERO.lights.key.intensity}
+          castShadow={quality.shadows}
+          shadow-mapSize={[quality.shadowMapSize || 1, quality.shadowMapSize || 1]}
+          shadow-camera-left={-20}
+          shadow-camera-right={20}
+          shadow-camera-top={20}
+          shadow-camera-bottom={-20}
+        />
+        <directionalLight ref={fillRef} position={[...HERO.lights.fill.position]} intensity={HERO.lights.fill.intensity} />
+      </group>
+      <group ref={meshesRef} visible={active}>
       {resources.items.map(({ block, material, q }) => (
         <mesh
           key={block.id}
@@ -110,6 +166,9 @@ export function WorldView({ layout, quality }: { layout: Layout; quality: Qualit
           receiveShadow={quality.shadows}
         />
       ))}
+      </group>
     </group>
   );
 }
+
+const Y_AXIS = new THREE.Vector3(0, 1, 0);

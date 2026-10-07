@@ -181,7 +181,9 @@ export function createCharacterAnimator(
       if (prev && activeName && (to === "walk" || to === "run") && (activeName === "walk" || activeName === "run")) {
         next.time = (prev.time / prev.getClip().duration) * target.clip.duration;
       }
-      next.fadeIn(fadeFor(to));
+      // The very first action (idle at creation) starts at full weight: a fade-in from nothing
+      // would show the bind pose (a T-pose) for a quarter of a second.
+      if (prev) next.fadeIn(fadeFor(to));
       next.play();
       if (prev) prev.fadeOut(fadeFor(to));
       active = next;
@@ -255,8 +257,20 @@ export function createCharacterAnimator(
     dispose() {
       if (disposed) return;
       disposed = true;
+      // stopAllAction and uncacheRoot put the bones back to the bind pose (a T-pose). The next owner
+      // of the skeleton (the hero Avatar after Exit) needs a frame or two to start its own idle, so
+      // the last pose is kept instead of flashing the bind pose.
+      const pose: Array<[THREE.Object3D, THREE.Vector3, THREE.Quaternion, THREE.Vector3]> = [];
+      scene.traverse((o) => {
+        if ((o as THREE.Bone).isBone) pose.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]);
+      });
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
+      for (const [o, p, q, sc] of pose) {
+        o.position.copy(p);
+        o.quaternion.copy(q);
+        o.scale.copy(sc);
+      }
       celebrate?.resolve();
       celebrate = null;
       actions.clear();

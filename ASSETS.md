@@ -100,3 +100,17 @@ Ground speeds are measured by `node scripts/measure-clips.mjs`.
 | `public/game/clips/land.glb` | `assets-src/mixamo/Hard Landing.fbx` | Hard Landing | 2026-10-06 | note 1 and note 3 | rotations plus Hips rotation and translation, frames 2 to 58 (1.867 s), trailing foot lowered by leg IK | 51.1 KB |
 
 Superseded and unused: the previous `walk` (about 0.95 m/s) and the "Run Forward Arc Left" run (travelled about 31 degrees off forward) no longer ship in `public/game/clips`; the old stripped files were overwritten by the clips above.
+
+## Fonts (`app/fonts/jetbrains-mono`)
+
+JetBrains Mono is self-hosted through `next/font/local` in `app/layout.tsx` (it replaces `next/font/google`, so `npm run build` needs no network).
+The files are copied unmodified from the npm package `@fontsource/jetbrains-mono` at exactly version 5.3.0 (npm license field OFL-1.1), which repackages the official JetBrains Mono release.
+The package is not a dependency of this repo; it was fetched once with `npm pack @fontsource/jetbrains-mono@5.3.0` and only the files below were copied.
+Shipped: latin subset, woff2, normal style, weights 400 and 700 only (the site uses the default weight and `font-bold`; no other weight and no italic is used anywhere).
+The license file is `app/fonts/jetbrains-mono/OFL.txt` (SIL Open Font License 1.1, copied from the same package); date checked: not checked.
+
+| File | Weight | Size | sha256 |
+|---|---|---|---|
+| `app/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2` | 400 | 21,168 bytes | `14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb` |
+| `app/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2` | 700 | 21,908 bytes | `d0d4e818808f2a0ba39b2b09d1989366f63494e295f003c7ef436697378507e8` |
+| `app/fonts/jetbrains-mono/OFL.txt` | license | - | `403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b` |
