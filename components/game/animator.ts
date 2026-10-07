@@ -1,7 +1,7 @@
 // Character animator: a small state machine plus an AnimationMixer (design 2.6, 5.3, 5.4).
 // Animation owns pose only; physics owns the world position.
 import * as THREE from "three";
-import type { AnimationConfig, ClipName } from "./config";
+import { HIPS_MOTION_CLIPS, type AnimationConfig, type ClipName } from "./config";
 import type { MotorState } from "./player";
 
 export type LocoState = "idle" | "walk" | "run" | "jump" | "fall" | "land";
@@ -10,6 +10,8 @@ export type LocoInput = {
   horizontalSpeed: number;
   verticalVelocity: number;
   airTime: number;
+  /** Downward speed (m/s) at the last touchdown; see MotorState.impactSpeed. */
+  impactSpeed: number;
   jumpedThisStep: boolean;
   stateTime: number;
   landClipDuration: number;
@@ -42,7 +44,7 @@ export function nextLocoState(current: LocoState, i: LocoInput, cfg: AnimationCo
     case "jump":
     case "fall": {
       if (i.grounded) {
-        return i.airTime >= cfg.hardLandAirTime ? "land" : bySpeed(i.horizontalSpeed, cfg);
+        return i.impactSpeed >= cfg.hardLandSpeed ? "land" : bySpeed(i.horizontalSpeed, cfg);
       }
       if (current === "jump" && i.verticalVelocity <= 0) return "fall";
       return current;
@@ -94,6 +96,39 @@ export function resolveClip(state: LocoState, clips: Clips): { name: ClipName; c
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
+const FOOT_BONES = ["LeftFoot", "LeftToeBase", "RightFoot", "RightToeBase"] as const;
+
+/**
+ * Keeps the feet out of the ground while a clip blend is in progress. Blending the crouch
+ * (low Hips, bent legs) with the standing pose in joint space dips the feet below both poses
+ * (up to 7 cm at the end of a hard landing), so the Hips are lifted by whatever the lowest
+ * foot or toe joint went below its bind-pose height. One-sided: it never lowers the avatar.
+ */
+function createFootFloor(scene: THREE.Object3D) {
+  const hips = scene.getObjectByName("Hips");
+  const bones = FOOT_BONES.map((n) => scene.getObjectByName(n)).filter((b): b is THREE.Object3D => !!b);
+  if (!hips || bones.length !== FOOT_BONES.length) return null;
+  const tmp = new THREE.Vector3();
+  const origin = new THREE.Vector3();
+  const lowest = () => {
+    scene.updateMatrixWorld(true);
+    scene.getWorldPosition(origin);
+    let low = Infinity;
+    for (const b of bones) low = Math.min(low, b.getWorldPosition(tmp).y - origin.y);
+    return low;
+  };
+  const floor = lowest();
+  return {
+    /** Lifts the Hips so no foot joint is below the bind-pose height; returns the lift (m). */
+    apply(): number {
+      const deficit = floor - lowest();
+      if (deficit <= 0) return 0;
+      hips.position.y += deficit;
+      return deficit;
+    },
+  };
+}
+
 export function createCharacterAnimator(
   scene: THREE.Object3D,
   clips: Clips,
@@ -110,6 +145,12 @@ export function createCharacterAnimator(
     return a;
   };
 
+  const footFloor = createFootFloor(scene);
+  const hipsClips: THREE.AnimationAction[] = [];
+  for (const n of HIPS_MOTION_CLIPS) {
+    const c = clips[n];
+    if (c) hipsClips.push(actionFor(c));
+  }
   let state: LocoState = "idle";
   let stateTime = 0;
   let active: THREE.AnimationAction | null = null;
@@ -170,6 +211,7 @@ export function createCharacterAnimator(
           horizontalSpeed: motor.horizontalSpeed,
           verticalVelocity: motor.verticalVelocity,
           airTime: motor.airTime,
+          impactSpeed: motor.impactSpeed,
           jumpedThisStep: motor.jumpedThisStep,
           stateTime,
           landClipDuration: landClip ? landClip.duration : 0,
@@ -187,6 +229,9 @@ export function createCharacterAnimator(
         );
       }
       mixer.update(dt);
+      // Only while a clip that moves the Hips (fall, land) still has weight: the other clips
+      // keep the pelvis at standing height and are left exactly as authored.
+      if (footFloor && hipsClips.some((a) => a.isRunning() && a.getEffectiveWeight() > 0)) footFloor.apply();
     },
     playCelebration() {
       const clip = clips.celebrate;

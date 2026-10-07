@@ -7,6 +7,6 @@ export default defineConfig({
   test: {
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["components/game/**/*.test.{ts,tsx}"],
+    include: ["scripts/__tests__/**/*.test.{ts,mjs}", "components/game/**/*.test.{ts,tsx}", "components/avatar/**/*.test.{ts,tsx}"],
   },
 });

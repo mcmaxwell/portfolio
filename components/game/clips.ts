@@ -11,15 +11,31 @@ const stripPrefix = (n: string) => n.replace(/^mixamorig:?/, "");
  * Returns a new rotation-only clip without Hips tracks, bound to names in
  * `jointNames`. Never mutates the input clip. Used for the stripped clips (defensive:
  * no binding warnings even if a source changes) and for the avatar's embedded idle.
+ *
+ * `keepHipsMotion` opts in to the Hips tracks (rotation and position) of a clip that ships
+ * them on purpose: the land clip, whose crouch needs the pelvis to drop and pitch (its Hips
+ * translation is authored small, a pelvis shift over planted feet). Every other clip, and the
+ * avatar's embedded hero idle, stay Hips-free: the capsule owns the root.
  */
-export function toGameClip(clip: THREE.AnimationClip, jointNames: ReadonlySet<string>): THREE.AnimationClip {
+export function toGameClip(
+  clip: THREE.AnimationClip,
+  jointNames: ReadonlySet<string>,
+  keepHipsMotion = false
+): THREE.AnimationClip {
   const tracks: THREE.KeyframeTrack[] = [];
   for (const t of clip.tracks) {
     const dot = t.name.lastIndexOf(".");
     if (dot < 0) continue;
     const node = stripPrefix(t.name.slice(0, dot));
     const prop = t.name.slice(dot + 1);
-    if (prop !== "quaternion" || node === "Hips" || !jointNames.has(node)) continue;
+    const hips = node === "Hips";
+    if (hips && keepHipsMotion && (prop === "position" || prop === "quaternion")) {
+      const copy = t.clone();
+      copy.name = `Hips.${prop}`;
+      tracks.push(copy);
+      continue;
+    }
+    if (prop !== "quaternion" || hips || !jointNames.has(node)) continue;
     const copy = t.clone();
     copy.name = `${node}.quaternion`;
     tracks.push(copy);
@@ -40,8 +56,8 @@ export function jointNamesOf(root: THREE.Object3D): Set<string> {
 let cache: Promise<GameAssets> | null = null;
 
 /**
- * Loads the first-play clips. A missing optional clip (idle, jump, fall, land are
- * not supplied yet) is skipped and the animator falls back (design 5.1).
+ * Loads the first-play clips. A clip that fails to load is skipped and the animator
+ * falls back (design 5.1).
  * `onProgress(loaded, total)` reports bytes when the server sends a length.
  */
 export function loadGameAssets(onProgress: (loaded: number, total: number) => void): Promise<GameAssets> {
@@ -73,7 +89,7 @@ export function loadGameAssets(onProgress: (loaded: number, total: number) => vo
       const clip = gltf.animations[0];
       return clip ? ([name, clip] as const) : null;
     } catch {
-      return null; // optional clip not supplied: fall back at runtime
+      return null; // clip unavailable: fall back at runtime
     }
   });
   const p = Promise.all(pending).then((entries) => {

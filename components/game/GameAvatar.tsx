@@ -7,7 +7,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { createCharacterAnimator, type CharacterAnimator } from "./animator";
 import { jointNamesOf, toGameClip, type GameAssets } from "./clips";
-import { ANIMATION, type ClipName } from "./config";
+import { ANIMATION, HIPS_MOTION_CLIPS, type ClipName } from "./config";
 
 type Props = {
   url: string;
@@ -37,7 +37,7 @@ export function GameAvatar({ url, assets, groupRef, animatorRef, castShadow }: P
     const joints = jointNamesOf(scene);
     const clips: Partial<Record<ClipName, THREE.AnimationClip>> = {};
     for (const [name, clip] of Object.entries(assets?.clips ?? {})) {
-      clips[name as ClipName] = toGameClip(clip, joints);
+      clips[name as ClipName] = toGameClip(clip, joints, HIPS_MOTION_CLIPS.includes(name as ClipName));
     }
     // Until the idle clip is supplied, the avatar's embedded idle (filtered) stands in.
     if (!clips.idle && animations[0]) clips.idle = toGameClip(animations[0], joints);

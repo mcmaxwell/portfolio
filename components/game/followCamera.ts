@@ -1,7 +1,13 @@
-// Follow camera (M1: no obstacle query; M3 adds the sphere cast). Design 2.7.
+// Follow camera with obstacle pull-in (design 2.7). The optional ObstacleQuery is a sphere cast
+// from the pivot toward the wanted camera position; the camera never ends past the first hit.
 import * as THREE from "three";
 import type { CameraConfig, Vec3 } from "./config";
 
+/**
+ * Sphere cast from `from` toward `to`: the travelled distance (m) to the first blocker, or
+ * null when the path is clear. A cast that starts inside a blocker must not report 0 forever
+ * (that would trap the camera at the pivot): implementations let it exit (see cameraProbe.ts).
+ */
 export type ObstacleQuery = (from: Vec3, to: Vec3, radius: number) => number | null;
 
 export interface FollowCamera {
@@ -26,7 +32,6 @@ export function createFollowCamera(
   query: ObstacleQuery | null,
   cfg: CameraConfig
 ): FollowCamera {
-  void query; // reserved for M3 (obstacle pull-in)
   const snapshot = {
     position: camera.position.clone(),
     quaternion: camera.quaternion.clone(),
@@ -43,6 +48,11 @@ export function createFollowCamera(
   let initialised = false;
   const desired = new THREE.Vector3();
   const look = new THREE.Vector3();
+  const pivotVec: Vec3 = { x: 0, y: 0, z: 0 };
+  const desiredVec: Vec3 = { x: 0, y: 0, z: 0 };
+  // Fraction (0..1) of the pivot-to-desired segment the camera may use; shrinks at once,
+  // eases back out so the camera does not pop when the blocker is passed.
+  let reach = 1;
 
   camera.fov = cfg.fov;
   camera.near = 0.1;
@@ -62,6 +72,24 @@ export function createFollowCamera(
       pivot.y - fy * cfg.distance,
       pivot.z - fz * cfg.distance + rz * cfg.shoulder
     );
+  };
+
+  const pullIn = (dt: number, instant: boolean) => {
+    let allowed = 1;
+    if (query) {
+      pivotVec.x = pivot.x;
+      pivotVec.y = pivot.y;
+      pivotVec.z = pivot.z;
+      desiredVec.x = desired.x;
+      desiredVec.y = desired.y;
+      desiredVec.z = desired.z;
+      const len = desired.distanceTo(pivot);
+      const hit = len > 1e-6 ? query(pivotVec, desiredVec, cfg.probeRadius) : null;
+      if (hit !== null) allowed = Math.min(1, Math.max(0, hit) / len);
+    }
+    if (instant || allowed < reach) reach = allowed;
+    else reach = Math.min(allowed, reach + (allowed - reach) * smooth(cfg.restoreK, dt));
+    if (reach < 1) desired.sub(pivot).multiplyScalar(reach).add(pivot);
   };
 
   const apply = () => {
@@ -107,6 +135,7 @@ export function createFollowCamera(
       pivot.z += (target.z - pivot.z) * kh;
       pivot.y += (wantY - pivot.y) * kv;
       place();
+      pullIn(dt, false);
       apply();
     },
     snapTo(target, characterYaw) {
@@ -115,6 +144,7 @@ export function createFollowCamera(
       lastGroundY = pivot.y;
       initialised = true;
       place();
+      pullIn(0, true);
       apply();
     },
     dispose() {

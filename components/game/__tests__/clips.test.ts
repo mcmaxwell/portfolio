@@ -44,21 +44,26 @@ describe("stripped clips in public/game/clips", () => {
     }
   });
 
-  it("has at least walk and run", () => {
-    expect(files).toEqual(expect.arrayContaining(["walk.glb", "run.glb"]));
+  it("ships exactly the six game clips idle, walk, run, jump, fall and land", () => {
+    expect([...files].sort()).toEqual(["fall.glb", "idle.glb", "jump.glb", "land.glb", "run.glb", "walk.glb"]);
   });
 
-  it.each(files)("%s: rotation-only, no Hips, avatar joints only, small, no mesh data", (file) => {
+  it.each(files)("%s: rotation-only, Hips only in land and fall, avatar joints only, small, no mesh data", (file) => {
     const path = join(clipsDir, file);
     expect(statSync(path).size).toBeLessThan(100 * 1024);
     const json = readGlbJson(path);
     expect(json.animations).toHaveLength(1);
     const channels = json.animations![0].channels;
     expect(channels.length).toBeGreaterThanOrEqual(40);
+    const hipsChannels = channels.filter((c) => json.nodes[c.target.node!].name === "Hips");
+    // Only land (pelvis pitch and drop for the crouch, QA F1) and fall (pelvis height so the feet
+    // hang on the capsule bottom) carry Hips tracks; fall has no Hips rotation.
+    const expectedHips: Record<string, string[]> = { "land.glb": ["rotation", "translation"], "fall.glb": ["translation"] };
+    expect(hipsChannels.map((c) => c.target.path).sort(), file).toEqual(expectedHips[file] ?? []);
+    expect(new Set(json.nodes.map((n) => n.name)).size, "node names are unique").toBe(json.nodes.length);
     for (const ch of channels) {
-      expect(ch.target.path).toBe("rotation");
       const name = json.nodes[ch.target.node!].name!;
-      expect(name).not.toBe("Hips");
+      if (name !== "Hips") expect(ch.target.path).toBe("rotation");
       expect(name.startsWith("mixamorig")).toBe(false);
       expect(avatarJoints.has(name), name).toBe(true);
     }
@@ -83,18 +88,52 @@ describe("stripped clips load through GLTFLoader", () => {
     const clip = await parse(file);
     expect(clip.tracks.length).toBeGreaterThanOrEqual(40);
     for (const t of clip.tracks) {
-      expect(t.name.endsWith(".quaternion"), t.name).toBe(true);
+      const position = t.name === "Hips.position"; // land and fall only (checked above)
+      expect(t.name.endsWith(".quaternion") || position, t.name).toBe(true);
       expect(t.times.length, t.name).toBeGreaterThanOrEqual(1); // constant tracks keep one key
-      expect(t.values.length, t.name).toBe(t.times.length * 4); // one quaternion per key
+      expect(t.values.length, t.name).toBe(t.times.length * (position ? 3 : 4)); // one value per key
       expect(Array.from(t.times).every((x, i, a) => i === 0 || x > a[i - 1]), t.name).toBe(true); // strictly increasing
       expect(avatarJoints.has(t.name.split(".")[0]), t.name).toBe(true);
     }
     expect(clip.duration).toBeGreaterThan(0.2);
   });
 
-  it("walk and run durations equal the loop period (duplicated last frame trimmed)", async () => {
-    expect((await parse("walk.glb")).duration).toBeCloseTo(41 / 30, 3);
-    expect((await parse("run.glb")).duration).toBeCloseTo(22 / 30, 3);
+  // Looping clips: the duplicated last key is dropped and the keys are shifted one frame, so
+  // the duration is the true loop period (source frames / 30). One-shot clips keep their
+  // timing; jump is the airborne part of the source (source frames 21 to 39), land the touchdown to stand-up part (frames 2 to 58).
+  const FPS = 30;
+  const expected: Record<string, { frames: number; loop: boolean }> = {
+    "idle.glb": { frames: 250, loop: true },
+    "walk.glb": { frames: 31, loop: true },
+    "run.glb": { frames: 19, loop: true },
+    "fall.glb": { frames: 21, loop: true },
+    "jump.glb": { frames: 18, loop: false },
+    "land.glb": { frames: 56, loop: false }, // source frames 2 to 58
+  };
+  it.each(Object.keys(expected))("%s has the expected duration and key timing", async (file) => {
+    const clip = await parse(file);
+    const e = expected[file];
+    expect(clip.duration).toBeCloseTo(e.frames / FPS, 3);
+    const longest = clip.tracks.reduce((a, t) => (t.times.length > a.times.length ? t : a));
+    expect(longest.times[0]).toBeCloseTo(e.loop ? 1 / FPS : 0, 4);
+  });
+
+  it("a looping clip ends one frame of motion before its first key (no pop at the wrap)", async () => {
+    // The repeated last key was dropped, so the wrap goes from the last key to the first
+    // key in one source frame; that jump must be no bigger than the clip's own frame steps.
+    for (const file of ["walk.glb", "run.glb", "fall.glb"]) {
+      // idle is excluded: it is resampled, so its keys are not one frame apart.
+      const clip = await parse(file);
+      for (const t of clip.tracks) {
+        const n = t.times.length;
+        if (n < 3 || !t.name.endsWith(".quaternion")) continue; // the planted Hips height is checked in stance.test.ts
+        const q = (i: number) => new THREE.Quaternion().fromArray(t.values, i * 4);
+        let maxStep = 0;
+        for (let i = 1; i < n; i++) maxStep = Math.max(maxStep, q(i - 1).angleTo(q(i)));
+        const wrap = q(n - 1).angleTo(q(0));
+        expect(wrap, `${file} ${t.name}`).toBeLessThanOrEqual(maxStep * 1.5 + 1e-3);
+      }
+    }
   });
 });
 
@@ -117,6 +156,21 @@ describe("toGameClip", () => {
     expect(out.tracks.map((t) => t.name).sort()).toEqual(["Head.quaternion", "Spine.quaternion"]);
     expect(out.duration).toBe(1);
     expect(out.name).toBe("c");
+  });
+
+  it("keepHipsMotion keeps the Hips rotation and position and nothing else of the Hips", () => {
+    const input = new THREE.AnimationClip("c", 1, [
+      q("Hips.quaternion"),
+      v("mixamorigHips.position"),
+      v("Hips.scale"),
+      q("mixamorigSpine.quaternion"),
+    ]);
+    expect(toGameClip(input, joints, true).tracks.map((t) => t.name).sort()).toEqual([
+      "Hips.position",
+      "Hips.quaternion",
+      "Spine.quaternion",
+    ]);
+    expect(toGameClip(input, joints).tracks.map((t) => t.name)).toEqual(["Spine.quaternion"]);
   });
 
   it("does not mutate its input", () => {

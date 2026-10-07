@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Raw Mixamo downloads (include the Mixamo character; not redistributable). See ASSETS.md.
+assets-src/mixamo/*.fbx

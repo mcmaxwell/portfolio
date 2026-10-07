@@ -29,13 +29,13 @@ export const PHYSICS = { dt: 1 / 60, maxSteps: 4, maxFrameDelta: 0.25 } as const
 // Total height 1.8 m (audit avatar bounds: about 1.865 m with feet at y about 0).
 export const CAPSULE = { radius: 0.3, halfHeight: 0.6, skin: 0.01 } as const;
 
-// R1 decision (M1): walk and run speeds are tuned toward the measured clip ground
-// speeds instead of the spec defaults (2.2 and 4.8), which would need a 2.2x and
-// 2.0x playback rate (above the 1.8 cap) and make the feet slide visibly.
-// With walk 1.6 and run 3.8 the playback rates are about 1.63 and 1.30.
+// Walk and run speeds are the spec defaults (2.2 and 4.8 m/s). The shipped Walking and
+// Running clips (ASSETS.md) have measured ground speeds of about 1.54 and 4.86 m/s, so the
+// playback rates are about 1.43 and 0.99, inside the 0.75 to 1.8 clamp (the earlier
+// R1 retune to 1.6 and 3.8 is superseded).
 export const MOVEMENT = {
-  walkSpeed: 1.6,
-  runSpeed: 3.8,
+  walkSpeed: 2.2,
+  runSpeed: 4.8,
   groundAccel: 30,
   airAccel: 8,
   gravity: 20,
@@ -68,20 +68,22 @@ export const CAMERA = {
   entrySeconds: 1.5,
 } as const;
 
-// clipSpeed: ground speed of each stripped clip in m/s, scaled to the avatar
-// (Hips-free foot-contact measurement in Node, times 1.03; see ASSETS.md and the M1
-// report). Walk about 0.95 * 1.03, run about 2.84 * 1.03.
+// clipSpeed: ground speed of each shipped clip in m/s, scaled to the avatar by the
+// pelvis-to-foot height ratio (`node scripts/measure-clips.mjs`: Hips-free stance-foot
+// slide, walk 1.535, run 4.858). hardLandSpeed: downward speed at touchdown (m/s) that
+// triggers the hard landing; free fall under MOVEMENT.gravity reaches it after about
+// 1.06 m, above the 0.9 m jump height, so a normal jump lands softly.
 export const ANIMATION = {
   idleMaxSpeed: 0.15,
   runEnter: 2.6,
   runExit: 2.3,
   fallDelay: 0.15,
-  hardLandAirTime: 0.35,
+  hardLandSpeed: 6.5,
   landLock: 0.12,
-  clipSpeed: { walk: 0.98, run: 2.93 },
+  clipSpeed: { walk: 1.54, run: 4.86 },
   timeScaleMin: 0.75,
   timeScaleMax: 1.8,
-  fade: { loco: 0.25, jump: 0.1, fall: 0.2, land: 0.1 },
+  fade: { loco: 0.25, jump: 0.1, fall: 0.2, land: 0.15 },
 } as const;
 
 export const INPUT = { joystickRunThreshold: 0.85 } as const;
@@ -119,11 +121,13 @@ export const CLIP_URLS: Record<ClipName, string> = {
   celebrate: "/game/clips/celebrate.glb",
 };
 /**
- * The asset list: clips fetched before the game is ready. Add "idle", "jump", "fall"
- * and "land" here when their stripped files exist in public/game/clips (owner action
- * pending); until then the animator uses the design 5.1 fallbacks.
+ * Clips that ship Hips tracks on purpose (see scripts/strip-clips.mjs groundHips and
+ * plantHips): the land crouch and the fall pose both need a pelvis height so the feet stay
+ * on the capsule bottom. Every other clip is Hips-free.
  */
-export const FIRST_PLAY_CLIPS: readonly ClipName[] = ["walk", "run"];
+export const HIPS_MOTION_CLIPS: readonly ClipName[] = ["fall", "land"];
+/** The asset list: clips fetched before the game is ready. A clip that fails to load is skipped and the animator falls back (design 5.1). */
+export const FIRST_PLAY_CLIPS: readonly ClipName[] = ["idle", "walk", "run", "jump", "fall", "land"];
 
 export type MotorConfig = typeof MOVEMENT & { capsule: typeof CAPSULE };
 export type CameraConfig = typeof CAMERA;

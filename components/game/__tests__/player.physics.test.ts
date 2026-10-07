@@ -4,7 +4,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { FEET_TO_CENTER, MOTOR_CONFIG, PHYSICS, type Vec3 } from "../config";
 import { cameraRelativeMove, createPlayerMotor, type MotorIntent, type PlayerMotor } from "../player";
 import { buildColliders } from "../world/colliders";
-import { getBlock, TEST_ARENA } from "../world/layout";
+import { getBlock, TEST_ARENA, type Layout } from "../world/layout";
 import { normalizeMove } from "../input";
 
 const DT = PHYSICS.dt;
@@ -20,11 +20,11 @@ afterEach(() => {
 const center = (feet: Vec3): Vec3 => ({ x: feet.x, y: feet.y + FEET_TO_CENTER, z: feet.z });
 const feetY = (m: PlayerMotor) => m.state.position.y - FEET_TO_CENTER;
 
-function rig(feet: Vec3 = TEST_ARENA.spawn) {
+function rig(feet: Vec3 = TEST_ARENA.spawn, layout: Layout = TEST_ARENA) {
   const world = new RAPIER.World({ x: 0, y: 0, z: 0 });
   world.timestep = DT;
   worlds.push(world);
-  buildColliders(RAPIER, world, TEST_ARENA);
+  buildColliders(RAPIER, world, layout);
   const spawn = center(TEST_ARENA.spawn);
   const motor = createPlayerMotor(RAPIER, world, spawn, MOTOR_CONFIG);
   if (feet !== TEST_ARENA.spawn) motor.teleport(center(feet));
@@ -162,7 +162,9 @@ describe("player motor on real Rapier", () => {
     const s = rig({ x: -8, y: 0, z: -3 });
     settle(s);
     const x0 = s.motor.state.position.x;
-    run(s, 2, { moveWorld: { x: Math.SQRT1_2, z: Math.SQRT1_2 }, run: true, jump: false });
+    // 1.5 s at run speed: long enough to reach the wall and slide along it, short enough to
+    // stay on it (the wall is 8 m long and the run speed is 4.8 m/s, so 2 s slid off its end).
+    run(s, 1.5, { moveWorld: { x: Math.SQRT1_2, z: Math.SQRT1_2 }, run: true, jump: false });
     expect(s.motor.state.position.z).toBeLessThanOrEqual(frontFace - 0.3 + 0.01);
     expect(s.motor.state.position.x - x0).toBeGreaterThan(1.5);
   });
@@ -190,7 +192,7 @@ describe("player motor on real Rapier", () => {
     expect(feetY(b.motor)).toBeCloseTo(0, 1);
   });
 
-  it("climbs a 30 degree ramp and is blocked by a 45 degree ramp", () => {
+  it("climbs a 30 degree ramp", () => {
     const r30 = getBlock(TEST_ARENA, "ramp-30");
     const a = rig({ x: r30.center.x, y: 0, z: 0 });
     settle(a);
@@ -204,13 +206,38 @@ describe("player motor on real Rapier", () => {
     }
     expect(peak).toBeGreaterThan(1.0);
     expect(airborne).toBe(0);
-
-    const r45 = getBlock(TEST_ARENA, "ramp-45");
-    const b = rig({ x: r45.center.x, y: 0, z: 0 });
-    settle(b);
-    run(b, 5, fwd(true));
-    expect(feetY(b.motor)).toBeLessThan(0.5);
   });
+
+  // F1/F2: assert the PEAK feet height over the whole run, from start positions near the
+  // low end, at walk and run speed. An end-state check is satisfied by climbing and
+  // stepping off the top. In the arena the wall (x -10 to -2, z +-0.25) overlaps the
+  // ramp-45 approach from 2 m out, so that start would be blocked by the wall and prove
+  // nothing: the 2 m start uses a layout with the ground and the same ramp block only.
+  const rampOnly: Layout = {
+    ...TEST_ARENA,
+    blocks: [getBlock(TEST_ARENA, "ground-a"), getBlock(TEST_ARENA, "ramp-45")],
+  };
+  for (const run_ of [false, true]) {
+    for (const dist of [0.5, 1, 2]) {
+      it(`never climbs the 45 degree ramp from ${dist} m away (${run_ ? "run" : "walk"})`, () => {
+        const r45 = getBlock(TEST_ARENA, "ramp-45");
+        const z0 = 2 - dist; // the ramp low end is at z = 2
+        const layouts = dist < 2 ? [TEST_ARENA, rampOnly] : [rampOnly];
+        for (const layout of layouts) {
+          const b = rig({ x: r45.center.x, y: 0, z: z0 }, layout);
+          settle(b);
+          let peak = 0;
+          const n = Math.round(6 / DT);
+          for (let i = 0; i < n; i++) {
+            tick(b, fwd(run_));
+            peak = Math.max(peak, feetY(b.motor));
+          }
+          expect(peak).toBeLessThan(0.3);
+          expect(b.motor.state.position.z).toBeLessThan(2.4); // it stayed at the foot of the ramp
+        }
+      });
+    }
+  }
 
   it("stays grounded while descending a ramp (snap to ground)", () => {
     const r30 = getBlock(TEST_ARENA, "ramp-30");

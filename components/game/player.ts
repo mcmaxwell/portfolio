@@ -20,6 +20,12 @@ export type MotorState = {
   grounded: boolean;
   /** Seconds airborne. Kept through the landing step so the animator can see how long the fall was. */
   airTime: number;
+  /**
+   * Downward speed (m/s, positive) at the last touchdown. Set on the landing step and kept
+   * while grounded, so the animator still sees it if a frame ran several physics steps;
+   * reset to 0 as soon as the player is airborne again.
+   */
+  impactSpeed: number;
   jumpedThisStep: boolean;
   landedThisStep: boolean;
   respawnedThisStep: boolean;
@@ -46,6 +52,9 @@ export function cameraRelativeMove(
 
 /** Horizontal movement length (m) used to probe for a step when the desired movement is shorter. */
 const STEP_PROBE = 0.06;
+
+/** Collisions whose surface is steeper than this (radians from up) count as walls, not slopes. */
+const WALL_ANGLE = (80 * Math.PI) / 180;
 
 export function createPlayerMotor(
   rapier: Rapier,
@@ -75,6 +84,42 @@ export function createPlayerMotor(
   kcc.enableSnapToGround(cfg.snapDistance);
   kcc.setApplyImpulsesToDynamicBodies(false);
 
+  /**
+   * Rapier's setMaxSlopeClimbAngle does not stop the capsule on a too-steep slope when
+   * the desired movement is mostly horizontal with a slight downward stick (measured:
+   * a 45 degree ramp is climbed 1:1 although the limit is 40, QA finding F1). The limit
+   * is enforced here. A rise over a contact steeper than the limit is allowed only up to
+   * stepHeight above the last walkable ground (a capsule rolling over a step edge sees
+   * steep normals of 60 to 70 degrees, so the normal alone cannot tell a step from a
+   * ramp). Beyond that the rise is dropped and the horizontal movement slides along the
+   * surface. Vertical faces (walls, step risers) never count as slopes.
+   */
+  let walkableY = spawn.y;
+  const steepContact = (): { x: number; z: number } | null => {
+    let steep: { x: number; z: number } | null = null;
+    const n = kcc.numComputedCollisions();
+    for (let i = 0; i < n; i++) {
+      const c = kcc.computedCollision(i);
+      if (!c) continue;
+      const nrm = c.normal1;
+      const angle = Math.acos(Math.min(1, Math.max(-1, nrm.y)));
+      if (angle > slopeRad + 1e-3 && angle < WALL_ANGLE) steep = { x: nrm.x, z: nrm.z };
+    }
+    return steep;
+  };
+  const limitSlopeClimb = (m: Vec3, fromY: number): Vec3 => {
+    if (m.y <= 1e-5) return m;
+    const steep = steepContact();
+    if (!steep) return m;
+    if (fromY + m.y - walkableY <= cfg.stepHeight) return m;
+    const hl = Math.hypot(steep.x, steep.z);
+    if (hl < 1e-6) return { x: m.x, y: 0, z: m.z };
+    const nx = steep.x / hl;
+    const nz = steep.z / hl;
+    const into = Math.min(0, m.x * nx + m.z * nz);
+    return { x: m.x - into * nx, y: 0, z: m.z - into * nz };
+  };
+
   const pos: Vec3 = { ...spawn };
   const prev: Vec3 = { ...spawn };
   const curr: Vec3 = { ...spawn };
@@ -83,6 +128,7 @@ export function createPlayerMotor(
   let vz = 0;
   let grounded = false;
   let airTime = 0;
+  let impactSpeed = 0;
   let sinceGrounded = Infinity;
   let sincePressed = Infinity;
   let disposed = false;
@@ -94,6 +140,7 @@ export function createPlayerMotor(
     verticalVelocity: 0,
     grounded: false,
     airTime: 0,
+    impactSpeed: 0,
     jumpedThisStep: false,
     landedThisStep: false,
     respawnedThisStep: false,
@@ -115,9 +162,11 @@ export function createPlayerMotor(
     vx = vy = vz = 0;
     grounded = false;
     airTime = 0;
+    impactSpeed = 0;
     sinceGrounded = Infinity;
     sincePressed = Infinity;
     kcc.enableSnapToGround(cfg.snapDistance);
+    walkableY = p.y;
   };
 
   return {
@@ -171,7 +220,7 @@ export function createPlayerMotor(
       const t = body.translation();
       const want = { x: vx * dt, y: vy * dt, z: vz * dt };
       kcc.computeColliderMovement(collider, want);
-      let m = kcc.computedMovement();
+      let m: Vec3 = kcc.computedMovement();
       // Rapier's autostep does not engage when the per-step horizontal movement is
       // small (measured: it stalls at walking speed, about 0.027 m per step, and at
       // rest against a step). When a grounded step is blocked, probe with a longer
@@ -193,6 +242,7 @@ export function createPlayerMotor(
           kcc.computeColliderMovement(collider, want); // restore the controller's state
         }
       }
+      m = limitSlopeClimb(m, t.y);
       const nx = t.x + m.x;
       const ny = t.y + m.y;
       const nz = t.z + m.z;
@@ -204,12 +254,17 @@ export function createPlayerMotor(
 
       grounded = !jumped && vy <= 0.001 && kcc.computedGrounded();
       if (grounded) {
-        if (!wasGrounded) state.landedThisStep = true; // keep airTime for this step
-        else airTime = 0;
+        if (!wasGrounded) {
+          state.landedThisStep = true; // keep airTime for this step
+          impactSpeed = Math.max(0, -vy);
+        } else airTime = 0;
       } else {
         airTime += dt;
+        impactSpeed = 0;
       }
       if (grounded && vy > 0) vy = 0;
+      if (!grounded) walkableY = Math.min(walkableY, ny);
+      else if (!steepContact()) walkableY = ny;
 
       body.setNextKinematicTranslation({ x: nx, y: ny, z: nz });
       setPos({ x: nx, y: ny, z: nz });
@@ -223,6 +278,7 @@ export function createPlayerMotor(
       state.verticalVelocity = vy;
       state.grounded = grounded;
       state.airTime = airTime;
+      state.impactSpeed = impactSpeed;
       state.jumpedThisStep = jumped;
       return state;
     },
