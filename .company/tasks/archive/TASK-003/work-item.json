@@ -1,0 +1,270 @@
+{
+  "workItemId": "TASK-003",
+  "feature": "playable-3d-portfolio",
+  "projectId": "portfolio",
+  "targetBaseCommit": "b61b848",
+  "tier": "MEDIUM",
+  "verificationProfile": "standard",
+  "objective": "User play-test feedback on the TASK-002 game before its PR: fix the avatar leaning backward while walking, and add a trophy (cup) on the highest terrace platform that the avatar collects with a dance.",
+  "sred": {
+    "related": true,
+    "workType": "debugging",
+    "technicalChallenge": "Whether the backward torso lean during locomotion comes from the Mixamo-to-Avaturn retarget rest-pose offset, the body-clearance or stance correction, or clip blending, and how to remove it without regressing grounding, landing or clearance.",
+    "hoursSpent": null,
+    "approachAndResult": "Reproduced the backward lean in the browser with a side camera and measured Hips-to-Head pitch per clip phase, then separated two causes: the Mixamo walk, run and idle clips had lost the pelvis pitch their spine was keyed against, and poseBlend chased its own output for a Hips bone no clip writes, preserving a stale 31 degree twist from the hero. Baked a solved constant forward spine pitch with a neck and head counter-pitch into the clips (leg tracks unchanged, 0 m leg-joint difference) and made poseBlend remember its own target. Result: walk mean pitch went from -8.3 to +3.3 degrees, run from -3.1 to +6.5 with the head tilt from -17.9 to about -2, and transitions never fall behind vertical; Codex review then found that Restart re-collected the trophy, fixed with a per-item exit latch shared by the cells."
+  },
+  "acceptanceCriteria": [
+    "The avatar no longer leans backward while walking or running; torso posture is natural and matches the clip's intended forward lean.",
+    "A trophy on the highest terrace platform can be collected once; collecting it plays the dance on the avatar, is announced accessibly, persists across reload, and is cleared by Restart.",
+    "Required checks pass, the change is cross-reviewed by Codex, QA approves, and it ships in the TASK-002 pull request."
+  ],
+  "constraints": [
+    "Same branch feat/task-002-3d-portfolio-game and the same pull request as TASK-002.",
+    "No new external asset unless recorded in ASSETS.md."
+  ],
+  "approvals": [
+    {
+      "date": "2026-10-08",
+      "by": "user",
+      "scope": "User play-test request in a direct message: the avatar looks weirdly bent backward when walking; add a cup on the highest of the square platforms, and when he takes it he also dances."
+    },
+    {
+      "date": "2026-10-08",
+      "by": "user",
+      "scope": "Explicit user instruction in a direct reply: 'merge it when green' for the game pull request (TASK-002 plus TASK-003)."
+    }
+  ],
+  "isolation": "TASK-002 worktree reused (same branch and PR)",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "status": "done",
+  "userRequests": [
+    "дивно вигнутий назад коли йду додай який кубок на квадратах тих на самому високуму і коли візме теж танец"
+  ],
+  "decisions": [
+    {
+      "date": "2026-10-08",
+      "by": "boss",
+      "decision": "Stage 01 accepted and committed as eb7b6c1 after the user play-tested it and said it was good. The Boss-proposed cosmetic polish (cup seating, pillar look) was dropped because the user approved the look as is. The 4 mm AT_LIMIT_SHORTFALL tolerance added to bodyClearance.test.ts is put to the Codex cross-review for judgement."
+    },
+    {
+      "date": "2026-10-08",
+      "by": "boss",
+      "decision": "To make the approved merge ship the game, the game PR targets master instead of the stacked company/onboard-portfolio-task-001 base: origin/master (intro video PR #2, content PR #3) is merged into feat/task-002-3d-portfolio-game after the restart-latch fix, conflicts are resolved by game-dev, then Codex, QA and the company-review gate run on the merged tree. PR #1's commit 710f034 is contained in the branch and lands with it."
+    },
+    {
+      "date": "2026-10-08",
+      "by": "boss",
+      "decision": "Codex round 2 (reports/06) approved 8386aa1 and the merge 043ca76. Its minor finding (Tab can reach the covered Play button while the intro video plays; activation is blocked; the intro is disabled in production) is recorded as a follow-up in the PR rather than another fix round. SR&ED hours not supplied; recorded as null per ADR-014."
+    }
+  ],
+  "qaOverrides": []
+}

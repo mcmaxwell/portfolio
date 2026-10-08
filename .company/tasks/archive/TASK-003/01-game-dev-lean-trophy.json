@@ -1,0 +1,265 @@
+{
+  "workItemId": "TASK-003",
+  "stageId": "01-game-dev-lean-trophy",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Fix the user-reported backward lean of the avatar while walking (reproduce it end to end first), and add a trophy cup on the highest terrace platform (terrace-2, top at 2.4 m) that the avatar collects with the dance clip.",
+  "contextFiles": [
+    ".company/tasks/archive/TASK-002/design.md",
+    "components/game/animator.ts",
+    "components/game/clips.ts",
+    "components/game/bodyClearance.ts",
+    "components/game/GameAvatar.tsx",
+    "components/game/world/campus.ts",
+    "components/game/challenge.ts",
+    "components/game/progress.ts",
+    "components/game/interactions.ts",
+    "components/game/ui/Hud.tsx",
+    ".company/memory/decisions/ADR-003-locomotion-retarget-strategy.md",
+    ".company/memory/decisions/ADR-005-progress-storage-versioning.md",
+    "ASSETS.md"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "b61b848",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/archive/TASK-002/reports/40-qa-final.json",
+    ".company/tasks/archive/TASK-002/reports/35-game-dev-m5.json"
+  ],
+  "acceptanceCriteria": [
+    "Bug reproduced first: in the browser at 1440x900, walking and running are captured from a side camera with before screenshots and a measured torso pitch (hips-to-head or spine-chain angle from vertical, per clip phase) for idle, walk and run, compared with the same clip played on the plain unretargeted skeleton or the hero; the root cause is identified and stated (retarget rest offset, stance or body-clearance correction, clip blend or something else).",
+    "After the fix the avatar does not lean backward while walking or running: measured torso pitch stays between upright and the clip's own forward lean (never behind vertical) across a full walk and run cycle and during start, stop and turn transitions; side-view after screenshots show natural posture; feet stay planted with no new foot sliding or sinking; a test that would fail on b61b848 covers the corrected posture.",
+    "A trophy cup built from primitives or a recorded asset sits centred on top of terrace-2 (the highest terrace platform, reachable by the existing jumps), visible from the plaza side, collectible once by walking into it: the avatar plays the existing dance clip in place, the cup disappears with a short effect, a polite live region announces 'Trophy collected', and E or Interact is not required. Under reduced motion the dance still plays but no camera move or flash.",
+    "Trophy progress is saved in the existing progress record without breaking existing saved data: a stored version 1 record without the trophy field still loads with its cells and completion intact, reload restores a collected trophy (cup absent), Restart clears it, and storage failure falls back in memory; progress.test.ts and a trophy test cover uniqueness, persistence, legacy record loading and restart. ADR-005 is updated if the record shape changes.",
+    "No regression: the energy cell challenge, beacon celebration and completion panel still work; the tower passage camera sweep has 0 frames inside geometry or with the avatar hidden; rAF p95 under 17.5 ms walking at 1440x900; touch Interact and Jump still work at 390x844 in emulation; the trophy jump route is completed with keyboard and in touch emulation.",
+    "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), git diff --check b61b848 is clean, the hero (components/avatar/*) is unchanged, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "The user is play-testing on http://localhost:3100, served from a separate copy; do not stop or reload it. Run your own dev server from the worktree on port 3101 and stop it by exact PID; never pkill.",
+    "Every browser you launch must use a --user-data-dir inside your stage output directory, deleted on exit and failure via exit and SIGTERM handlers; check free disk and stop under 5 GB; run builds in a copy of the tree and delete it; never write evidence under the repository or .company.",
+    "Do not edit data/index.ts, lib/persona.ts, components/avatar/*, public/avatar.glb or public/animations/*; reuse public/animations/dance.glb; no new external asset unless recorded in ASSETS.md.",
+    "Record host load with every timing measurement.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "bug fix with root cause",
+    "trophy feature",
+    "tests",
+    "before and after screenshots"
+  ],
+  "reportPath": "reports/01-game-dev-lean-trophy.json"
+}

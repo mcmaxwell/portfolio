@@ -1,0 +1,151 @@
+{
+  "workItemId": "TASK-003",
+  "stageId": "06-cross-reviewer-r2",
+  "agent": "cross-reviewer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "codex",
+  "authType": "subscription",
+  "planLabel": "ChatGPT subscription",
+  "executionPlan": "Verified the fixed head, inspected the complete base-to-head diff and changed files in context, reviewed the latch and merge integration, and ran every required check verbatim.",
+  "actualModel": "GPT-5 Codex (unverified alias)",
+  "summary": "All four required checks passed. The exit latch fixes Restart and load-in-radius collection, and the merge preserves the intro and game-entry behavior; one minor keyboard-focus issue remains while the intro overlays Play.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "eb7b6c1",
+    "targetResultCommit": "043ca7687c1ecd963b5bd8d036055033eb7b1b7b",
+    "targetDiffFiles": [
+      ".company/costs/ledger.jsonl",
+      ".company/tasks/archive/TASK-004/01-frontend-dev-assets-structure.json",
+      ".company/tasks/archive/TASK-004/02-content-writer-copy.json",
+      ".company/tasks/archive/TASK-004/03-frontend-dev-lint.json",
+      ".company/tasks/archive/TASK-004/04-qa-content.json",
+      ".company/tasks/archive/TASK-004/05-content-writer-avatar-fix.json",
+      ".company/tasks/archive/TASK-004/06-qa-content-r2.json",
+      ".company/tasks/archive/TASK-004/reports/01-frontend-dev-assets-structure.json",
+      ".company/tasks/archive/TASK-004/reports/02-content-writer-copy.json",
+      ".company/tasks/archive/TASK-004/reports/03-frontend-dev-lint.json",
+      ".company/tasks/archive/TASK-004/reports/04-qa-content.json",
+      ".company/tasks/archive/TASK-004/reports/05-content-writer-avatar-fix.json",
+      ".company/tasks/archive/TASK-004/work-item.json",
+      "components/avatar/IntroVideo.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/__tests__/challenge.test.ts",
+      "components/game/__tests__/content.test.ts",
+      "components/game/__tests__/trophy.test.ts",
+      "components/game/challenge.ts",
+      "data/index.ts",
+      "lib/persona.ts",
+      "public/proj-apexmind.png",
+      "public/proj-xecsuite.png"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed with one existing warning",
+      "evidence": "> portfolio@0.1.0 lint\n> next lint\n./components/avatar/useRealtimeChat.ts\n224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "32 test files and 674 tests passed",
+      "evidence": "Test Files 32 passed (32)\nTests 674 passed (674)\nDuration 242.38s"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "production build passed",
+      "evidence": "Compiled successfully\nGenerating static pages (7/7)\nRoute /: 40.6 kB, First Load JS 125 kB"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+      "status": "passed",
+      "evidence": "Executed git diff --stat and git diff for eb7b6c1167d8f4a96eeb25ed0b825cb04a02c71b..043ca7687c1ecd963b5bd8d036055033eb7b1b7b, then inspected the changed implementation, tests, merge parents, and task records in context. The finding cites changed line 215 of TalkingAvatar.tsx."
+    },
+    {
+      "criterion": "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+      "status": "passed",
+      "evidence": "npm run typecheck, npm run lint, npm test, and npm run build were executed verbatim from the working-copy root; each exited 0 and is recorded in testsRun and crossReview.checksRun."
+    },
+    {
+      "criterion": "The round-1 finding is fixed: an item can only be collected after the player has been outside its reach while it was uncollected, Restart in place and a load inside the radius do not collect, and the tests would fail on eb7b6c1.",
+      "status": "passed",
+      "evidence": "challenge.ts starts each item disarmed, arms it only after an uncollected out-of-reach update, and deletes its latch when collected. The tests cover Restart in place, leaving and returning, initial load inside the radius, and the same behavior for cells. At eb7b6c1, challenge.ts collected any uncollected in-reach cell or trophy immediately, so the new inside-after-Restart and initial-inside assertions necessarily fail on that base."
+    },
+    {
+      "criterion": "The merged TalkingAvatar.tsx preserves both the intro video behaviour and every game entry change (Play entry, prefetch, busy guard, voice stop, no-WebGL guard), Play cannot start the game while the intro plays, and no handler is stale.",
+      "status": "passed",
+      "evidence": "The merge retains IntroVideo and capture mode, Play entry, hover/focus/press prefetch, phase-based busy handling, disconnect as stopVoice, and WebGL gating around both Canvas and Play. The Play handler queries the live section DOM at click time and calls shell.play only when no intro video is mounted, avoiding a render-time stale value."
+    },
+    {
+      "criterion": "Any correctness, robustness, resource-leak, accessibility or maintainability defect introduced by the latch or the merge resolution is reported with severity.",
+      "status": "passed",
+      "evidence": "The latch has no observed correctness or lifecycle defect. One minor keyboard-focus defect in the combined intro and Play UI is reported; no critical or important finding remains."
+    }
+  ],
+  "assumptions": [],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "When an overlay temporarily owns a user journey, covered interactive controls should be made inert; visual stacking alone does not remove them from keyboard navigation."
+  ],
+  "selfUsage": {
+    "filesRead": 31,
+    "approxLinesRead": 6500,
+    "approxLinesWritten": 0,
+    "retries": 0
+  },
+  "crossReview": {
+    "verdict": "approved",
+    "reviewedHead": "043ca7687c1ecd963b5bd8d036055033eb7b1b7b",
+    "checksRun": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 lint\n> next lint\nuseRealtimeChat.ts:224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'."
+      },
+      {
+        "name": "unit",
+        "command": "npm test",
+        "exitCode": 0,
+        "evidence": "Test Files 32 passed (32)\nTests 674 passed (674)\nDuration 242.38s"
+      },
+      {
+        "name": "build",
+        "command": "npm run build",
+        "exitCode": 0,
+        "evidence": "Compiled successfully\nGenerating static pages (7/7)\nRoute /: 40.6 kB, First Load JS 125 kB"
+      }
+    ],
+    "findings": [
+      {
+        "severity": "minor",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 215,
+        "trigger": "While a sufficiently long intro is playing and the avatar has become ready, use Tab to move past the visible Skip button and the covered Talk control onto Play.",
+        "consequence": "Keyboard focus moves to a control hidden behind the opaque intro, so its focus indicator disappears; focusing Play also starts game prefetch even though the intro still owns the interface. Activation is correctly blocked, but the keyboard journey is confusing.",
+        "evidence": "IntroVideo is mounted as a z-30 visual cover, while the chrome below remains mounted and is not inert during the intro. Play remains focusable when avatarReady and its onFocus handler calls shell.prefetch(\"focus\"); the only intro-specific protection is inside its onClick handler.",
+        "rule": "Covered controls must be removed from sequential keyboard navigation while an overlay owns interaction; frontend review requires coherent focus order and visible keyboard focus."
+      }
+    ]
+  }
+}

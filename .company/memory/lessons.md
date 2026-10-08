@@ -16,3 +16,5 @@
 - [TASK-002] A hover-prewarmed baseline hides most of a cold-load cost: A/B the no-prefetch click, the press and the hover separately, and start all shader compiles before awaiting their links together.
 - [TASK-002] CDP touch emulation: `touchEnd` releases exactly the points it lists and `touchMove` with fewer points releases nothing; under heavy host load, drive the avatar with closed-loop steering from the renderer camera yaw rather than dead reckoning.
 - [TASK-002] The README is an upstream tutorial template with a manual table of contents, so a new section needs a matching TOC entry and anchor.
+- [TASK-003] A bone no clip writes keeps whatever the last owner left, so blend code must remember its own target; and re-run bodyClearance.test.ts after any clip posture change.
+- [TASK-003] Proximity pickups need an exit latch: arm an item only after the player is seen outside its reach, or Restart and reload inside the radius re-collect it on the next frame.
