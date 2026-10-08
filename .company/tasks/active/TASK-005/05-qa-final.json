@@ -1,0 +1,162 @@
+{
+  "workItemId": "TASK-005",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "intro video inert hero focus game prefetch entry fade follow camera jump passage head crop wall sweep test useRealtimeChat lint",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "app/layout.tsx",
+      "app/provider.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "eslint.config.mjs",
+      "package.json"
+    ],
+    "symbols": [
+      {
+        "name": "ThemeProvider",
+        "type": "function",
+        "file": "app/provider.tsx",
+        "line": 7
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      },
+      {
+        "name": "ChatStatus",
+        "type": "type",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 26
+      },
+      {
+        "name": "runSiteAction",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 6
+      },
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "portfolio",
+        "type": "package",
+        "file": "package.json"
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "app/provider.tsx",
+        "type": "contains",
+        "to": "ThemeProvider",
+        "evidence": "app/provider.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "ChatStatus",
+        "evidence": "components/avatar/useRealtimeChat.ts:26",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "runSiteAction",
+        "evidence": "components/avatar/useRealtimeChat.ts:6",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/useRealtimeChat.ts:41",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "autoprefixer",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint-config-next",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "targetBaseCommit": "819affe",
+  "assignee": "qa-engineer",
+  "stageId": "05-qa-final",
+  "objective": "Independent standard review of the TASK-005 diff b9776c1..819affe: verify every work-item acceptance criterion with your own commands and browser checks, then fill the company-review gate report.",
+  "constraints": [
+    "Do not modify, create or delete any file inside the worktree (the gate fingerprints tracked and untracked content); write evidence only to a scratch directory outside it and the gate report only at the qa-report.json path given in the prompt.",
+    "Run your own dev or production server on port 3103 and stop it by exact PID; every browser uses a --user-data-dir in scratch, deleted on exit.",
+    "Do not generate synthetic CPU load; record the natural host load with any timing.",
+    "Gate report values: specVerdict and qualityVerdict 'pass', layer status 'pass' with evidence, criterion status 'passed', gaps []. Any important or critical finding needs a 'challenge' layer and disposition fixed or refuted with verification; findings need a relative file and a valid line.",
+    "Copy every acceptanceCriteria string verbatim into both your stage report and the gate report."
+  ],
+  "contextFiles": [],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-005/reports/01-game-dev-polish.json",
+    ".company/tasks/active/TASK-005/reports/02-frontend-dev-intro-a11y.json",
+    ".company/tasks/active/TASK-005/reports/03-tech-writer-docs.json",
+    ".company/tasks/active/TASK-005/reports/04-frontend-dev-vite-paths.json",
+    ".company/tasks/active/TASK-005/work-item.json"
+  ],
+  "acceptanceCriteria": [
+    "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone.",
+    "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame, without camera clipping or geometry occlusion.",
+    "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before.",
+    "The game test suite passes without timeouts when run under heavy host load, and the useRealtimeChat lint warning is gone with npm run lint reporting zero warnings.",
+    "Required checks pass, QA approves, records are committed and a pull request is opened."
+  ],
+  "deliverables": [
+    "review"
+  ],
+  "reportPath": "reports/05-qa-final.json"
+}
