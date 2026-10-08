@@ -1,0 +1,61 @@
+{
+  "workItemId": "TASK-005",
+  "stageId": "03-tech-writer-docs",
+  "agent": "tech-writer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read the stage contract, both upstream reports (01-game-dev-polish, 02-frontend-dev-intro-a11y) and the three target docs; made minimal Edit changes to README.md (added one fade sentence, removed two now-fixed known-limitation bullets), .company/memory/features.md (one camera and entry line in the playable entry) and .company/memory/modules.md (avatar intro gating and related tests; game camera rule 6, entry fade cap, test layout). No Bash was available, so no script or test was run and testsRun is empty; accuracy was checked by Grep of the edited files for em dashes and absolute paths in added lines.",
+  "actualModel": "claude-haiku-5-5",
+  "summary": "features.md and modules.md now describe the TASK-005 camera rule 6, entry fade first-step cap, intro-covered inert gating with deferred prefetch, and the per-face bodyClearance test layout. README's Playable 3D world section now states the fade cap and drops the two known-limitation bullets for the entry fade step and the tower passage head crop, which the upstream reports mark as fixed. No tests were run by this stage.",
+  "filesChanged": [
+    "README.md",
+    ".company/memory/features.md",
+    ".company/memory/modules.md"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "2c677dc",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "README.md",
+      ".company/memory/features.md",
+      ".company/memory/modules.md"
+    ],
+    "projectContextUsed": false
+  },
+  "testsRun": [],
+  "criteria": [
+    {
+      "criterion": "features.md and modules.md describe the TASK-005 behaviour changes (entry fade first-step cap, camera rule 6 head framing, intro-covered controls inert with deferred prefetch, per-face bodyClearance test files) accurately against the stage reports.",
+      "status": "passed",
+      "evidence": "Inspection only. features.md playable entry gained 'Camera and entry' line (rule 6 frameHead, ENV_FIRST_STEP_S = 10 ms in components/game/tween.ts). modules.md avatar section gained intro gating bullets (onActiveChange, inert and aria-hidden while playing or fading, Play prefetch deferred, env unset unchanged, same-origin CSP note) and components/avatar/introInert.test.tsx; game section gained camera rule 6, entry fade cap, test layout (bodyClearance* per wall face, bodyClearanceHarness.ts, followCamera.framing.test.ts, vitest 60 s safety-net timeout) and the related-tests list. Wording traced to upstream reports 01 and 02."
+    },
+    {
+      "criterion": "README changes, if any, are limited to affected game behaviour, with one sentence per line, no em dash and no machine-absolute paths.",
+      "status": "passed",
+      "evidence": "Inspection only. README edits are in the Playable 3D world section: one added sentence on its own line after the Entering and exiting paragraph, and removal of two Known limitations bullets (entry fade step, tower passage head crop). Grep of README.md for em dash and absolute path prefixes returned no matches."
+    }
+  ],
+  "assumptions": [
+    "Contract targetBaseCommit is 2c677dc, but both upstream reports cite b9776c1 as their base; this stage reports 2c677dc as instructed.",
+    "Both upstream reports are status needs-info; game-dev reports npm test passing (1339 tests) later. These docs make no test-pass claim.",
+    "Removing the head-crop known-limitation bullet relies on game-dev's Rapier harness regression test, not a visual browser check; the fade measurement was on a dev server, not a production build.",
+    "Intro gating was placed in modules.md only, per the contract objective; features.md hero entry was not edited.",
+    "The 140 synthetic-load run is documented as unverified; no load test is claimed.",
+    "modules.md game 'Build/test/lint' line still cites the historical 3b285ff test count and was left unchanged."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "Known-limitation bullets in README must be removed when the follow-up they describe ships, or they go stale and contradict the fix."
+  ],
+  "selfUsage": {
+    "filesRead": 10,
+    "approxLinesRead": 1000,
+    "approxLinesWritten": 40,
+    "retries": 0
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "workItemId": "TASK-005",
+  "stageId": "02-frontend-dev-intro-a11y",
+  "agent": "frontend-dev",
+  "status": "needs-info",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Reproduced on b9776c1 in a production build driven by Chrome via playwright-core (user-data-dir in scratch, deleted on exit). Lifted the intro-cover state from IntroVideo into TalkingAvatar, then made the covered controls inert and gated prefetch. Fixed the hook deps. Added a jsdom test, confirmed it fails on b9776c1 sources and passes on the fix, and re-checked in the browser with the env var set and unset.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "While the intro cover is up, the hero controls (talk, Play, gesture list and chips, status, hints) now carry inert and aria-hidden, and Play no longer calls shell.prefetch on hover, focus or press until the cover is gone. The useRealtimeChat warning is fixed by adding gestureRef to the useCallback deps. typecheck and lint exit 0. npm test exits 1 because of one failure in game-dev's in-progress components/game/__tests__/tween.test.ts, which I did not touch. Status is needs-info because the 'npm test exits 0' criterion cannot be met until game-dev's tween test is fixed.",
+  "filesChanged": [
+    "components/avatar/IntroVideo.tsx",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/avatar/useRealtimeChat.ts",
+    "components/avatar/introInert.test.tsx"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "b9776c1",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/avatar/IntroVideo.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/avatar/introInert.test.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "tsc --noEmit clean",
+      "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "zero warnings, including components/avatar",
+      "evidence": "> next lint\n\n\u2714 No ESLint warnings or errors"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 1,
+      "result": "684 passed, 1 failed; same failure on two full runs. The failing file is game-dev's uncommitted edit, not mine.",
+      "evidence": "FAIL components/game/__tests__/tween.test.ts > entry world reveal under a frame hitch > the first visible step is within 1.25x the median step ...\nAssertionError: expected 0.1166666666666667 to be less than or equal to 0.06944444444443629\n Test Files  1 failed | 33 passed (34)\n      Tests  1 failed | 684 passed (685)\n Duration  225.49s"
+    },
+    {
+      "command": "npx vitest run components/avatar",
+      "exitCode": 0,
+      "result": "2 passed",
+      "evidence": " Test Files  1 passed (1)\n      Tests  2 passed (2)"
+    },
+    {
+      "command": "same vitest run with components/avatar/TalkingAvatar.tsx and IntroVideo.tsx restored to b9776c1 content (then re-applied)",
+      "exitCode": 1,
+      "result": "new test fails on base: 1 failed | 1 passed",
+      "evidence": "x makes the covered controls inert and defers the prefetch until the intro ends\nAssertionError: expected null not to be null"
+    },
+    {
+      "command": "git diff --check b9776c1",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    },
+    {
+      "command": "node probe.cjs intro (next build with NEXT_PUBLIC_INTRO_VIDEO_URL=/intro-test.mp4, next start -p 3102), BASELINE b9776c1; host load average 61",
+      "exitCode": 0,
+      "result": "bug reproduced",
+      "evidence": "hasVideo:true, playInert:false, prefetchRequestsAfterFocus: game entry chunks + /game/clips/{idle,walk,run,jump,fall,land}.glb, tabStops start at '> wave','> run',... (covered gesture buttons tabbable under the video)"
+    },
+    {
+      "command": "node probe.cjs intro, FIXED; host load average 27",
+      "exitCode": 0,
+      "result": "covered controls inert, no early prefetch, normal after the intro",
+      "evidence": "hasVideo:true, playInert:true, prefetchRequestsAfterFocus:[], tabStops: A:./home ... A:./contact, BUTTON:[ skip intro ], then page links; after clicking skip intro: focused '[ play / explore ]', playInert:false, prefetchRequests: game chunks + 6 clip glbs"
+    },
+    {
+      "command": "node probe.cjs nointro (next build with the env var unset, next start -p 3102), FIXED; host load average 31",
+      "exitCode": 0,
+      "result": "hero unchanged",
+      "evidence": "hasVideo:false, playInert:false, prefetch on Play focus fires game chunks + clip glbs, tabStops start '> wave','> run',... as on baseline"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before, verified by keyboard in the browser and by a unit test that fails on b9776c1.",
+      "status": "passed",
+      "evidence": "Browser keyboard walk with the intro playing: Tab goes nav links, then [ skip intro ], then page links; no hero control takes focus. Play carries inert, and focus caused zero prefetch requests. After skipping, Play takes focus and the prefetch requests fire as on baseline. components/avatar/introInert.test.tsx fails on the b9776c1 sources and passes on the fix."
+    },
+    {
+      "criterion": "With NEXT_PUBLIC_INTRO_VIDEO_URL unset, hero behaviour is unchanged.",
+      "status": "passed",
+      "evidence": "Production build with the env var unset: no video, no inert nodes, Tab order and Play-focus prefetch match baseline. The unit test also asserts no video, no [inert] and one prefetch call."
+    },
+    {
+      "criterion": "The useRealtimeChat lint warning is fixed without changing chat behaviour, and npm run lint reports zero warnings for components/avatar.",
+      "status": "passed",
+      "evidence": "gestureRef added to the connect useCallback deps (one line, no disable comment). gestureRef comes from useRef in TalkingAvatar, so its identity is stable and connect is not recreated. npm run lint exit 0: 'No ESLint warnings or errors'."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint and npm test exit 0 with exit codes explicitly captured, git diff --check b9776c1 is clean, and no commit is made.",
+      "status": "failed",
+      "evidence": "typecheck 0, lint 0, git diff --check 0, no commit made. npm test exits 1 on one failing test in game-dev's uncommitted components/game/__tests__/tween.test.ts (first visible step 0.1167 vs bound 0.0694); the other 684 tests pass, including mine. I did not edit it. The criterion passes once game-dev's tween work is fixed."
+    }
+  ],
+  "assumptions": [
+    "The inert subtree covers the whole hero chrome. The h1, subtitle and talk button were already wrapped by the existing INERT spread, and I extended the same spread to Play.",
+    "Browser verification used a production build (next build / next start on port 3102). The dev server kept full-reloading from game-dev's in-progress edits, which remounted the hero before the intro could be observed.",
+    "The page CSP has media-src 'self' blob:, so the test video was served same-origin through a playwright route to /intro-test.mp4. No file was added to the repo.",
+    "The worktree's node_modules was a dangling symlink to a removed worktree. I replaced it with a real npm ci install (gitignored). The portfolio2 node_modules could not be used because it lacks @react-three/rapier."
+  ],
+  "questions": [
+    "components/game/__tests__/tween.test.ts (game-dev's uncommitted change) fails the 'first visible step within 1.25x the median step' test. Should game-dev fix it before npm test can exit 0?"
+  ],
+  "decisionsProposed": [
+    "IntroVideo reports its cover state through an onActiveChange callback, and TalkingAvatar owns inert and prefetch gating from it (replaces the DOM querySelector check). Active covers the playing and fading phases, so controls stay inert until the cover is removed."
+  ],
+  "lessonsProposed": [
+    "Testing Library role queries and accessible names ignore aria-hidden or inert subtrees, so an inert-state test must query by text.",
+    "Dev-server browser checks are unreliable while another specialist edits the same worktree (Fast Refresh remounts). Use a production build for evidence.",
+    "NEXT_PUBLIC_INTRO_VIDEO_URL must be same-origin because of the CSP media-src."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 190,
+    "retries": 3
+  }
+}

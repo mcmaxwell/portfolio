@@ -1,0 +1,166 @@
+{
+  "workItemId": "TASK-005",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "intro video inert hero focus game prefetch entry fade follow camera jump passage head crop wall sweep test useRealtimeChat lint",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "app/layout.tsx",
+      "app/provider.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "eslint.config.mjs",
+      "package.json"
+    ],
+    "symbols": [
+      {
+        "name": "ThemeProvider",
+        "type": "function",
+        "file": "app/provider.tsx",
+        "line": 7
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      },
+      {
+        "name": "ChatStatus",
+        "type": "type",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 26
+      },
+      {
+        "name": "runSiteAction",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 6
+      },
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "portfolio",
+        "type": "package",
+        "file": "package.json"
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "app/provider.tsx",
+        "type": "contains",
+        "to": "ThemeProvider",
+        "evidence": "app/provider.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "ChatStatus",
+        "evidence": "components/avatar/useRealtimeChat.ts:26",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "runSiteAction",
+        "evidence": "components/avatar/useRealtimeChat.ts:6",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/useRealtimeChat.ts:41",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "autoprefixer",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint-config-next",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "targetBaseCommit": "b9776c1",
+  "assignee": "game-dev",
+  "stageId": "01-game-dev-polish",
+  "objective": "Fix TASK-002 final QA findings F1 (entry world fade first step 10.5 luminance, 3.75x neighbour median, vs accepted 6.8-7.0, 2.27x) and F2 (at the tower passage mouth, avatar z about 17.0-17.3, camera 2.2 m away at y 3.1, the head is cropped off the top for about two frames of a jump, portrait and landscape), and make the game test suite robust under host load (under load 140: followCamera x4 and player.physics x1 'Test timed out in 5000ms', bodyClearance cases cut off at 180000ms; unloaded it passes in about 300 s). Reproduce each in the browser or test harness first.",
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "Another specialist works in parallel in the same worktree on disjoint files; do not edit files outside your listed ownership, and expect unrelated diffs from them.",
+    "Every browser you launch must use a --user-data-dir inside your stage output directory, deleted on exit and failure; never write evidence under the repository or .company; stop any server you start by exact PID, never pkill.",
+    "Record host load with every timing measurement. No new external asset. No em dash in any new text.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array.",
+    "Own only components/game/**, its tests and vitest config; do not edit components/avatar/*, data/*, lib/persona.ts or public/avatar.glb.",
+    "Run your dev server on port 3101.",
+    "Fix test flakiness at the root (deterministic, cheaper sampling or precomputation, or splitting heavy cases) rather than only raising timeouts; keep the same coverage of the behaviours tested."
+  ],
+  "contextFiles": [
+    "components/game/followCamera.ts",
+    "components/game/__tests__/",
+    "README.md#playable-3d-world",
+    ".company/memory/modules.md"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/archive/TASK-002/reports"
+  ],
+  "acceptanceCriteria": [
+    "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone, shown by a before and after frame measurement.",
+    "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame in portrait 390x844, landscape 844x390 and desktop 1440x900, without near-plane clipping or geometry occlusion, with a regression test that fails on b9776c1.",
+    "npm test passes with zero timeouts when run while the host is under heavy synthetic CPU load (record load average), and its unloaded duration does not grow.",
+    "npm run typecheck, npm run lint and npm test exit 0 with exit codes explicitly captured, git diff --check b9776c1 is clean, and no commit is made."
+  ],
+  "deliverables": [
+    "fix",
+    "tests"
+  ],
+  "reportPath": "reports/01-game-dev-polish.json"
+}

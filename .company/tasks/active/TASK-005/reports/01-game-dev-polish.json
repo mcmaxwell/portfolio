@@ -1,0 +1,162 @@
+{
+  "workItemId": "TASK-005",
+  "stageId": "01-game-dev-polish",
+  "agent": "game-dev",
+  "status": "needs-info",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Reproduced F1 with an in-page per-frame canvas luminance probe on a dev server (port 3101, headless Chrome, own temp profile) and F2 with a Rapier-driven regression test; fixed both in components/game; split the heavy bodyClearance matrix per wall face and per file and added a test timeout safety net. Synthetic CPU load generation was DENIED by the permission classifier (see criterion 3), so the load test used natural host load only.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "F1: the first fade step is now 3.7 luminance (0.85x the median step) against 21.6 before (7 to 9x), still monotone; F2: a new regression test (6 cases x 6 jump points x 3 viewports) failed on the unfixed code and passes with a new camera rule 6 that tilts the aim to keep the crown in frame. The suite went from 228 s to 52-65 s unloaded and passes with zero timeouts at host load 86, but a synthetic load of 140 was not run because creating CPU hogs was denied.",
+  "filesChanged": [
+    "components/game/config.ts",
+    "components/game/followCamera.ts",
+    "components/game/tween.ts",
+    "components/game/GameScene.tsx",
+    "components/game/__tests__/tween.test.ts",
+    "components/game/__tests__/followCamera.test.ts",
+    "components/game/__tests__/followCamera.framing.test.ts",
+    "components/game/__tests__/cameraHarness.ts",
+    "components/game/__tests__/bodyClearance.test.ts",
+    "components/game/__tests__/bodyClearance.landing.test.ts",
+    "components/game/__tests__/bodyClearanceHarness.ts",
+    "components/game/__tests__/bodyClearance.pose-facing.test.ts",
+    "components/game/__tests__/bodyClearance.pose-diagonal.test.ts",
+    "components/game/__tests__/bodyClearance.pose-diagonal-other.test.ts",
+    "components/game/__tests__/bodyClearance.pose-sideways-left.test.ts",
+    "components/game/__tests__/bodyClearance.pose-sideways-right.test.ts",
+    "components/game/__tests__/bodyClearance.pose-back-to-wall.test.ts",
+    "vitest.config.mts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "b9776c1",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/config.ts",
+      "components/game/followCamera.ts",
+      "components/game/tween.ts",
+      "components/game/GameScene.tsx",
+      "components/game/__tests__/tween.test.ts",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/game/__tests__/followCamera.framing.test.ts",
+      "components/game/__tests__/cameraHarness.ts",
+      "components/game/__tests__/bodyClearance.test.ts",
+      "components/game/__tests__/bodyClearance.landing.test.ts",
+      "components/game/__tests__/bodyClearanceHarness.ts",
+      "components/game/__tests__/bodyClearance.pose-facing.test.ts",
+      "components/game/__tests__/bodyClearance.pose-diagonal.test.ts",
+      "components/game/__tests__/bodyClearance.pose-diagonal-other.test.ts",
+      "components/game/__tests__/bodyClearance.pose-sideways-left.test.ts",
+      "components/game/__tests__/bodyClearance.pose-sideways-right.test.ts",
+      "components/game/__tests__/bodyClearance.pose-back-to-wall.test.ts",
+      "vitest.config.mts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npx vitest run components/game/__tests__/followCamera.framing.test.ts (new regression test, run on unfixed followCamera.ts, host load 278)",
+      "exitCode": 1,
+      "result": "6 failed (all cases) on the b9776c1 camera",
+      "evidence": "AssertionError: jump at z 17.5: desktop 1440x900 frame 35: crown ndc (0.02, 1.12, 0.79), feet 0.79, camera (0.09, 2.54, 17.28): expected 27 to be +0 // Object.is equality  |  jump at z 18.2: desktop 1440x900 frame 34: crown ndc (0.04, 1.14, 0.84), feet 0.88, camera (0.12, 2.66, 16.83): expected 42 to be +0"
+    },
+    {
+      "command": "npx vitest run components/game/__tests__/followCamera.framing.test.ts (same test, with the fix)",
+      "exitCode": 0,
+      "result": "6 passed",
+      "evidence": "Tests  6 passed (6)"
+    },
+    {
+      "command": "F1 browser measurement (scratch harness, dev server :3101, 1440x900, per-frame canvas luminance of the left region, ENV_FIRST_STEP_S=10 for before, 0.01 for after, host load 8 to 9)",
+      "exitCode": 0,
+      "result": "before 3 runs: first step 21.6, 20.6, 21.6 vs median 3.07, 2.31, 2.84 = 7.05x, 8.94x, 7.58x; after 3 runs: first step 3.67, 3.67, 3.67 vs median 4.29, 4.15, 4.33 = 0.86x, 0.88x, 0.85x; monotone true in all 6",
+      "evidence": "before2-1 lum 0.0 21.6 25.8 29.3 34.1 37.6 40.7 ... | after2-1 lum 0.0 3.7 11.6 20.8 28.1 32.4 36.8 40.3 43.2 45.4 46.5 48.8 (per-frame readPixels after each rAF draw; the 47 ms swap hitch was the first game dt in the instrumented runs)"
+    },
+    {
+      "command": "npx vitest run (unmodified suite at base, one file bodyClearance.test.ts, load 11)",
+      "exitCode": 0,
+      "result": "685 passed, 228 s wall; bodyClearance.test.ts alone 226 s (one worker), pose cases 23 to 31 s each",
+      "evidence": "3:47.93 total; Tests 685 passed (full1.json)"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "no errors",
+      "evidence": "> tsc --noEmit -p ."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no warnings or errors",
+      "evidence": "\u2714 No ESLint warnings or errors"
+    },
+    {
+      "command": "npm test (run 1, host load 46.76 at start, 92.85 at end)",
+      "exitCode": 0,
+      "result": "41 files, 1339 tests passed, 52.15 s",
+      "evidence": "Test Files  41 passed (41)  Tests  1339 passed (1339)  Duration  52.15s"
+    },
+    {
+      "command": "npm test (run 2, host load 85.98 at start, 86.16 at end)",
+      "exitCode": 0,
+      "result": "41 files, 1339 tests passed, 64.79 s, zero 'timed out' lines",
+      "evidence": "Test Files  41 passed (41)  Tests  1339 passed (1339)  Duration  64.79s; grep -c 'timed out' = 0"
+    },
+    {
+      "command": "git diff --check b9776c1",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone, shown by a before and after frame measurement.",
+      "status": "passed",
+      "evidence": "Cause: the hero-to-world swap is a long frame (47 ms) counted in full as the first fade step. Fix: stepEnvTween caps the first step of an opening tween at ENV_FIRST_STEP_S = 10 ms (components/game/tween.ts), used by GameScene. Browser per-frame: before 7.05x/8.94x/7.58x the median of steps 2-11; after 0.86x/0.88x/0.85x; monotone true. Unit test in tween.test.ts (first step <= 1.25x median with a 47 ms hitch; uncapped 2.8x). Dev server, not production build."
+    },
+    {
+      "criterion": "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame in portrait 390x844, landscape 844x390 and desktop 1440x900, without near-plane clipping or geometry occlusion, with a regression test that fails on b9776c1.",
+      "status": "passed",
+      "evidence": "Cause: leaving the passage, rule 5 pulls the camera to the mouth while the avatar is airborne 1 to 2 m away, so the crown leaves the view (ndc y 1.09 to 1.14). Fix: rule 6 frameHead in components/game/followCamera.ts tilts the aim to keep the crown (CAMERA.headTop 1.85 m) inside the view less CAMERA.frameMarginDeg 4 degrees; camera position unchanged; off during entry/exit blends. followCamera.framing.test.ts (3 headings x walk/run x 6 jump points, all 3 viewports, near+0.3 m, no blocking geometry) failed 6/6 on base, passes now. Verified in the Rapier harness, not by eye in a browser."
+    },
+    {
+      "criterion": "npm test passes with zero timeouts when run while the host is under heavy synthetic CPU load (record load average), and its unloaded duration does not grow.",
+      "status": "untested",
+      "evidence": "Synthetic load generation was denied by the permission classifier and not worked around. npm test passed twice under natural host load 46.8 to 92.9 and 86.0 to 86.2, exit 0, 1339 passed, zero 'timed out'. Root cause addressed: the 226 s single-file bodyClearance matrix was split into a shared harness and per-face files so the runner parallelises; unloaded duration fell from 228 s to 52 s; vitest testTimeout/hookTimeout 60 s is only a safety net."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint and npm test exit 0 with exit codes explicitly captured, git diff --check b9776c1 is clean, and no commit is made.",
+      "status": "passed",
+      "evidence": "typecheck 0, lint 0, npm test 0 (twice), git diff --check b9776c1 0; no git commit, stash, reset or checkout; servers stopped by exact PID, Chrome profiles removed."
+    }
+  ],
+  "assumptions": [
+    "The avatar crown is 1.85 m above the soles (capsule 1.81 m plus margin); no per-asset measurement was made.",
+    "The Rapier harness projection of the crown with vertical fov 55 stands in for the three viewports (aspect does not change the vertical crop).",
+    "node_modules in the worktree is git-ignored.",
+    "The temporary diagnostic line in GameScene.tsx and the before toggle were removed before the final runs."
+  ],
+  "questions": [
+    "Synthetic CPU load at 140 was denied by the permission classifier; a run at that load needs explicit authorization."
+  ],
+  "decisionsProposed": [
+    "Opening env tweens consume at most 10 ms of the first visible step (ENV_FIRST_STEP_S): the swap hitch only delays the fade instead of becoming its first step.",
+    "Camera rule 6 (keep the crown in frame by tilting the aim, never moving the camera) belongs in the followCamera contract next to rules 1 to 5.",
+    "Heavy campus matrices are written one case per wall face and split over several test files; vitest testTimeout 60 s is a safety net, not the fix."
+  ],
+  "lessonsProposed": [
+    "Per-frame canvas luminance via gl.readPixels in a wrapped requestAnimationFrame measures every rendered frame; CDP screencast drops frames above load 100 and cannot resolve a fade.",
+    "A single long test file runs on one vitest worker: split by pose/face into files so wall time and per-case time both shrink.",
+    "Check the whole tween chain when a fade pops: a linearised opacity combined with eased fog, clear alpha and lights, and a long swap frame counted as dt."
+  ],
+  "selfUsage": {
+    "filesRead": 30,
+    "approxLinesRead": 3500,
+    "approxLinesWritten": 650,
+    "retries": 1
+  }
+}
