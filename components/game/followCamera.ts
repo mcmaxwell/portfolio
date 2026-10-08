@@ -307,7 +307,11 @@ export function createFollowCamera(
     return hi;
   };
 
-  /** Closest the camera ever gets to the avatar's upper body: just outside the 0.3 m capsule. */
+  /**
+   * Near-plane threshold, not a guaranteed minimum distance: just outside the 0.3 m capsule. Below
+   * this camera distance (sealed pocket only) the near plane is raised; HARD_MIN is deliberately
+   * absent from the resolved distance, which never exceeds the solved clear distance.
+   */
   const HARD_MIN = 0.45;
   const BODY_CLIP = 0.35;
   const SWING_STEP = 15 * DEG;
