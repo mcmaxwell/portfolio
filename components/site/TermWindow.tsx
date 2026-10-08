@@ -18,7 +18,7 @@ export function TermWindow({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`overflow-hidden border border-term-line bg-term-panel/70 backdrop-blur-sm ${className}`}
+      className={`overflow-hidden border border-term-line bg-term-panel/80 ${className}`}
     >
       <div className="flex items-center gap-2 border-b border-term-line px-4 py-2.5">
         <span className="h-2.5 w-2.5 rounded-full bg-term-red/70" />

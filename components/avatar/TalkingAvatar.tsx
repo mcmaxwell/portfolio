@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useRef, useState, type CSSProperties } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -80,6 +80,20 @@ const TalkingAvatar = () => {
   shellRef.current = shell;
   const { phase, inGame, reduced } = shell;
   const busy = phase !== "hero";
+
+  // The hero canvas is a full-screen WebGL scene that renders every frame. Once it is scrolled out of
+  // view that work only competes with page scrolling (dropped frames, flickering images), so the render
+  // loop stops until the hero comes back. Only in the plain hero phase: the transition and the game own
+  // the loop themselves.
+  const [heroInView, setHeroInView] = useState(true);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setHeroInView(entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const offscreen = phase === "hero" && !heroInView;
   // IntroVideo keeps its own state and reports whether its cover is up (playing or fading). While it
   // is, the hero controls beneath it are inert, Play is ignored and the game prefetch waits.
   const [introActive, setIntroActive] = useState(false);
@@ -153,7 +167,7 @@ const TalkingAvatar = () => {
         {webgl && (
         <Canvas
           camera={{ position: [...HERO.cameraPosition], fov: HERO.fov }}
-          frameloop={shell.renderPaused ? "never" : "always"}
+          frameloop={shell.renderPaused || offscreen ? "never" : "always"}
           onCreated={shell.onCanvasCreated}
         >
           {!inGame && <>

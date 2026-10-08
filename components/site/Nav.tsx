@@ -17,7 +17,11 @@ export function Nav() {
   // Re-queries elements on each scroll, so the dynamically-mounted hero
   // (#talk) is found and "home" activates at the top.
   useEffect(() => {
-    const onScroll = () => {
+    // Measured once per frame at most: scroll events can fire several times a frame, and each
+    // getBoundingClientRect forces a layout in the middle of scrolling.
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
       const line = window.innerHeight * 0.4;
       let current = items[0].watch;
       for (const it of items) {
@@ -26,7 +30,10 @@ export function Nav() {
       }
       setActive(current);
     };
-    onScroll();
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
     window.addEventListener("scroll", onScroll, { passive: true });
     // Re-evaluate when layout changes (e.g. the dynamic hero mounts and grows
     // the page), so "home" activates at the top.
@@ -35,6 +42,7 @@ export function Nav() {
     return () => {
       window.removeEventListener("scroll", onScroll);
       ro.disconnect();
+      cancelAnimationFrame(frame);
     };
   }, []);
 
