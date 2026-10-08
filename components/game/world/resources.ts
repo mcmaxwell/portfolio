@@ -57,6 +57,20 @@ function signTexture(sign: Sign): THREE.CanvasTexture {
  */
 const REVEALABLE = { transparent: true, opacity: 1 } as const;
 
+/** Per-frame state of the challenge visuals (cells and the beacon beam). */
+export type ChallengeFrame = {
+  time: number; // seconds, any monotonic clock
+  dt: number;
+  collected: ReadonlySet<string>; // cell ids
+  beam: boolean; // all three collected, beacon not yet lit
+  glow: number; // 0..1 celebration level
+  reduced: boolean;
+};
+export type ChallengeVisuals = {
+  update(f: ChallengeFrame): void;
+  /** Jump to the target state at once (no shrink or grow): on mount and after a restart. */
+  snap(f: ChallengeFrame): void;
+};
 export type SignItem = { sign: Sign; material: THREE.MeshStandardMaterial; mesh: THREE.Mesh };
 export type WorldResources = {
   /** Every world mesh: instanced batches and sign planes. Built once, shared by every mount. */
@@ -72,6 +86,8 @@ export type WorldResources = {
   /** Every texture the world samples, for uploading before the first game frame. */
   textures: THREE.Texture[];
   stats: { instances: number; batches: number };
+  /** Energy cells and the beacon beam; null where the layout has no challenge or there is no DOM. */
+  challenge: ChallengeVisuals | null;
 };
 
 type Inst = { shape: Shape; mat: string; px: number; py: number; pz: number; q: THREE.Quaternion; sx: number; sy: number; sz: number; tint: number };
@@ -220,6 +236,7 @@ function createWorldResources(layout: Layout, prebuilt: Record<TexName, THREE.Ca
       signs.push({ sign, material, mesh });
     }
   }
+  const challenge = mats ? createChallengeVisuals(layout, geos, mats.get("neon-cyan"), root, batches) : null;
   const { mesh: sky, material: skyMat } = createSky();
   const all = [...(mats?.all ?? []), ...signs.map((s) => s.material)];
   return {
@@ -257,11 +274,88 @@ function createWorldResources(layout: Layout, prebuilt: Record<TexName, THREE.Ca
       return out;
     },
     textures: collectTextures(all),
+    challenge,
     stats: { instances: batches.reduce((n, b) => n + b.count, 0), batches: batches.length },
   };
 }
 
 const Y_UP = new THREE.Vector3(0, 1, 0);
+
+/** Height of a cell's glow above the floor spot it is collected from (m): chest height. */
+export const CELL_LIFT = 1.15;
+const CELL_SIZE = 0.5;
+const BEAM = { height: 18, radius: 0.14 } as const;
+
+/**
+ * The energy cells (spinning, bobbing crystals) and the beacon beam, as two small instanced meshes that
+ * share the neon-cyan material of the world's trim, so they add no shader program. They are listed in
+ * `batches` so the quality settings and the warm-up probes treat them like every other batch.
+ */
+function createChallengeVisuals(
+  layout: Layout,
+  geos: Record<Shape, THREE.BufferGeometry>,
+  material: THREE.Material,
+  root: THREE.Group,
+  batches: THREE.InstancedMesh[]
+): ChallengeVisuals | null {
+  const cells = layout.challenge.cells;
+  const beacon = layout.challenge.beacon;
+  if (cells.length === 0 && !beacon) return null;
+  const cellMesh = new THREE.InstancedMesh(geos.box, material, Math.max(1, cells.length));
+  cellMesh.name = "box|neon-cyan|cells";
+  const beamMesh = new THREE.InstancedMesh(geos.cyl, material, 1);
+  beamMesh.name = "cyl|neon-cyan|beam";
+  for (const m of [cellMesh, beamMesh]) {
+    m.frustumCulled = false;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    m.userData.cast = false;
+    m.userData.receive = true;
+    root.add(m);
+    batches.push(m);
+  }
+  const scale = cells.map(() => 1);
+  let beamK = 0;
+  const m4 = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const e = new THREE.Euler();
+  const p = new THREE.Vector3();
+  const sc = new THREE.Vector3();
+  const lerpTo = (cur: number, target: number, dt: number, rate: number) => cur + (target - cur) * (1 - Math.exp(-rate * dt));
+  const write = (f: ChallengeFrame) => {
+    cells.forEach((c, i) => {
+      const bob = f.reduced ? 0 : Math.sin(f.time * 2 + i * 2.1) * 0.08;
+      const spin = f.reduced ? Math.PI / 4 : f.time * 1.1 + i;
+      // A cube stood on a corner: a crystal, turning about the vertical.
+      e.set(Math.atan(Math.SQRT1_2), spin, Math.PI / 4, "YXZ");
+      q.setFromEuler(e);
+      const s = CELL_SIZE * Math.max(0.0001, scale[i]);
+      m4.compose(p.set(c.position.x, c.position.y + CELL_LIFT + bob, c.position.z), q, sc.set(s, s, s));
+      cellMesh.setMatrixAt(i, m4);
+    });
+    cellMesh.instanceMatrix.needsUpdate = true;
+    if (beacon) {
+      const w = Math.max(0.0001, beamK) * (1 + f.glow * 0.7);
+      const h = BEAM.height * (0.15 + 0.85 * beamK) * (1 + f.glow * 0.3);
+      m4.compose(p.set(beacon.position.x, beacon.position.y + h / 2, beacon.position.z), QID, sc.set(BEAM.radius * 2 * w, beamK < 0.01 ? 0.0001 : h, BEAM.radius * 2 * w));
+      beamMesh.setMatrixAt(0, m4);
+      beamMesh.instanceMatrix.needsUpdate = true;
+    }
+  };
+  const target = (f: ChallengeFrame, i: number) => (f.collected.has(cells[i].cellId ?? "") ? 0 : 1);
+  return {
+    snap(f) {
+      cells.forEach((_, i) => (scale[i] = target(f, i)));
+      beamK = f.beam ? 1 : 0;
+      write(f);
+    },
+    update(f) {
+      cells.forEach((_, i) => (scale[i] = f.reduced ? target(f, i) : lerpTo(scale[i], target(f, i), f.dt, 9)));
+      beamK = f.reduced ? (f.beam ? 1 : 0) : lerpTo(beamK, f.beam ? 1 : 0, f.dt, 3);
+      write(f);
+    },
+  };
+}
+const QID = new THREE.Quaternion();
 
 const cache = new Map<Layout["name"], WorldResources>();
 const pending = new Map<Layout["name"], Promise<WorldResources>>();

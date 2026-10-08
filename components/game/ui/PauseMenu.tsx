@@ -4,14 +4,17 @@ import { useRef } from "react";
 import { Dialog } from "../shell/Dialog";
 import type { PauseReason } from "../session";
 
-/** Resume and Exit to portfolio (Restart, Settings and Controls arrive with their features). */
+/** Resume, Restart challenge and Exit to portfolio (Settings and Controls arrive with their features). */
 export function PauseMenu({
   reason,
   onResume,
+  onRestart,
   onExit,
 }: {
   reason: PauseReason | null;
   onResume: () => void;
+  /** Clears the challenge progress (settings stay) and returns to the game. */
+  onRestart: () => void;
   onExit: () => void;
 }) {
   const resumeRef = useRef<HTMLButtonElement>(null);
@@ -32,6 +35,12 @@ export function PauseMenu({
           className="border border-term-green bg-term-green/10 px-5 py-2 text-term-green-bright transition-colors hover:bg-term-green hover:text-term-bg"
         >
           [ resume ]
+        </button>
+        <button
+          onClick={onRestart}
+          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-green hover:text-term-green-bright"
+        >
+          [ restart challenge ]
         </button>
         <button
           onClick={onExit}

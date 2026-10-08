@@ -7,6 +7,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { QualityPreset } from "../config";
+import { allCollected, type ProgressV1 } from "../progress";
+import type { Store } from "../session";
 import { HERO } from "../shell/transition";
 import { lerp } from "../tween";
 import type { Layout } from "./layout";
@@ -40,6 +42,8 @@ export type WorldHandle = {
   warm(): Promise<void>;
   /** The player's ground position: the shadow window follows it (snapped to shadow texels). */
   follow(x: number, z: number): void;
+  /** The beacon celebration: 0 is the normal light, 1 the full brightening and cyan tint. */
+  setCelebration(level: number): void;
 };
 
 export function WorldView({
@@ -48,6 +52,7 @@ export function WorldView({
   active,
   handleRef,
   avatarUrl,
+  challenge,
 }: {
   layout: Layout;
   quality: QualityPreset;
@@ -56,6 +61,8 @@ export function WorldView({
   handleRef: MutableRefObject<WorldHandle | null>;
   /** The avatar the game will show, so its shadow programs compile with the world's. */
   avatarUrl: string;
+  /** The challenge visuals follow this progress (cells vanish when collected, the beam shows after the third). */
+  challenge?: { progress: Store<ProgressV1>; reducedMotion: boolean };
 }) {
   const { scene, gl, camera } = useThree();
   const avatar = useGLTF(avatarUrl, true, false).scene;
@@ -94,8 +101,35 @@ export function WorldView({
     };
   }, [gl, scene, quality.shadows, resources]);
 
+  // Challenge visuals: set to the current progress on mount, then follow it each frame.
+  const celebRef = useRef(0);
+  const challengeCache = useRef<{ progress: ProgressV1 | null; collected: Set<string>; all: boolean; completed: boolean }>({
+    progress: null,
+    collected: new Set(),
+    all: false,
+    completed: false,
+  });
+  const frameOf = (time: number, dt: number) => {
+    const p = challenge?.progress.getState();
+    const c = challengeCache.current;
+    if (p && c.progress !== p) {
+      c.progress = p;
+      c.collected = new Set(p.collected);
+      c.all = allCollected(p);
+      c.completed = p.completed;
+    }
+    // The beam shows from the third cell until the beacon is lit, and stays through the celebration.
+    const beam = c.all && (!c.completed || celebRef.current > 0);
+    return { time, dt, collected: c.collected, beam, glow: celebRef.current, reduced: challenge?.reducedMotion ?? false };
+  };
+  useLayoutEffect(() => {
+    resources.challenge?.snap(frameOf(0, 0));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resources, challenge]);
+
   // The dome follows the camera: it is the far backdrop, never reached.
-  useFrame(({ camera: cam }) => {
+  useFrame(({ camera: cam, clock }, dt) => {
+    if (active) resources.challenge?.update(frameOf(clock.elapsedTime, Math.min(dt, 0.1)));
     resources.sky.position.copy(cam.position);
     // The Canvas re-applies its own (off) shadow setting whenever its props change, e.g. on a
     // pause or resize, so the game asserts its setting each frame; it is a plain assignment.
@@ -174,8 +208,18 @@ export function WorldView({
       key.position.copy(snapped).addScaledVector(keyDir.current, 36);
       key.target.updateMatrixWorld();
     };
+    const cCyan = new THREE.Color("#7fe9ff");
+    let lastK = 0;
+    let lastYaw = 0;
     const handle: WorldHandle = {
+      setCelebration(level) {
+        celebRef.current = level;
+        handle.apply(lastK, lastYaw);
+      },
       apply(k, heroYaw) {
+        lastK = k;
+        lastYaw = heroYaw;
+        const glow = celebRef.current;
         const fog = fogRef.current;
         if (fog) {
           fog.near = lerp(WORLD_LOOK.fogHero.near, WORLD_LOOK.fog.near, k);
@@ -186,18 +230,18 @@ export function WorldView({
         resources.reveal(k);
         const amb = ambientRef.current;
         if (amb) {
-          amb.intensity = lerp(HERO.lights.ambient, WORLD_LOOK.ambient.intensity, k);
-          amb.color.lerpColors(white, cAmbient, k);
+          amb.intensity = lerp(HERO.lights.ambient, WORLD_LOOK.ambient.intensity, k) + glow * 0.55;
+          amb.color.lerpColors(white, cAmbient, k).lerp(cCyan, glow * 0.55);
         }
         const hemi = hemiRef.current;
         if (hemi) {
-          hemi.intensity = lerp(HERO.lights.hemisphere, WORLD_LOOK.hemisphere.intensity, k);
+          hemi.intensity = lerp(HERO.lights.hemisphere, WORLD_LOOK.hemisphere.intensity, k) + glow * 0.4;
           hemi.color.lerpColors(white, cSky, k);
           hemi.groundColor.lerpColors(heroGround, cGround, k);
         }
         const key = keyRef.current;
         if (key) {
-          key.intensity = lerp(HERO.lights.key.intensity, WORLD_LOOK.key.intensity, k);
+          key.intensity = lerp(HERO.lights.key.intensity, WORLD_LOOK.key.intensity, k) + glow * 0.9;
           key.color.lerpColors(white, cKey, k);
           // Hero key light carried into game coordinates, blended to the world key direction.
           tmp.copy(keyHero).applyAxisAngle(Y_AXIS, heroYaw).lerp(keyWorld, k);
@@ -230,6 +274,7 @@ export function WorldView({
     handleRef.current = handle;
     handle.apply(0, 0);
     return () => {
+      celebRef.current = 0;
       if (handleRef.current === handle) handleRef.current = null;
     };
   }, [active, gl, camera, resources, handleRef, quality.shadows, quality.shadowMapSize, avatar, layout.name]);

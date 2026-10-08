@@ -15,8 +15,9 @@ import { Physics, useRapier } from "@react-three/rapier";
 import * as THREE from "three";
 import type { CharacterAnimator } from "./animator";
 import { solidsOf, type BodyClearance } from "./bodyClearance";
-import type { GameAssets } from "./clips";
-import { CAMERA, FEET_TO_CENTER, MOTOR_CONFIG, MOVEMENT, PHYSICS, resolveQuality, type Vec3 } from "./config";
+import { createChallenge, type ChallengeSystem } from "./challenge";
+import { jointNamesOf, loadCelebrationClip, toGameClip, type GameAssets } from "./clips";
+import { CAMERA, CELEBRATION, FEET_TO_CENTER, MOTOR_CONFIG, MOVEMENT, PHYSICS, resolveQuality, type Vec3 } from "./config";
 import { createFixedStepper, type FixedStepper } from "./fixedStep";
 import { createObstacleQuery } from "./cameraProbe";
 import { createFollowCamera, type FollowCamera } from "./followCamera";
@@ -132,6 +133,9 @@ type Runtime = {
   stepper: FixedStepper;
   cam: FollowCamera;
   interactions: InteractionSystem;
+  challenge: ChallengeSystem;
+  /** The beacon celebration in progress (seconds played, how long it lasts), or null. */
+  celebration: { t: number; duration: number } | null;
   intent: MotorIntent;
   frame: MotorState;
   tmp: Vec3;
@@ -192,11 +196,16 @@ function ActiveGame({
     if (reduced) cam.snapTo(spawnCenter, spawnYaw);
     else cam.beginEntry(spawnCenter, startYaw, spawnYaw, CAMERA.entrySeconds);
     game.input.attach(gl.domElement);
+    const challenge = createChallenge(layout.challenge, game);
+    const items = layout.challenge.beacon ? [...layout.interactables, layout.challenge.beacon] : layout.interactables;
     const rt: Runtime = {
       motor,
       stepper: createFixedStepper(PHYSICS),
       cam,
-      interactions: createInteractionSystem(layout.interactables, game),
+      challenge,
+      celebration: null,
+      // The beacon answers only after the third cell; cells are collected by walking into them.
+      interactions: createInteractionSystem(items, game, (i) => i.kind !== "beacon" || challenge.beaconReady(), challenge.activate),
       intent: { moveWorld: { x: 0, z: 0 }, run: false, jump: false },
       frame: { ...motor.state, position: { ...motor.state.position } },
       tmp: { x: 0, y: 0, z: 0 },
@@ -237,6 +246,8 @@ function ActiveGame({
       if (done) return;
       done = true;
       runtime.current = null;
+      animatorRef.current?.stopCelebration(0);
+      worldRef.current?.setCelebration(0);
       rt.interactions.dispose();
       game.input.detach();
       cam.dispose();
@@ -246,6 +257,33 @@ function ActiveGame({
     game.registerCleanup(teardown);
     return teardown;
   }, [rapier, world, camera, gl, game, layout, worldRef]);
+
+  // The celebration gesture is fetched once the game is running (it is not part of the first-play set).
+  const celebrationClip = useRef<THREE.AnimationClip | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      void loadCelebrationClip().then((c) => {
+        if (!cancelled) celebrationClip.current = c;
+      });
+    };
+    if (game.session.getState().mode === "playing") {
+      load();
+      return () => {
+        cancelled = true;
+      };
+    }
+    const unsub = game.session.subscribe(() => {
+      if (game.session.getState().mode === "playing") {
+        unsub();
+        load();
+      }
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [game]);
 
   // Pause (design 2.3): the canvas stops rendering through the Canvas `frameloop` prop, which the
   // shell derives from this same session (an imperative setFrameloop would be undone by the Canvas
@@ -416,8 +454,38 @@ function ActiveGame({
       // Reduced motion: no camera leg; the pose is held for the short HUD fade.
     } else rt.cam.update(dtc, pos, s.grounded, rt.charYaw, look, snap.recenter && live);
 
-    // Interactions: the focus (prompt) follows the player; E opens the panel of the focused item.
-    rt.interactions.update({ x: pos.x, y: pos.y - FEET_TO_CENTER, z: pos.z }, rt.charYaw, snap.interact);
+    // Interactions: the focus (prompt) follows the player; E opens the panel of the focused item or lights the beacon.
+    const feet = { x: pos.x, y: pos.y - FEET_TO_CENTER, z: pos.z };
+    rt.interactions.update(feet, rt.charYaw, snap.interact);
+    rt.challenge.update(feet);
+
+    // The beacon celebration: the lighting effect and the gesture, then the completion panel (design 2.3).
+    // A pause skips it: after Resume the panel opens at once.
+    const cel = rt.celebration;
+    if (mode === "celebrating") {
+      if (!cel) {
+        const raw = celebrationClip.current;
+        const grp = groupRef.current;
+        const clip = !game.reducedMotion && raw && grp ? toGameClip(raw, jointNamesOf(grp)) : undefined;
+        const duration = game.reducedMotion ? CELEBRATION.reducedSeconds : clip ? Math.min(clip.duration, CELEBRATION.maxSeconds) : CELEBRATION.noClipSeconds;
+        if (clip) void animatorRef.current?.playCelebration(clip);
+        rt.celebration = { t: 0, duration };
+      } else {
+        cel.t += dtc;
+        worldRef.current?.setCelebration(Math.max(0, Math.min(1, cel.t / 0.4, (cel.duration - cel.t) / 0.8)));
+        if (cel.t >= cel.duration) {
+          animatorRef.current?.stopCelebration(0.4);
+          worldRef.current?.setCelebration(0);
+          rt.celebration = null;
+          session.dispatch({ type: "CELEBRATION_DONE" });
+        }
+      }
+    } else if (cel && mode !== "paused") {
+      animatorRef.current?.stopCelebration(0.2);
+      worldRef.current?.setCelebration(0);
+      rt.celebration = null;
+      if (mode === "playing" && game.progress.getState().completed) session.dispatch({ type: "OPEN_PANEL", panel: { kind: "completion" } });
+    }
 
     // Session progress.
     if (mode === "entering") {
@@ -466,6 +534,7 @@ export function GameScene({ game, assets, active, avatarUrl, layout, onPhysics, 
   const worldRef = useRef<WorldHandle | null>(null);
   const quality = useQuality();
   const layoutData = layoutFor(layout);
+  const challenge = useMemo(() => ({ progress: game.progress, reducedMotion: game.reducedMotion }), [game]);
   return (
     <GameErrorBoundary
       onError={(e) => {
@@ -476,7 +545,7 @@ export function GameScene({ game, assets, active, avatarUrl, layout, onPhysics, 
     >
       <ContextGuard onLost={() => faultCb.current("context-lost")} />
       <Suspense fallback={null}>
-        <WorldView layout={layoutData} quality={quality} active={active} handleRef={worldRef} avatarUrl={avatarUrl} />
+        <WorldView layout={layoutData} quality={quality} active={active} handleRef={worldRef} avatarUrl={avatarUrl} challenge={challenge} />
         <Physics paused gravity={[0, 0, 0]} colliders={false}>
           <WarmUp worldRef={worldRef} gate={warmGate} onReady={() => cb.current("ready")} />
           {active && (

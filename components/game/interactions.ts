@@ -61,12 +61,15 @@ export interface InteractionSystem {
 /**
  * Focus follows the player only while playing: any other mode (entering, panel, paused, ...)
  * clears it, so a prompt never shows over a panel or a pause menu. Interacting with an item that
- * has a panel opens it; cells and the beacon (Milestone 4) carry no panel and are handled elsewhere.
+ * has a panel opens it; the beacon has none and goes to `onActivate` (challenge.ts). Cells are collected by
+ * proximity in challenge.ts and are never offered here.
  */
 export function createInteractionSystem(
   items: readonly Interactable[],
   game: Pick<GameHandle, "session" | "focus">,
-  available: (i: Interactable) => boolean = () => true
+  available: (i: Interactable) => boolean = () => true,
+  /** Called for the focused item when the key is pressed and it has no panel (the beacon). */
+  onActivate?: (item: Interactable) => void
 ): InteractionSystem {
   const { session, focus } = game;
   return {
@@ -87,7 +90,10 @@ export function createInteractionSystem(
         next = current;
       }
       focus.set(next);
-      if (interactPressed && next?.panel) session.dispatch({ type: "OPEN_PANEL", panel: next.panel });
+      if (interactPressed && next) {
+        if (next.panel) session.dispatch({ type: "OPEN_PANEL", panel: next.panel });
+        else onActivate?.(next);
+      }
     },
     dispose() {
       focus.set(null);

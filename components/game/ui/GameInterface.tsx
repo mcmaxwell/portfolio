@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import type { PanelId } from "../config";
 import type { GameHandle } from "../session";
 import { TIMING } from "../shell/transition";
-import { ControlsHint, HudButtons, InteractionPrompt } from "./Hud";
+import { restartChallenge } from "../progress";
+import { ChallengeHud, ControlsHint, HudButtons, InteractionPrompt } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
 import { PortfolioPanel } from "./panels";
 import { TouchControls } from "./TouchControls";
@@ -18,6 +19,7 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
   const { session } = game;
   const state = useSession(session);
   const focused = useSyncExternalStore(game.focus.subscribe, game.focus.getState, game.focus.getState);
+  const progress = useSyncExternalStore(game.progress.subscribe, game.progress.getState, game.progress.getState);
   const reduced = game.reducedMotion;
   const rootRef = useRef<HTMLDivElement>(null);
   const [coarse] = useState(
@@ -76,6 +78,12 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
 
   const pause = useCallback(() => session.dispatch({ type: "PAUSE", reason: "user" }), [session]);
   const resume = useCallback(() => session.dispatch({ type: "RESUME" }), [session]);
+  // Restart clears the cells and the completion (settings stay) and goes straight back to the game.
+  const restart = useCallback(() => {
+    game.progress.update(restartChallenge);
+    setAnnounce("Challenge restarted. Energy cells 0/3.");
+    session.dispatch({ type: "RESUME" });
+  }, [game, session]);
   const closePanel = useCallback(() => session.dispatch({ type: "CLOSE_PANEL" }), [session]);
   const openPanel = useCallback((panel: PanelId) => session.dispatch({ type: "OPEN_PANEL", panel }), [session]);
 
@@ -134,10 +142,11 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
         {announce}
       </div>
       <HudButtons shown={buttonsShown} leaving={leaving} blocked={state.mode === "panel"} reduced={reduced} onPause={pause} onExit={onExit} />
+      <ChallengeHud progress={progress} shown={buttonsShown} leaving={leaving} touch={coarse} reduced={reduced} />
       <ControlsHint shown={hintShown && !hintGone && !leaving} reduced={reduced} />
       <InteractionPrompt item={state.mode === "playing" ? focused : null} touch={coarse} />
       {coarse && <TouchControls input={game.input} session={session} focus={game.focus} shown={touchShown && !leaving} />}
-      {state.mode === "paused" && <PauseMenu reason={state.pauseReason} onResume={resume} onExit={onExit} />}
+      {state.mode === "paused" && <PauseMenu reason={state.pauseReason} onResume={resume} onRestart={restart} onExit={onExit} />}
       {state.mode === "panel" && state.panel && <PortfolioPanel panel={state.panel} onClose={closePanel} onOpen={openPanel} />}
     </div>
   );

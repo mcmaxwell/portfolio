@@ -68,6 +68,12 @@ export type Destination = {
 /** An oriented interior volume (a building's inside). The camera must not sit in one unless the avatar does. */
 export type Room = { id: string; center: Vec3; size: Vec3; yawDeg: number };
 
+export type Challenge = {
+  /** Collected by walking into them (no key); `position` is feet level, the glow floats above it. */
+  cells: readonly Interactable[];
+  beacon: Interactable | null;
+};
+
 export type Layout = {
   name: "test-arena" | "campus";
   blocks: readonly Block[];
@@ -75,6 +81,8 @@ export type Layout = {
   spawnYawDeg: number;
   killPlaneY: number;
   interactables: readonly Interactable[];
+  /** The exploration challenge (M4): one energy cell per destination and the beacon that finishes it. */
+  challenge: Challenge;
   beacon: Vec3 | null;
   signs: readonly Sign[];
   destinations: readonly Destination[];
@@ -100,6 +108,7 @@ export const TEST_ARENA: Layout = {
   spawn: v(0, 0, -12),
   spawnYawDeg: 0,
   interactables: [],
+  challenge: { cells: [], beacon: null },
   beacon: null,
   signs: [],
   destinations: [],

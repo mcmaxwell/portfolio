@@ -183,6 +183,23 @@ describe("character animator", () => {
     a.dispose();
   });
 
+  it("the celebration plays over idle, resolves when stopped, and idle comes back; without a clip it resolves at once", async () => {
+    const a = createCharacterAnimator(makeScene(), { idle: clip("idle") }, cfg);
+    await expect(a.playCelebration()).resolves.toBeUndefined(); // no celebrate clip supplied
+    const dance = clip("dance");
+    let done = false;
+    void a.playCelebration(dance).then(() => (done = true));
+    for (let i = 0; i < 30; i++) a.update(1 / 60, motor({}));
+    expect(done).toBe(false);
+    a.stopCelebration(0.2);
+    await Promise.resolve();
+    expect(done).toBe(true);
+    for (let i = 0; i < 40; i++) a.update(1 / 60, motor({}));
+    expect(a.state).toBe("idle");
+    a.stopCelebration(); // a second stop is harmless
+    a.dispose();
+  });
+
   it("jumps and lands with only idle supplied (fallbacks) without throwing", () => {
     const a = createCharacterAnimator(makeScene(), { idle: clip("idle") }, cfg);
     a.update(1 / 60, motor({ jumpedThisStep: true, grounded: false, verticalVelocity: 6 }));

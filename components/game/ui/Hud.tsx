@@ -2,8 +2,10 @@
 
 // HUD pieces (design 2.10, play-transition.md 2.6). Staged fade-in during the entry: the buttons
 // are keyboard-reachable from S + 1000 ms, before control is handed over, so the player is never
-// trapped in the sequence. The "Energy cells" counter arrives with the challenge in M4.
+// trapped in the sequence. The "Energy cells n/3" counter and the return-to-the-beacon guidance
+// (M4) live in ChallengeHud.
 import type { Interactable } from "../config";
+import { CELL_IDS, allCollected, type ProgressV1 } from "../progress";
 import { promptTarget } from "../content";
 import { EASE, TIMING } from "../shell/transition";
 
@@ -90,6 +92,7 @@ export function InteractionPrompt({ item, touch }: { item: Interactable | null; 
     <div
       className="pointer-events-none absolute bottom-24 left-0 right-0 flex justify-center px-4 md:bottom-16"
       data-interaction-prompt
+      style={touch ? { bottom: "calc(13rem + env(safe-area-inset-bottom))" } : undefined}
     >
       <div role="status" aria-live="polite" className="sr-only">
         {item ? `${touch ? "Press the Interact button" : "Press E"} to ${text}` : ""}
@@ -103,6 +106,59 @@ export function InteractionPrompt({ item, touch }: { item: Interactable | null; 
           <span>{text}</span>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Text of the counter, e.g. "Energy cells 1/3". */
+export const counterText = (p: ProgressV1): string => `Energy cells ${p.collected.length}/${CELL_IDS.length}`;
+/** The guidance after the third cell (until the beacon is lit). */
+export const GUIDANCE = "All three energy cells collected. Return to the glowing beacon in the plaza and press E.";
+export const GUIDANCE_TOUCH = "All three energy cells collected. Return to the glowing beacon in the plaza and use Interact.";
+
+/**
+ * The challenge counter and the guidance. The counter is a polite live region, so each collected cell is
+ * announced ("Energy cells 2/3"); the guidance is a second one that appears with the third cell. Both are
+ * plain text on a dark chip (contrast above 4.5:1 on any background).
+ */
+export function ChallengeHud({
+  progress,
+  shown,
+  leaving,
+  touch,
+  reduced,
+}: {
+  progress: ProgressV1;
+  shown: boolean;
+  leaving: boolean;
+  touch: boolean;
+  reduced: boolean;
+}) {
+  const ready = allCollected(progress) && !progress.completed;
+  const transition = `opacity ${reduced ? TIMING.reduced.fadeMs : TIMING.hud.buttonsEndMs - TIMING.hud.buttonsStartMs}ms ${EASE.out}`;
+  return (
+    <div
+      className="pointer-events-none absolute flex max-w-[min(22rem,calc(100vw-2rem))] flex-col items-end gap-2"
+      style={{ top: "max(1rem, env(safe-area-inset-top))", right: "max(1rem, env(safe-area-inset-right))", opacity: shown && !leaving ? 1 : 0, transition }}
+      data-challenge-hud
+    >
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className={`border bg-term-bg/85 px-4 py-2 text-xs backdrop-blur ${progress.completed ? "border-term-cyan text-term-cyan" : "border-term-green text-term-green-bright"}`}
+        data-energy-counter
+      >
+        {counterText(progress)}
+      </div>
+      <p
+        role="status"
+        aria-live="polite"
+        className={ready ? "border border-term-cyan bg-term-bg/85 px-4 py-2 text-xs leading-relaxed text-term-fg backdrop-blur box-glow" : "sr-only"}
+        data-challenge-guidance
+      >
+        {ready ? (touch ? GUIDANCE_TOUCH : GUIDANCE) : ""}
+      </p>
     </div>
   );
 }

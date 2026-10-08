@@ -3,12 +3,15 @@
 // Touch controls: a left joystick, a right-half look area and a Jump button (design 2.10).
 // Each control tracks its own pointer id, so stick and look work at the same time.
 // A touch while the entry plays skips the rest of it and starts the stick at once.
-import { useRef, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
+import { INPUT } from "../config";
 import type { InputController } from "../input";
 import type { GameHandle, SessionStore } from "../session";
 import { promptText } from "./Hud";
 
 const STICK_RADIUS = 56;
+/** The run ring: dragging past this fraction of the radius runs (matches INPUT.joystickRunThreshold). */
+const RUN_RING = STICK_RADIUS * INPUT.joystickRunThreshold;
 
 export function TouchControls({
   input,
@@ -35,6 +38,34 @@ export function TouchControls({
   const setKnob = (x: number, y: number) => {
     if (knobRef.current) knobRef.current.style.transform = `translate(${x}px, ${y}px)`;
   };
+
+  // Blur, a hidden tab, a pause (or any mode that is not play) and unmount release both tracked
+  // pointers and the stick, so nothing keeps walking or turning after the finger is gone.
+  const releaseRef = useRef<() => void>(() => {});
+  releaseRef.current = () => {
+    stick.current = null;
+    look.current = null;
+    setKnob(0, 0);
+    input.setTouchMove(0, 0);
+  };
+  useEffect(() => {
+    const release = () => releaseRef.current();
+    const onVisibility = () => {
+      if (document.hidden) release();
+    };
+    window.addEventListener("blur", release);
+    document.addEventListener("visibilitychange", onVisibility);
+    const unsub = session.subscribe(() => {
+      const mode = session.getState().mode;
+      if (mode !== "playing" && mode !== "entering") release();
+    });
+    return () => {
+      window.removeEventListener("blur", release);
+      document.removeEventListener("visibilitychange", onVisibility);
+      unsub();
+      release();
+    };
+  }, [session]);
 
   const stickMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const s = stick.current;
@@ -109,6 +140,12 @@ export function TouchControls({
         onPointerCancel={stickEnd}
         onLostPointerCapture={stickEnd}
       >
+        <div
+          aria-hidden="true"
+          data-run-ring
+          className="pointer-events-none absolute rounded-full border border-dashed border-term-green/40"
+          style={{ width: RUN_RING * 2, height: RUN_RING * 2 }}
+        />
         <div ref={knobRef} className="h-14 w-14 rounded-full border border-term-green bg-term-green/20" />
       </div>
       {/* jump */}

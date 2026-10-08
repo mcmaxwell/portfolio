@@ -72,7 +72,13 @@ export interface CharacterAnimator {
   /** Playback rate of the active locomotion action (1 for non-locomotion states). */
   readonly timeScale: number;
   update(dt: number, motor: MotorState, opts?: { hardLandAllowed?: boolean }): void;
-  playCelebration(): Promise<void>;
+  /**
+   * Plays the celebration (the `celebrate` clip, or `override`) over the current pose and resolves when it
+   * ends or is stopped; the previous pose fades back in afterwards. Resolves at once without a clip.
+   */
+  playCelebration(override?: THREE.AnimationClip): Promise<void>;
+  /** Ends a running celebration early (fades out, resolves its promise). A no-op otherwise. */
+  stopCelebration(fadeSeconds?: number): void;
   dispose(): void;
 }
 
@@ -178,7 +184,7 @@ export function createCharacterAnimator(
   let stateTime = 0;
   let active: THREE.AnimationAction | null = null;
   let activeName: ClipName | null = null;
-  let celebrate: { resolve: () => void; action: THREE.AnimationAction } | null = null;
+  let celebrate: { finish: (fade: number) => void } | null = null;
   let disposed = false;
 
   const fadeFor = (to: LocoState) =>
@@ -263,24 +269,41 @@ export function createCharacterAnimator(
       // keep the pelvis at standing height and are left exactly as authored.
       if (footFloor && hipsClips.some((a) => a.isRunning() && a.getEffectiveWeight() > 0)) footFloor.apply();
     },
-    playCelebration() {
-      const clip = clips.celebrate;
+    playCelebration(override) {
+      const clip = override ?? clips.celebrate;
       if (!clip || disposed) return Promise.resolve();
+      celebrate?.finish(0.15);
       return new Promise<void>((resolve) => {
         const action = actionFor(clip);
         action.reset().setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = false;
-        if (active) fadeTo(active, 0, 0.2);
-        action.fadeIn(0.2).play();
-        const onDone = (e: { action?: THREE.AnimationAction }) => {
-          if (e.action !== action) return;
+        action.enabled = true;
+        action.setEffectiveTimeScale(1);
+        action.setEffectiveWeight(0);
+        if (active) fadeTo(active, 0, 0.25);
+        fadeTo(action, 1, 0.25);
+        action.play();
+        const finish = (fade: number) => {
+          if (celebrate?.finish !== finish) return;
           mixer.removeEventListener("finished", onDone as never);
           celebrate = null;
+          fadeTo(action, 0, fade);
+          // The pose that was playing before (idle) comes back.
+          if (active) {
+            active.enabled = true;
+            fadeTo(active, 1, fade);
+          }
           resolve();
         };
+        const onDone = (e: { action?: THREE.AnimationAction }) => {
+          if (e.action === action) finish(0.3);
+        };
         mixer.addEventListener("finished", onDone as never);
-        celebrate = { resolve, action };
+        celebrate = { finish };
       });
+    },
+    stopCelebration(fadeSeconds = 0.3) {
+      celebrate?.finish(fadeSeconds);
     },
     dispose() {
       if (disposed) return;
@@ -299,7 +322,7 @@ export function createCharacterAnimator(
         o.quaternion.copy(q);
         o.scale.copy(sc);
       }
-      celebrate?.resolve();
+      celebrate?.finish(0);
       celebrate = null;
       actions.clear();
     },

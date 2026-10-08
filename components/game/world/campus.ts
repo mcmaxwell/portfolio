@@ -234,6 +234,16 @@ export function buildCampus(): Layout {
     { id: "tower-contact", kind: "contact", position: at(TOWER, [0, TOWER_FLOOR, 4.8]), radius: 1.8, prompt: "View contact options", panel: { kind: "contact" } },
   ];
 
+  // Energy cells: one beside each destination's display route, in the line of sight of the approach
+  // (straight through the door or passage), a few steps inside so each needs a short walk in.
+  const CELL_RADIUS = 1.0;
+  const cells: Interactable[] = [
+    { id: "cell-lab", kind: "cell", cellId: "lab", position: at(LAB, [0, 0, 2.6]), radius: CELL_RADIUS, prompt: "Energy cell" },
+    { id: "cell-workshop", kind: "cell", cellId: "workshop", position: at(WORKSHOP, [0, WORKSHOP_FLOOR, 2.6]), radius: CELL_RADIUS, prompt: "Energy cell" },
+    { id: "cell-tower", kind: "cell", cellId: "tower", position: at(TOWER, [0, TOWER_FLOOR, 2.0]), radius: CELL_RADIUS, prompt: "Energy cell" },
+  ];
+  const beacon: Interactable = { id: "beacon", kind: "beacon", position: v(0, 0, 1.5), radius: 2.0, prompt: "Light the beacon" };
+
   const sign = (id: string, text: string, o: { origin: { x: number; z: number }; yaw: number }, p: readonly [number, number, number], width: number, height: number, accent: Sign["accent"]): Sign => ({
     id,
     text,
@@ -257,6 +267,7 @@ export function buildCampus(): Layout {
     spawn: v(0, 0, -6),
     spawnYawDeg: 0,
     interactables,
+    challenge: { cells, beacon },
     beacon: v(0, 0, 1.5),
     signs,
     destinations: [

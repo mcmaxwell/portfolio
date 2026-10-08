@@ -227,9 +227,33 @@ function ContactPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** The panels this milestone ships. Controls, settings and completion arrive with their features. */
+/** The panels this milestone ships. Controls and settings arrive with their features. */
 export function hasPanel(panel: PanelId): boolean {
-  return ["project", "all-projects", "skills", "experience", "contact"].includes(panel.kind);
+  return ["project", "all-projects", "skills", "experience", "contact", "completion"].includes(panel.kind);
+}
+
+/** The panel after the beacon celebration: three ways to go on. */
+function CompletionPanel({ onClose, onOpen }: { onClose: () => void; onOpen: (p: PanelId) => void }) {
+  const exploreRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Dialog labelledBy={TITLE_ID} onClose={onClose} initialFocusRef={exploreRef} wide>
+      <h2 id={TITLE_ID} className="mb-2 text-base font-bold text-term-green-bright">
+        Challenge complete
+      </h2>
+      <p className="mb-5 leading-relaxed text-term-fg/90">The beacon is lit: all three energy cells are collected. Keep exploring, or head straight to the work.</p>
+      <div className="flex flex-wrap gap-3">
+        <button ref={exploreRef} type="button" onClick={onClose} className={`${BUTTON} border-term-green text-term-green-bright`}>
+          [ explore more ]
+        </button>
+        <button type="button" onClick={() => onOpen({ kind: "all-projects" })} className={BUTTON}>
+          [ view projects ]
+        </button>
+        <button type="button" onClick={() => onOpen({ kind: "contact" })} className={BUTTON}>
+          [ contact ]
+        </button>
+      </div>
+    </Dialog>
+  );
 }
 
 export function PortfolioPanel({ panel, onClose, onOpen }: { panel: PanelId; onClose: () => void; onOpen: (p: PanelId) => void }) {
@@ -244,6 +268,8 @@ export function PortfolioPanel({ panel, onClose, onOpen }: { panel: PanelId; onC
       return <ExperiencePanel key="experience" onClose={onClose} />;
     case "contact":
       return <ContactPanel key="contact" onClose={onClose} />;
+    case "completion":
+      return <CompletionPanel key="completion" onClose={onClose} onOpen={onOpen} />;
     default:
       return (
         <Frame key={panel.kind} title="Not available yet" onClose={onClose}>

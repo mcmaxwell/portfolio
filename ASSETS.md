@@ -53,7 +53,7 @@ All nine files share: origin https://www.mixamo.com, provider Adobe Mixamo, term
 | `public/animations/walk.glb` | walk (exact Mixamo title unknown - to confirm by owner; 1.4 s, 42 frames) | hero only. The game copy `assets-src/mixamo/walk.glb` and its stripped clip were superseded by the 2026-10-06 Walking download and removed from the game |
 | `public/animations/run.glb` | "Run Forward Arc Left" (title per the Boss; 0.767 s, 23 frames; travels about 31 degrees off forward, Hips yaw drifts about 36 degrees per loop) | hero only. The game copy `assets-src/mixamo/run.glb` and its stripped clip were superseded by the 2026-10-06 Running download (the Arc Left run travelled off forward) and removed from the game |
 | `public/animations/wave.glb` | wave (exact Mixamo title unknown - to confirm by owner) | none |
-| `public/animations/dance.glb` | dance (exact Mixamo title unknown - to confirm by owner) | none (planned source for the M5 celebrate clip) |
+| `public/animations/dance.glb` | dance (exact Mixamo title unknown - to confirm by owner) | none (no file added: the game's beacon celebration loads this existing gesture at run time, `components/game/clips.ts`, first 3.6 s, rotation tracks only) |
 | `public/animations/silly_dance.glb` | silly dance (exact Mixamo title unknown - to confirm by owner) | none |
 | `public/animations/zombie.glb` | zombie (exact Mixamo title unknown - to confirm by owner) | none |
 | `public/animations/defeated.glb` | defeated (exact Mixamo title unknown - to confirm by owner) | none |

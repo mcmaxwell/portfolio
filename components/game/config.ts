@@ -106,6 +106,10 @@ export const ANIMATION = {
   fade: { loco: 0.25, jump: 0.1, fall: 0.2, land: 0.15 },
 } as const;
 
+/** The existing gesture (lib/gestures.ts) the avatar performs at the beacon, and how long of it plays (s). */
+export const CELEBRATION = { gesture: "dance", maxSeconds: 3.6, noClipSeconds: 2.2, reducedSeconds: 1.0 } as const;
+export const CELEBRATION_GESTURE = CELEBRATION.gesture;
+
 export const INPUT = { joystickRunThreshold: 0.85 } as const;
 
 export type QualityPreset = {

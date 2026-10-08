@@ -1,7 +1,8 @@
 // Character animator assets: clip loading and the runtime filter (design 2.6, 5.2).
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { CLIP_URLS, FIRST_PLAY_CLIPS, type ClipName } from "./config";
+import { gestureUrl } from "@/lib/gestures";
+import { CELEBRATION_GESTURE, CLIP_URLS, FIRST_PLAY_CLIPS, type ClipName } from "./config";
 
 export type GameAssets = { clips: Partial<Record<ClipName, THREE.AnimationClip>> };
 
@@ -104,4 +105,22 @@ export function loadGameAssets(onProgress: (loaded: number, total: number) => vo
     if (cache === p) cache = null; // allow Retry after a failure
   });
   return p;
+}
+
+// The celebration plays the site's existing "dance" gesture (public/animations/dance.glb, already used by
+// the portfolio's avatar; recorded in ASSETS.md). It is not part of the first-play set: it is fetched once
+// the game is running, and the celebration simply skips the clip if it never arrived.
+let celebration: Promise<THREE.AnimationClip | null> | null = null;
+
+export function loadCelebrationClip(): Promise<THREE.AnimationClip | null> {
+  if (!celebration) {
+    celebration = new GLTFLoader()
+      .loadAsync(gestureUrl(CELEBRATION_GESTURE))
+      .then((gltf) => gltf.animations[0] ?? null)
+      .catch(() => {
+        celebration = null; // allow another try on the next session
+        return null;
+      });
+  }
+  return celebration;
 }

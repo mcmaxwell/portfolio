@@ -2,6 +2,7 @@
 // and the cleanup registry. It holds no positions or velocities and never touches React state.
 import type { Interactable, PanelId } from "./config";
 import { createInputController, type InputController } from "./input";
+import { createProgressStore, getProgressStore, type ProgressStore } from "./progress";
 
 export type SessionMode = "entering" | "playing" | "paused" | "panel" | "celebrating" | "leaving" | "fault";
 export type PauseReason = "user" | "hidden" | "blur";
@@ -135,6 +136,8 @@ export interface GameHandle {
   /** The interactable the player is near and facing (the prompt), written by the interaction system. */
   focus: ValueStore<Interactable | null>;
   input: InputController;
+  /** Challenge progress and settings: versioned, saved locally, in memory when storage is unavailable. */
+  progress: ProgressStore;
   reducedMotion: boolean;
   readonly disposed: boolean;
   registerCleanup(fn: () => void): void; // run LIFO by dispose()
@@ -143,6 +146,9 @@ export interface GameHandle {
 
 export function createGame(opts: { reducedMotion: boolean; storage?: Storage | null }): GameHandle {
   const input = createInputController();
+  // An explicit storage (tests) gets its own store; otherwise the page-wide store, so progress also
+  // survives Exit and re-entry within one visit.
+  const progress = opts.storage !== undefined ? createProgressStore(opts.storage) : getProgressStore();
   const session = createSessionStore();
   const focus = createValueStore<Interactable | null>(null);
   const cleanups: Array<() => void> = [];
@@ -159,6 +165,7 @@ export function createGame(opts: { reducedMotion: boolean; storage?: Storage | n
     session,
     focus,
     input,
+    progress,
     reducedMotion: opts.reducedMotion,
     get disposed() {
       return disposed;
