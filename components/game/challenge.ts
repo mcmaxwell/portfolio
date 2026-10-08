@@ -13,6 +13,8 @@ export interface ChallengeSystem {
   update(player: Vec3): void;
   /** True while the beacon should answer (all three cells, not yet completed). */
   beaconReady(): boolean;
+  /** True while the beacon is waiting for cells (not ready, not completed): the hint at the beacon. */
+  beaconWaiting(): boolean;
   /** For the interaction system: the beacon starts the celebration only when ready; a cell or other item does nothing. */
   activate(item: Interactable): void;
 }
@@ -30,6 +32,7 @@ export function createChallenge(challenge: Challenge, game: Pick<GameHandle, "se
       }
     },
     beaconReady: () => canActivateBeacon(progress.getState()),
+    beaconWaiting: () => !progress.getState().completed && !canActivateBeacon(progress.getState()),
     activate(item) {
       if (item.kind !== "beacon" || session.getState().mode !== "playing") return;
       if (!canActivateBeacon(progress.getState())) return;

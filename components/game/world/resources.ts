@@ -8,7 +8,7 @@ import { blockQuaternion, resolveLayout, type Block, type Layout, type Sign } fr
 import { buildDecor, type Shape } from "./decor";
 import { createMaterials } from "./materials";
 import { createSky } from "./sky";
-import { buildTextures, type TexName } from "./textures";
+import { buildTextures, buildTexturesInWorker, type TexName } from "./textures";
 import { nextFrame, skinnedMeshes, warmGameState, type WarmPlan, type WarmProbe } from "./warm";
 import { resolveQuality } from "../config";
 
@@ -171,7 +171,7 @@ function buildGeometries(): Record<Shape, THREE.BufferGeometry> {
   };
 }
 
-function createWorldResources(layout: Layout, prebuilt: Record<TexName, THREE.CanvasTexture> | null): WorldResources {
+function createWorldResources(layout: Layout, prebuilt: Record<TexName, THREE.Texture> | null): WorldResources {
   const geos = buildGeometries();
   const hasDom = typeof document !== "undefined";
   const mats = hasDom && prebuilt ? createMaterials(prebuilt) : null;
@@ -394,7 +394,9 @@ export function loadWorldResources(layout: Layout): Promise<WorldResources> {
   if (!p) {
     p = (async () => {
       const t0 = performance.now();
-      const prebuilt = typeof document !== "undefined" ? await buildTextures(8, pacer(9)) : null;
+      // Off the main thread first (a worker), so neither the hero nor the loading strip competes with the
+      // painting; paced slices on the main thread when there is no worker or it fails.
+      const prebuilt = typeof document !== "undefined" ? (await buildTexturesInWorker(8)) ?? (await buildTextures(8, pacer(9))) : null;
       await nextFrame();
       const t1 = performance.now();
       const r = createWorldResources(layout, prebuilt);
@@ -405,8 +407,23 @@ export function loadWorldResources(layout: Layout): Promise<WorldResources> {
       return r;
     })();
     pending.set(layout.name, p);
+    // A failed build is forgotten, so the next call (the click's own load) tries again.
+    p.catch(() => {
+      if (pending.get(layout.name) === p) pending.delete(layout.name);
+    });
   }
   return p;
+}
+
+/**
+ * Start building the world's resources (the textures, in a worker) without waiting for anything else.
+ * The shell calls this when Play is hovered, focused or pressed, as soon as the game code is in, so
+ * the result is usually ready before the click. Never rejects; a failure surfaces on the real load.
+ */
+export function prepareWorld(layoutName?: Layout["name"]): void {
+  loadWorldResources(resolveLayout(layoutName)).catch(() => {
+    // the click's own load tries again
+  });
 }
 
 /** For React Suspense: the resources, or throws the promise that finishes building them. */

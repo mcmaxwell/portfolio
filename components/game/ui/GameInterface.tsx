@@ -7,7 +7,7 @@ import type { PanelId } from "../config";
 import type { GameHandle } from "../session";
 import { TIMING } from "../shell/transition";
 import { restartChallenge } from "../progress";
-import { ChallengeHud, ControlsHint, HudButtons, InteractionPrompt } from "./Hud";
+import { ChallengeHud, ControlsHint, beaconHintText, HudButtons, InteractionPrompt } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
 import { PortfolioPanel } from "./panels";
 import { TouchControls } from "./TouchControls";
@@ -19,6 +19,7 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
   const { session } = game;
   const state = useSession(session);
   const focused = useSyncExternalStore(game.focus.subscribe, game.focus.getState, game.focus.getState);
+  const hinted = useSyncExternalStore(game.hint.subscribe, game.hint.getState, game.hint.getState);
   const progress = useSyncExternalStore(game.progress.subscribe, game.progress.getState, game.progress.getState);
   const reduced = game.reducedMotion;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -144,7 +145,11 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
       <HudButtons shown={buttonsShown} leaving={leaving} blocked={state.mode === "panel"} reduced={reduced} onPause={pause} onExit={onExit} />
       <ChallengeHud progress={progress} shown={buttonsShown} leaving={leaving} touch={coarse} reduced={reduced} />
       <ControlsHint shown={hintShown && !hintGone && !leaving} reduced={reduced} />
-      <InteractionPrompt item={state.mode === "playing" ? focused : null} touch={coarse} />
+      <InteractionPrompt
+        item={state.mode === "playing" ? focused : null}
+        touch={coarse}
+        hint={state.mode === "playing" && hinted?.kind === "beacon" ? beaconHintText(progress) : null}
+      />
       {coarse && <TouchControls input={game.input} session={session} focus={game.focus} shown={touchShown && !leaving} />}
       {state.mode === "paused" && <PauseMenu reason={state.pauseReason} onResume={resume} onRestart={restart} onExit={onExit} />}
       {state.mode === "panel" && state.panel && <PortfolioPanel panel={state.panel} onClose={closePanel} onOpen={openPanel} />}

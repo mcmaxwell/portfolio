@@ -135,6 +135,8 @@ export interface GameHandle {
   session: SessionStore;
   /** The interactable the player is near and facing (the prompt), written by the interaction system. */
   focus: ValueStore<Interactable | null>;
+  /** An interactable the player is next to that cannot answer yet (the beacon before three cells): a hint, never a prompt. */
+  hint: ValueStore<Interactable | null>;
   input: InputController;
   /** Challenge progress and settings: versioned, saved locally, in memory when storage is unavailable. */
   progress: ProgressStore;
@@ -151,6 +153,7 @@ export function createGame(opts: { reducedMotion: boolean; storage?: Storage | n
   const progress = opts.storage !== undefined ? createProgressStore(opts.storage) : getProgressStore();
   const session = createSessionStore();
   const focus = createValueStore<Interactable | null>(null);
+  const hint = createValueStore<Interactable | null>(null);
   const cleanups: Array<() => void> = [];
   let disposed = false;
   let lastMode: SessionMode = session.getState().mode;
@@ -164,6 +167,7 @@ export function createGame(opts: { reducedMotion: boolean; storage?: Storage | n
   const handle: GameHandle = {
     session,
     focus,
+    hint,
     input,
     progress,
     reducedMotion: opts.reducedMotion,

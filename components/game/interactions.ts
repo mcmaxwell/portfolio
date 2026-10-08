@@ -54,6 +54,8 @@ export interface InteractionSystem {
   /** Call every frame with the player's feet position, the character's facing and the interact edge. */
   update(player: Vec3, facingYaw: number, interactPressed: boolean): void;
   readonly focused: Store<Interactable | null>;
+  /** The nearest item in reach that is `hintable` but not focusable, or null (only meaningful when nothing is focused). */
+  readonly hinted: Store<Interactable | null> | null;
   /** Clears the focus (the prompt disappears). */
   dispose(): void;
 }
@@ -66,17 +68,32 @@ export interface InteractionSystem {
  */
 export function createInteractionSystem(
   items: readonly Interactable[],
-  game: Pick<GameHandle, "session" | "focus">,
+  game: Pick<GameHandle, "session" | "focus"> & Partial<Pick<GameHandle, "hint">>,
   available: (i: Interactable) => boolean = () => true,
   /** Called for the focused item when the key is pressed and it has no panel (the beacon). */
-  onActivate?: (item: Interactable) => void
+  onActivate?: (item: Interactable) => void,
+  /** Items that, while not available, still earn a non-interactive hint when the player is next to them. */
+  hintable: (i: Interactable) => boolean = () => false
 ): InteractionSystem {
   const { session, focus } = game;
+  const hint = game.hint ?? null;
+  const nearestHint = (player: Vec3, facingYaw: number): Interactable | null => {
+    let best: Candidate | null = null;
+    const current = hint?.getState() ?? null;
+    for (const item of items) {
+      if (available(item) || !hintable(item)) continue;
+      const c = candidate(player, facingYaw, item, current?.id === item.id ? EDGE_HYSTERESIS : 0);
+      if (c && (!best || c.dist < best.dist)) best = c;
+    }
+    return best?.item ?? null;
+  };
   return {
     focused: focus,
+    hinted: hint,
     update(player, facingYaw, interactPressed) {
       if (session.getState().mode !== "playing") {
         focus.set(null);
+        hint?.set(null);
         return;
       }
       let next = pickFocus(player, facingYaw, items, available);
@@ -90,6 +107,7 @@ export function createInteractionSystem(
         next = current;
       }
       focus.set(next);
+      if (hint) hint.set(next ? null : nearestHint(player, facingYaw));
       if (interactPressed && next) {
         if (next.panel) session.dispatch({ type: "OPEN_PANEL", panel: next.panel });
         else onActivate?.(next);
@@ -97,6 +115,7 @@ export function createInteractionSystem(
     },
     dispose() {
       focus.set(null);
+      hint?.set(null);
     },
   };
 }

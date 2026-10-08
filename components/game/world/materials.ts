@@ -318,7 +318,7 @@ export function isWorldMaterial(key: string): boolean {
   return key in TRI || key in GLOW || FIXED_KEYS.includes(key);
 }
 
-export function createMaterials(textures: Record<TexName, THREE.CanvasTexture>): MaterialSet {
+export function createMaterials(textures: Record<TexName, THREE.Texture>): MaterialSet {
   const all: THREE.Material[] = [];
   const map = new Map<string, THREE.Material>();
   const reg = <M extends THREE.Material>(key: string, m: M, base = 1): M => {

@@ -177,17 +177,23 @@ function start(gl: THREE.WebGLRenderer, camera: THREE.Camera, plan: WarmPlan, op
     const t0 = performance.now();
     let sliceStart = t0;
     try {
+      // The colour programs of every unit link in parallel in the GPU process: a unit only starts its
+      // compile here (the synchronous part), and the links are awaited together at the end, then the
+      // layouts are read. Waiting for each unit's link before starting the next one serialised them.
+      const links: Array<Promise<unknown>> = [];
       for (const u of units) {
         if (cancelled) break;
         const s = performance.now();
-        await u.run();
-        primePrograms();
+        const pending = u.run();
+        if (pending) links.push(pending);
         if (typeof performance.measure === "function") performance.measure(`warm:${u.label}`, { start: s, end: performance.now() });
         if (performance.now() - sliceStart > FRAME_BUDGET_MS) {
           await nextFrame();
           sliceStart = performance.now();
         }
       }
+      await Promise.all(links);
+      primePrograms();
     } catch {
       // A failed pre-compile only costs a hitch later; it must not fail the load.
     } finally {

@@ -49,6 +49,42 @@ describe("counter and guidance", () => {
   });
 });
 
+describe("layout under the Exit button (F3)", () => {
+  it("the counter is as tall as the 44 px buttons and the chips are 12 px apart, so the guidance sits clear of the Exit row", () => {
+    // jsdom has no layout; the 12 px clearance below the Exit row (16 + 44 + 12) is measured in the browser (m5 f3.mjs).
+    expect(counter().className).toContain("min-h-[44px]");
+    expect((document.querySelector("[data-challenge-hud]") as HTMLElement).className).toContain("gap-3");
+  });
+});
+
+describe("beacon hint before three cells", () => {
+  const hintItem = { id: "beacon", kind: "beacon", position: { x: 0, y: 0, z: 1.5 }, radius: 2, prompt: "Light the beacon" } as never;
+  const region = () => document.querySelector("[data-interaction-prompt] [role=status]") as HTMLElement;
+
+  it("says how many cells are missing in a polite live region and as a non-interactive chip without a key", () => {
+    act(() => game.hint.set(hintItem));
+    expect(region()).toHaveTextContent("Collect 3 energy cells to power the beacon");
+    const chip = document.querySelector("[data-interaction-hint]") as HTMLElement;
+    expect(chip).toHaveTextContent("Collect 3 energy cells to power the beacon");
+    expect(chip.querySelector("kbd, button, a")).toBeNull();
+    collect("lab");
+    expect(region()).toHaveTextContent("Collect 2 more energy cells to power the beacon");
+    collect("lab", "workshop");
+    expect(region()).toHaveTextContent("Collect 1 more energy cell to power the beacon");
+  });
+
+  it("is not shown away from the beacon, outside the playing mode, or in place of the prompt", () => {
+    expect(document.querySelector("[data-interaction-hint]")).toBeNull();
+    act(() => game.hint.set(hintItem));
+    expect(document.querySelector("[data-interaction-hint]")).not.toBeNull();
+    act(() => game.focus.set({ id: "lab-screen", kind: "project", position: { x: 0, y: 0, z: 0 }, radius: 1, prompt: "View project", panel: "projects" } as never));
+    expect(document.querySelector("[data-interaction-hint]")).toBeNull();
+    act(() => game.focus.set(null));
+    key("Escape");
+    expect(document.querySelector("[data-interaction-hint]")).toBeNull();
+  });
+});
+
 describe("Restart in the pause menu", () => {
   it("clears the cells and the completion, keeps settings and returns to the game", () => {
     act(() => game.progress.update((p) => ({ ...p, settings: { ...p.settings, quality: "low" } })));

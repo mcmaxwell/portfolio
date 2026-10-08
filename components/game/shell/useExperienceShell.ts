@@ -13,6 +13,7 @@ import {
   type LoaderDeps,
   type LoadState,
 } from "./gameLoader";
+import { inertPageBehind } from "./pageInert";
 import { experienceAttribute, TIMING, type Phase } from "./transition";
 
 export type { GameModule, LoadState, Phase };
@@ -192,6 +193,7 @@ export function useExperienceShell(opts: {
   const [announce, setAnnounce] = useState("");
 
   const saved = useRef<Saved | null>(null);
+  const restoreInert = useRef<(() => void) | null>(null);
   const reducedRef = useRef(false);
   const chromeDone = useRef(false);
   const stripShownAt = useRef<number | null>(null);
@@ -250,7 +252,12 @@ export function useExperienceShell(opts: {
     setGameState(g);
   }, []);
 
-  const unlockPage = useCallback(() => unlockPageStyles(saved.current), []);
+  const unlockPage = useCallback(() => {
+    // The page behind the game is live again before focus goes back to Play.
+    restoreInert.current?.();
+    restoreInert.current = null;
+    unlockPageStyles(saved.current);
+  }, []);
 
   const disposeGame = useCallback(() => {
     gameRef.current?.handle.dispose();
@@ -372,6 +379,8 @@ export function useExperienceShell(opts: {
         setReduced(reducedNow);
         const top = optsRef.current.stageRef?.current?.getBoundingClientRect().top ?? 0;
         saved.current = lockPage(window.scrollY, top);
+        restoreInert.current?.();
+        restoreInert.current = inertPageBehind(optsRef.current.stageRef?.current ?? null);
         setBackdrop(Math.abs(top) >= 1);
         chromeDone.current = false;
         setChromeDone(false);
@@ -543,6 +552,8 @@ export function useExperienceShell(opts: {
       clearTimers();
       gameRef.current?.handle.dispose();
       loader.cancel();
+      restoreInert.current?.();
+      restoreInert.current = null;
       if (phaseRef.current !== "hero" && saved.current) {
         unlockPageStyles(saved.current);
         window.scrollTo({ top: saved.current.scrollY, behavior: "instant" });
@@ -596,6 +607,9 @@ export function useExperienceShell(opts: {
       const coarse = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
       const early = trigger !== "press" && !coarse;
       loader.prefetch((mod) => {
+        // Start painting the world's textures at once, for every trigger: it runs in a worker, so the
+        // page stays idle, and a press or a touch has the click's own dwell to get ahead.
+        mod.prepareWorld(readLayoutParam(window.location.search));
         // Compile the world's shaders now, while the user is only hovering: the stall must not land
         // inside the chrome exit animation after the click.
         const target = rendererRef.current;

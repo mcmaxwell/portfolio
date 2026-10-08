@@ -86,7 +86,7 @@ export function promptText(item: Interactable): string {
  * live region stays mounted so a screen reader announces each change; the visible chip is hidden
  * from it (the sentence in the region says the same).
  */
-export function InteractionPrompt({ item, touch }: { item: Interactable | null; touch: boolean }) {
+export function InteractionPrompt({ item, touch, hint = null }: { item: Interactable | null; touch: boolean; hint?: string | null }) {
   const text = item ? promptText(item) : "";
   return (
     <div
@@ -95,8 +95,13 @@ export function InteractionPrompt({ item, touch }: { item: Interactable | null; 
       style={touch ? { bottom: "calc(13rem + env(safe-area-inset-bottom))" } : undefined}
     >
       <div role="status" aria-live="polite" className="sr-only">
-        {item ? `${touch ? "Press the Interact button" : "Press E"} to ${text}` : ""}
+        {item ? `${touch ? "Press the Interact button" : "Press E"} to ${text}` : (hint ?? "")}
       </div>
+      {!item && hint && (
+        <div aria-hidden="true" className="border border-term-line bg-term-bg/85 px-4 py-2 text-sm text-term-fg backdrop-blur" data-interaction-hint>
+          {hint}
+        </div>
+      )}
       {item && (
         <div
           aria-hidden="true"
@@ -108,6 +113,12 @@ export function InteractionPrompt({ item, touch }: { item: Interactable | null; 
       )}
     </div>
   );
+}
+
+/** What the beacon says before it can be lit: how many cells are still missing. Not an action, so no key. */
+export function beaconHintText(p: ProgressV1): string {
+  const left = CELL_IDS.length - p.collected.length;
+  return left === CELL_IDS.length ? `Collect ${left} energy cells to power the beacon` : `Collect ${left} more energy ${left === 1 ? "cell" : "cells"} to power the beacon`;
 }
 
 /** Text of the counter, e.g. "Energy cells 1/3". */
@@ -138,7 +149,7 @@ export function ChallengeHud({
   const transition = `opacity ${reduced ? TIMING.reduced.fadeMs : TIMING.hud.buttonsEndMs - TIMING.hud.buttonsStartMs}ms ${EASE.out}`;
   return (
     <div
-      className="pointer-events-none absolute flex max-w-[min(22rem,calc(100vw-2rem))] flex-col items-end gap-2"
+      className="pointer-events-none absolute flex max-w-[min(22rem,calc(100vw-2rem))] flex-col items-end gap-3"
       style={{ top: "max(1rem, env(safe-area-inset-top))", right: "max(1rem, env(safe-area-inset-right))", opacity: shown && !leaving ? 1 : 0, transition }}
       data-challenge-hud
     >
@@ -146,7 +157,7 @@ export function ChallengeHud({
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className={`border bg-term-bg/85 px-4 py-2 text-xs backdrop-blur ${progress.completed ? "border-term-cyan text-term-cyan" : "border-term-green text-term-green-bright"}`}
+        className={`flex min-h-[44px] items-center border bg-term-bg/85 px-4 py-2 text-xs backdrop-blur ${progress.completed ? "border-term-cyan text-term-cyan" : "border-term-green text-term-green-bright"}`}
         data-energy-counter
       >
         {counterText(progress)}

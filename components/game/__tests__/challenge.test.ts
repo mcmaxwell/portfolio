@@ -18,7 +18,7 @@ function setup() {
   game.session.dispatch({ type: "ENTRY_DONE" });
   const challenge = createChallenge(CAMPUS.challenge, game);
   const items = [...CAMPUS.interactables, beacon!];
-  const interactions = createInteractionSystem(items, game, (i) => i.kind !== "beacon" || challenge.beaconReady(), challenge.activate);
+  const interactions = createInteractionSystem(items, game, (i) => i.kind !== "beacon" || challenge.beaconReady(), challenge.activate, (i) => i.kind === "beacon" && challenge.beaconWaiting());
   return { game, challenge, interactions };
 }
 
@@ -112,6 +112,42 @@ describe("beacon gating, completion and restart", () => {
     expect(game.session.getState().mode).toBe("playing");
     expect(game.focus.getState()).toBeNull();
     expect(game.progress.getState().completed).toBe(false);
+  });
+
+  it("next to the beacon before three cells there is a hint, not a prompt, and E still does nothing", () => {
+    const { game, challenge, interactions } = setup();
+    interactions.update(away, 0, false);
+    expect(game.hint.getState()).toBeNull();
+    interactions.update(stand, 0, false);
+    expect(game.hint.getState()?.id).toBe("beacon");
+    expect(game.focus.getState()).toBeNull();
+    challenge.update(feetOf(cell("lab")));
+    press(interactions);
+    expect(game.session.getState().mode).toBe("playing");
+    expect(game.progress.getState().completed).toBe(false);
+    interactions.update(stand, Math.PI, false); // facing away still hints
+    expect(game.hint.getState()?.id).toBe("beacon");
+    interactions.update(away, 0, false);
+    expect(game.hint.getState()).toBeNull();
+  });
+
+  it("the hint is gone once the beacon is ready (it becomes the prompt) and after completion, and outside the playing mode", () => {
+    const { game, challenge, interactions } = setup();
+    for (const id of ["lab", "workshop", "tower"]) challenge.update(feetOf(cell(id)));
+    interactions.update(stand, 0, false);
+    expect(game.hint.getState()).toBeNull();
+    expect(game.focus.getState()?.id).toBe("beacon");
+    press(interactions);
+    game.session.dispatch({ type: "CELEBRATION_DONE" });
+    game.session.dispatch({ type: "CLOSE_PANEL" });
+    interactions.update(stand, 0, false);
+    expect(game.hint.getState()).toBeNull();
+    game.progress.update(restartChallenge);
+    interactions.update(stand, 0, false);
+    expect(game.hint.getState()?.id).toBe("beacon");
+    game.session.dispatch({ type: "PAUSE", reason: "user" });
+    interactions.update(stand, 0, false);
+    expect(game.hint.getState()).toBeNull();
   });
 
   it("after the third cell the beacon is focused and E starts the celebration and saves completion", () => {

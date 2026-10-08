@@ -205,7 +205,7 @@ function ActiveGame({
       challenge,
       celebration: null,
       // The beacon answers only after the third cell; cells are collected by walking into them.
-      interactions: createInteractionSystem(items, game, (i) => i.kind !== "beacon" || challenge.beaconReady(), challenge.activate),
+      interactions: createInteractionSystem(items, game, (i) => i.kind !== "beacon" || challenge.beaconReady(), challenge.activate, (i) => i.kind === "beacon" && challenge.beaconWaiting()),
       intent: { moveWorld: { x: 0, z: 0 }, run: false, jump: false },
       frame: { ...motor.state, position: { ...motor.state.position } },
       tmp: { x: 0, y: 0, z: 0 },
@@ -472,7 +472,13 @@ function ActiveGame({
         rt.celebration = { t: 0, duration };
       } else {
         cel.t += dtc;
-        worldRef.current?.setCelebration(Math.max(0, Math.min(1, cel.t / 0.4, (cel.duration - cel.t) / 0.8)));
+        // Reduced motion: one short fade up to a steady lower level, held, and one fade out. Nothing moves
+        // or breathes in between, so there is no pulse (the full version swells over 0.4 s and drains over 0.8 s).
+        const reducedFade = TIMING.reduced.fadeMs / 1000;
+        const up = game.reducedMotion ? reducedFade : 0.4;
+        const down = game.reducedMotion ? reducedFade : 0.8;
+        const peak = game.reducedMotion ? 0.5 : 1;
+        worldRef.current?.setCelebration(Math.max(0, Math.min(peak, (peak * cel.t) / up, (peak * (cel.duration - cel.t)) / down)));
         if (cel.t >= cel.duration) {
           animatorRef.current?.stopCelebration(0.4);
           worldRef.current?.setCelebration(0);

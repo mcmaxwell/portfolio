@@ -135,6 +135,9 @@ const TalkingAvatar = () => {
       {/* Canvas wrapper: absolute in the hero, fixed from the click (the section keeps its h-screen
           place, so nothing below it shifts). The scanlines travel with the canvas. */}
       <div ref={canvasWrapRef} data-stage-canvas className={wrapClass} style={wrapStyle}>
+        {/* Without WebGL the canvas cannot be created and would throw, blanking the whole page: skip it
+            (the portfolio stays usable, without the 3D hero and without Play). */}
+        {webgl && (
         <Canvas
           camera={{ position: [...HERO.cameraPosition], fov: HERO.fov }}
           frameloop={shell.renderPaused ? "never" : "always"}
@@ -181,6 +184,7 @@ const TalkingAvatar = () => {
             />
           )}
         </Canvas>
+        )}
         {/* scanline overlay: stays over the canvas until the world takes over, then fades */}
         <div
           className="pointer-events-none absolute inset-0 z-10"
@@ -262,13 +266,14 @@ const TalkingAvatar = () => {
           >
             {active ? "[ end session ]" : "[ talk to me ]"}
           </button>
+          {webgl && (
           <button
             ref={playRef}
             onClick={shell.play}
             onPointerEnter={() => shell.prefetch("hover")}
             onFocus={() => shell.prefetch("focus")}
             onPointerDown={() => shell.prefetch("press")}
-            disabled={!avatarReady || status === "connecting" || !webgl}
+            disabled={!avatarReady || status === "connecting"}
             aria-disabled={busy || undefined}
             className={`border border-term-cyan bg-term-cyan/10 px-8 py-3 text-sm text-term-cyan transition-colors hover:bg-term-cyan hover:text-term-bg disabled:opacity-50 ${
               leavingChrome ? "animate-play-press" : ""
@@ -276,6 +281,7 @@ const TalkingAvatar = () => {
           >
             {busy && phase !== "returning" ? "[ starting… ]" : "[ play / explore ]"}
           </button>
+          )}
         </div>
       </div>
 

@@ -12,7 +12,7 @@ import { readLayoutParam, useExperienceShell, type ExperienceShell } from "../sh
 type Rig = {
   shell: () => ExperienceShell;
   stopVoice: ReturnType<typeof vi.fn>;
-  mod: GameModule & { createGame: ReturnType<typeof vi.fn>; loadGameAssets: ReturnType<typeof vi.fn>; prewarmWorld: ReturnType<typeof vi.fn> };
+  mod: GameModule & { createGame: ReturnType<typeof vi.fn>; loadGameAssets: ReturnType<typeof vi.fn>; prewarmWorld: ReturnType<typeof vi.fn>; prepareWorld: ReturnType<typeof vi.fn> };
   importGame: ReturnType<typeof vi.fn>;
   play: HTMLButtonElement;
   stage: HTMLElement;
@@ -35,6 +35,7 @@ function fakeModule() {
       return { clips: {} };
     }),
     prewarmWorld: vi.fn(async () => {}),
+    prepareWorld: vi.fn(),
   } as unknown as Rig["mod"];
 }
 
@@ -67,6 +68,8 @@ function setup(): Rig {
     });
     latest = shell;
     return (
+      <>
+      <nav data-testid="nav"><a href="#projects">Projects</a></nav>
       <section
         ref={(el) => {
           stageRef.current = el;
@@ -75,16 +78,23 @@ function setup(): Rig {
         }}
       >
         <div ref={wrapRef} />
-        <button
-          ref={(el) => {
-            playRef.current = el;
-            playEl = el as HTMLButtonElement;
-          }}
-        >
-          play
-        </button>
+        <div data-testid="gestures">
+          <button data-xfade>wave</button>
+        </div>
+        <div data-xfade data-testid="chrome">
+          <button
+            ref={(el) => {
+              playRef.current = el;
+              playEl = el as HTMLButtonElement;
+            }}
+          >
+            play
+          </button>
+        </div>
         {shell.strip !== "off" && <LoadingStrip progress={0.5} visible={shell.strip === "in"} reduced={false} onCancel={shell.cancel} />}
       </section>
+      <footer data-testid="footer"><a href="#top">Top</a></footer>
+      </>
     );
   }
   const r = render(<Harness />);
@@ -766,6 +776,18 @@ describe("prefetch and early shader compile", () => {
     await flush();
     expect(rig.mod.prewarmWorld).not.toHaveBeenCalled();
   });
+
+  it("starts painting the world textures for every trigger, a coarse pointer and a missing canvas included", async () => {
+    for (const trigger of ["hover", "focus", "press"] as const) {
+      cleanup();
+      coarse = trigger === "press";
+      const rig = setup();
+      rig.shell().prefetch(trigger); // no canvas yet
+      await flush();
+      expect(rig.mod.prepareWorld).toHaveBeenCalledWith("campus");
+      expect(rig.mod.prewarmWorld).not.toHaveBeenCalled();
+    }
+  });
 });
 
 describe("repeated cycles leave nothing behind", () => {
@@ -866,5 +888,102 @@ describe("repeated cycles leave nothing behind", () => {
     rig.unmount();
     expect(vi.getTimerCount()).toBe(0);
     expect(root.dataset.experience).toBeUndefined();
+  });
+});
+
+describe("the page behind the game is inert while playing", () => {
+  async function toGame(rig: Rig) {
+    await play(rig);
+    await advance(360);
+    act(() => rig.shell().game!.handle.session.dispatch({ type: "ENTRY_DONE" }));
+  }
+  const behind = () => [screen.getByTestId("nav"), screen.getByTestId("chrome"), screen.getByTestId("gestures"), screen.getByTestId("footer")];
+  const expectInert = () => {
+    for (const el of behind()) {
+      expect(el).toHaveAttribute("inert");
+      expect(el).toHaveAttribute("aria-hidden", "true");
+    }
+  };
+  const expectLive = () => {
+    for (const el of behind()) {
+      expect(el).not.toHaveAttribute("inert");
+      expect(el).not.toHaveAttribute("aria-hidden");
+    }
+  };
+
+  it("is inert from the click, through loading and the game, and keeps the stage itself live", async () => {
+    const rig = setup();
+    expectLive();
+    act(() => rig.shell().play());
+    expectInert();
+    await flush();
+    await advance(500); // the loading strip is up
+    expectInert();
+    expect(rig.stage).not.toHaveAttribute("inert");
+    expect(rig.stage).not.toHaveAttribute("aria-hidden");
+    act(() => rig.shell().reportPhysics("ready"));
+    await flush();
+    await advance(1000);
+    expectInert();
+  });
+
+  it("Exit restores every attribute and focuses Play", async () => {
+    const rig = setup();
+    await toGame(rig);
+    expectInert();
+    act(() => rig.shell().exit());
+    act(() => rig.shell().exitLegDone());
+    await advance(40);
+    expectLive();
+    expect(rig.play).toHaveFocus();
+  });
+
+  it("Cancel while loading restores every attribute and focuses Play", async () => {
+    const rig = setup();
+    act(() => rig.shell().play());
+    await flush();
+    await advance(500);
+    act(() => rig.shell().cancel());
+    expectLive();
+    expect(rig.play).toHaveFocus();
+  });
+
+  it("a load failure keeps the page inert behind its dialog and restores it on Back", async () => {
+    importFails = 1;
+    const rig = setup();
+    act(() => rig.shell().play());
+    await flush();
+    expect(rig.shell().failure).not.toBeNull();
+    expectInert();
+    act(() => rig.shell().back());
+    await advance(40);
+    expectLive();
+    expect(rig.play).toHaveFocus();
+  });
+
+  it("a lost graphics context restores the page on Back", async () => {
+    const rig = setup();
+    await play(rig);
+    await advance(360);
+    act(() => rig.shell().reportFault("context-lost"));
+    expectInert();
+    act(() => rig.shell().back());
+    await advance(40);
+    expectLive();
+    expect(rig.play).toHaveFocus();
+  });
+
+  it("keeps an aria-hidden or inert the page already had, and unmounting mid-game leaves nothing behind", async () => {
+    const rig = setup();
+    const nav = screen.getByTestId("nav");
+    nav.setAttribute("aria-hidden", "false");
+    const footer = screen.getByTestId("footer");
+    footer.setAttribute("inert", "");
+    await toGame(rig);
+    rig.unmount();
+    expect(nav).toHaveAttribute("aria-hidden", "false");
+    expect(nav).not.toHaveAttribute("inert");
+    expect(footer).toHaveAttribute("inert");
+    expect(footer).not.toHaveAttribute("aria-hidden");
   });
 });
