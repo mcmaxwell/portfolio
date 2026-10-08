@@ -27,4 +27,5 @@ Third-person 3D campus entered from the hero Play button, with Project Lab, Skil
 - **Files**: components/game/ (GameScene.tsx, shell/gameLoader.ts, world/WorldView.tsx, world/campus.ts, player.ts, input.ts, followCamera.ts, challenge.ts, progress.ts, ui/GameInterface.tsx, ui/TouchControls.tsx); entry point components/avatar/TalkingAvatar.tsx
 - **Progress**: localStorage key portfolio.game.progress, version 1 (ADR-005); unavailable or invalid storage falls back to in-memory progress.
 - **Limits and controls**: see the "Playable 3D world" section of README.md.
+- **Camera and entry**: follow camera rule 6 (frameHead) keeps the avatar head in view by tilting the aim, never moving the camera; the first opening env fade step is capped at ENV_FIRST_STEP_S = 10 ms (components/game/tween.ts).
 - **Status**: stable

@@ -81,6 +81,7 @@ Each destination shows only content that already exists in `data/index.ts` and `
 ### Entering and exiting
 
 Play starts one continuous transition: the hero text and buttons fade out, the hero canvas grows to full screen, and the camera moves behind the avatar while it walks into the world.
+The first step of the fade is capped, so a long frame at the world swap delays the fade rather than producing a visible step.
 Loading progress, if any, appears as a small strip while the avatar idles.
 Cancel is available while the world loads, and Escape also cancels.
 Exit returns to the exact hero layout with focus on Play.
@@ -139,8 +140,6 @@ The first Play downloads about 945 kB in total.
 - Cold load improved by about 600 ms against a targeted 1.1 s, measured on a host that was not quiet.
 - The toes of the avatar can sit up to 6 cm inside a prop in plinth and wall corners, for up to 25 frames.
 - Faint streaks are visible on some interior walls.
-- The entry fade's largest brightness step at the world swap is a follow-up; it reads as a fade rather than a pop.
-- When jumping at the tower passage mouth, the avatar's head can be cropped at the top of the frame for about two frames, which is a framing follow-up.
 - Performance was measured in headless Chrome on an Apple M1 Pro: frame time p95 is 16.7 ms, which is the 60 Hz vsync cap, and render CPU time p95 is 0.8 ms.
 - Across 50 Play and Exit cycles, the post-GC JavaScript heap rose from 17.19 MB to 19.04 MB and was flattening out.
 

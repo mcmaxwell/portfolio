@@ -9,7 +9,9 @@
 //      passage) it also swings sideways round the avatar (the "swing", smallest first) instead of
 //      sinking into the avatar or the wall. The camera is never forced past the clear distance:
 //      a position inside a collider is never an option,
-//   5. with the avatar outside a building (not in its doorway) the camera stays outside it too.
+//   5. with the avatar outside a building (not in its doorway) the camera stays outside it too,
+//   6. the crown of the head stays inside the view: when the camera is close and above a jumping
+//      avatar (the passage mouth pulls it in at once) the aim tilts up just enough, and relaxes smoothly.
 // It pulls in at once and restores smoothly.
 import * as THREE from "three";
 import { HERO } from "./shell/transition";
@@ -142,6 +144,9 @@ export function createFollowCamera(
   // Floor tracking: feet height of the last grounded frame (the camera floor follows a fall down).
   let lastGroundFeet = 0;
   let feetNow = 0;
+  // Extra aim elevation (radians) that keeps the crown of the head in view; rises at once, decays smoothly.
+  let aim = 0;
+  const aimPoint = new THREE.Vector3();
   const anchor = new THREE.Vector3(); // the avatar's true upper body, the origin of every cast
   const anchorVec: Vec3 = { x: 0, y: 0, z: 0 };
   const probeVec: Vec3 = { x: 0, y: 0, z: 0 };
@@ -387,10 +392,43 @@ export function createFollowCamera(
     desired.copy(resolved);
   };
 
+  /**
+   * Rule 6: the elevation the aim must gain so the crown of the head is no higher than the top of
+   * the view less the margin. The camera stays where rules 1 to 5 put it; only where it looks changes.
+   */
+  const frameHead = (dt: number, instant: boolean) => {
+    const decay = Math.exp(-cfg.restoreK * dt);
+    aim = instant ? 0 : aim * decay;
+    if (aim < 1e-4) aim = 0;
+    const lx = pivot.x - desired.x;
+    const ly = pivot.y - desired.y;
+    const lz = pivot.z - desired.z;
+    const hl = Math.hypot(lx, lz);
+    const hd = Math.hypot(anchor.x - desired.x, anchor.z - desired.z);
+    if (hd > 0.05) {
+      const lookEl = Math.atan2(ly, hl);
+      const crownEl = Math.atan2(feetNow + cfg.headTop - desired.y, hd);
+      const limit = (cfg.fov / 2 - cfg.frameMarginDeg) * DEG;
+      aim = Math.max(aim, crownEl - lookEl - limit);
+    }
+    aim = Math.min(aim, MAX_PITCH);
+  };
+
   const apply = () => {
     camera.position.copy(desired);
     look.set(pivot.x, pivot.y, pivot.z);
-    camera.lookAt(look);
+    if (aim > 0) {
+      // Tilt the aim up by `aim`, keeping its azimuth and its distance from the camera.
+      const lx = look.x - desired.x;
+      const lz = look.z - desired.z;
+      const hl = Math.hypot(lx, lz);
+      const r = Math.hypot(hl, look.y - desired.y);
+      const el = Math.min(Math.atan2(look.y - desired.y, hl) + aim, MAX_PITCH);
+      const ax = hl > 1e-6 ? lx / hl : Math.sin(yaw);
+      const az = hl > 1e-6 ? lz / hl : Math.cos(yaw);
+      aimPoint.set(desired.x + ax * r * Math.cos(el), desired.y + r * Math.sin(el), desired.z + az * r * Math.cos(el));
+      camera.lookAt(aimPoint);
+    } else camera.lookAt(look);
   };
 
   const setAnchor = (target: Vec3) => {
@@ -426,6 +464,7 @@ export function createFollowCamera(
       reach = 1;
       lift = 0;
       swing = 0;
+      aim = 0;
       setAnchor(target);
       lastGroundFeet = feetNow;
       exitDone = false;
@@ -452,6 +491,7 @@ export function createFollowCamera(
         setAnchor(target);
         lastGroundFeet = feetNow;
         pullIn(0, true);
+        frameHead(0, true);
         apply();
         setFov(cfg.fov);
         return;
@@ -525,6 +565,8 @@ export function createFollowCamera(
       setAnchor(target);
       if (grounded) lastGroundFeet = feetNow;
       pullIn(dt, false);
+      if (blend) aim = 0;
+      else frameHead(dt, false);
       if (blend && blend.kind === "entry") {
         blend.t += dt;
         const k = Math.min(1, blend.t / blend.duration);
@@ -545,6 +587,7 @@ export function createFollowCamera(
       setAnchor(target);
       lastGroundFeet = feetNow;
       pullIn(0, true);
+      frameHead(0, true);
       apply();
     },
     dispose() {

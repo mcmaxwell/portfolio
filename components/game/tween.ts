@@ -37,3 +37,23 @@ export function stepYawTween(t: YawTween, dt: number): number {
 }
 
 export const yawTweenDone = (t: YawTween): boolean => t.elapsed >= t.delay + t.duration;
+
+/** A value tween with a start delay and an easing, advanced by frame time (the world look tween). */
+export type EnvTween = { from: number; to: number; delay: number; duration: number; elapsed: number; ease: (t: number) => number };
+
+/**
+ * The most frame time the FIRST step of an opening (from < to) tween may consume: 10 ms, under the 16.7 ms of a 60 Hz frame (the fade then opens gently and builds up).
+ * The first visible frame of the world follows the swap from the hero, which is a long frame
+ * (shader and texture work, 35 to 47 ms measured). Counted in full it becomes the first step of
+ * the fade, two to three times a regular step. Capped, the fade starts no harder than it
+ * runs and the hitch only delays the fade by the time it cost. Later steps take the whole frame.
+ */
+export const ENV_FIRST_STEP_S = 0.01;
+
+/** Advances the tween by one frame and returns [value, done]. Closing tweens (exit) take the whole frame. */
+export function stepEnvTween(t: EnvTween, dt: number): [value: number, done: boolean] {
+  const opening = t.to > t.from;
+  t.elapsed += opening && t.elapsed <= 0 ? Math.min(dt, ENV_FIRST_STEP_S) : dt;
+  const k = t.duration <= 0 ? 1 : (t.elapsed - t.delay) / t.duration;
+  return [lerp(t.from, t.to, t.ease(k)), k >= 1];
+}

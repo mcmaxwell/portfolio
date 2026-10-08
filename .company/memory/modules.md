@@ -47,11 +47,15 @@ Keep one concise section per verified module. Do not duplicate the generated gra
 - Package root: components/avatar/
 - Entrypoints: TalkingAvatar.tsx (default export, Canvas + UI), Avatar.tsx (Avatar, GLTF/animation), useRealtimeChat.ts (WebRTC voice hook), AskHints.tsx (typewriter prompt hints)
 - Setup/development commands: npm run dev (mic permission + OPENAI_API_KEY needed for live session)
-- Build/test/lint commands: npm run build / npm run lint; tests: none
+- Build/test/lint commands: npm run build / npm run lint; tests: components/avatar/introInert.test.tsx
 - Dependencies and external services: @react-three/fiber, @react-three/drei (useGLTF), three; OpenAI Realtime API — useRealtimeChat fetches /api/realtime-session for the ephemeral key then POSTs SDP to https://api.openai.com/v1/realtime/calls. Uses navigator.mediaDevices.getUserMedia (microphone). Loads GLB assets from public/.
 - Security and data boundaries: Client never sees OPENAI_API_KEY — only the ephemeral key from the server route (useRealtimeChat.ts:109-118). Mic access gated by browser + Permissions-Policy 'microphone=(self)' (next.config.mjs:46). Client function-call handler only runs whitelisted local actions (navigate_to_section, play_gesture) — useRealtimeChat.ts:6-24,171-192. Server-only boundary: OPENAI_API_KEY must not escape app/api/realtime-session/route.ts.
+- Intro gating: IntroVideo reports its cover state through onActiveChange, and TalkingAvatar keeps the covered hero controls inert and aria-hidden while the cover is active (playing or fading).
+- Play does not call shell.prefetch on hover, focus or press until the cover is removed.
+- With NEXT_PUBLIC_INTRO_VIDEO_URL unset, the hero is unchanged.
+- The intro video URL must be same-origin, because the CSP media-src is 'self' blob:.
 - Key source files: components/avatar/useRealtimeChat.ts, components/avatar/Avatar.tsx, components/avatar/TalkingAvatar.tsx
-- Related tests: none
+- Related tests: components/avatar/introInert.test.tsx (queries by text, because role queries ignore inert and aria-hidden subtrees)
 - Status: verified
 
 ## lib
@@ -98,6 +102,13 @@ Keep one concise section per verified module. Do not duplicate the generated gra
 - Responsibility: The playable third-person 3D portfolio world entered from the hero Play button: loading shell and transitions, the campus, locomotion, the collision-aware follow camera, interactions and panels, the energy-cell challenge, versioned local progress, and keyboard, mouse and touch controls.
 - Camera: the follow camera keeps CAMERA.minDistance whenever clear space allows.
 - Camera: in a sealed pocket under 0.45 m, which the campus does not contain, the camera stays within the clear distance and the near plane is raised so the avatar is clipped rather than the camera entering geometry.
+- Camera rule 6 (frameHead in components/game/followCamera.ts) tilts the aim so the head top (CAMERA.headTop, 1.85 m) stays inside the view less CAMERA.frameMarginDeg (4 degrees); the camera position is unchanged.
+- Camera rule 6 is off during the entry and exit blends.
+- Entry fade: stepEnvTween in components/game/tween.ts caps the first step of an opening env tween at ENV_FIRST_STEP_S (10 ms), so the world-swap frame hitch delays the fade instead of becoming its first step.
+- Test layout: the bodyClearance matrix is split per wall face into `bodyClearance*.test.ts` files that share bodyClearanceHarness.ts, so vitest can run them on several workers.
+- Camera tests: followCamera.framing.test.ts covers rule 6 across headings, walk and run, jump points and viewports, using cameraHarness.ts.
+- vitest.config.mts sets testTimeout and hookTimeout to 60 s as a safety net only, not as the fix.
+- The suite was verified under natural host load up to about 92; zero-timeout behaviour under a synthetic load of 140 is unverified.
 - Package root: components/game/
 - Entrypoints: GameScene.tsx, shell/gameLoader.ts (dynamic import after Play), world/WorldView.tsx, ui/GameInterface.tsx, ui/TouchControls.tsx, ui/PauseMenu.tsx, ui/panels.tsx, progress.ts, challenge.ts
 - Setup/development commands: npm run dev
@@ -105,5 +116,5 @@ Keep one concise section per verified module. Do not duplicate the generated gra
 - Dependencies and external services: three and @react-three/fiber as for the hero; a Rapier physics engine (physics initialization can fail, and the portfolio stays usable); public/avatar.glb, public/animations/ and public/game/clips/ (see ASSETS.md). The voice session stays disconnected in the game: the lifecycle probe counted zero realtime-session fetches and zero microphone acquisitions.
 - Security and data boundaries: progress is stored only in the browser under localStorage key portfolio.game.progress (ADR-005) and falls back to memory when storage is blocked or throws. The game shares the hero's avatar model through the shared useGLTF cache. No secrets are used.
 - Key source files: components/game/GameScene.tsx, components/game/player.ts, components/game/followCamera.ts, components/game/challenge.ts, components/game/progress.ts, components/game/world/campus.ts
-- Related tests: components/game/__tests__/ (challenge, progress, followCamera, player.physics, input, session, gameLoader, shell, noWebgl, panels, TouchControls)
+- Related tests: components/game/__tests__/ (challenge, progress, followCamera, followCamera.framing, tween, player.physics, input, session, gameLoader, shell, noWebgl, panels, TouchControls, bodyClearance* per wall face; see Camera tests and Test layout above)
 - Status: verified

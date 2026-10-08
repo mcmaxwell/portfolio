@@ -86,6 +86,10 @@ export const CAMERA = {
   maxLiftDeg: 80,
   lookSensitivity: 0.004,
   entrySeconds: 1.5,
+  /** Height of the avatar's crown above the soles (m): the point rule 6 keeps inside the frame. */
+  headTop: 1.85,
+  /** Margin (degrees) kept between the crown and the top edge of the view. */
+  frameMarginDeg: 4,
 } as const;
 
 // clipSpeed: ground speed of each shipped clip in m/s, scaled to the avatar by the
