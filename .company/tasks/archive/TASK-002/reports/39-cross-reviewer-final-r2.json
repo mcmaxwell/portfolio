@@ -1,0 +1,145 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "39-cross-reviewer-final-r2",
+  "agent": "cross-reviewer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "codex",
+  "authType": "subscription",
+  "planLabel": "unavailable (ChatGPT subscription)",
+  "executionPlan": "Verified the fixed review head, inspected the complete round-2 delta and relevant camera context, ran every required check verbatim, and independently checked the collision-distance, near-plane restoration, regression-test, and whitespace claims.",
+  "actualModel": "GPT-5 (unverified)",
+  "summary": "The round-1 collision defect and all three whitespace errors are fixed, and every required check passes. The cross-review is approved with one minor finding for a stale HARD_MIN comment that no longer describes the sealed-pocket behavior.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": "3b285ff52a341f80bf4e5fb23fede169d22f474b",
+    "targetDiffFiles": [
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/game/__tests__/stance.test.ts",
+      "components/game/followCamera.ts",
+      "components/game/world/texturePaint.ts"
+    ],
+    "projectContextUsed": false
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "TypeScript check passed.",
+      "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "Lint passed with one pre-existing warning outside the reviewed delta.",
+      "evidence": "> portfolio@0.1.0 lint\n> next lint\ncomponents/avatar/useRealtimeChat.ts:224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "30 test files and 637 tests passed.",
+      "evidence": "Test Files 30 passed (30)\nTests 637 passed (637)\nDuration 224.15s"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "Production build completed successfully.",
+      "evidence": "Creating an optimized production build ...\n\u2713 Compiled successfully\n\u2713 Generating static pages (7/7)\nRoute /: 40.9 kB, First Load JS 125 kB"
+    },
+    {
+      "command": "git diff --check 710f03404c18e6bb28ec05e4073c4b8bace5e176..3b285ff52a341f80bf4e5fb23fede169d22f474b",
+      "exitCode": 0,
+      "result": "No whitespace errors.",
+      "evidence": "Command exited 0 with no output."
+    },
+    {
+      "command": "git diff -w --exit-code 3c888d6a7d592a739d784b1ae2f3aae7d32986e3..3b285ff52a341f80bf4e5fb23fede169d22f474b -- components/avatar/TalkingAvatar.tsx",
+      "exitCode": 0,
+      "result": "TalkingAvatar delta is whitespace-only.",
+      "evidence": "Command exited 0 with no output."
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+      "status": "passed",
+      "evidence": "HEAD was 3b285ff52a341f80bf4e5fb23fede169d22f474b. The complete stat and unified diff from 3c888d6a7d592a739d784b1ae2f3aae7d32986e3 were inspected with the changed implementation and tests in context; the sole finding cites changed follow-camera code."
+    },
+    {
+      "criterion": "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+      "status": "passed",
+      "evidence": "npm run typecheck, npm run lint, npm test, and npm run build were run verbatim from the working-copy root and each exited 0."
+    },
+    {
+      "criterion": "The round-1 important finding is verified fixed: for every input the follow camera's resolved distance is at most the solved clear distance, the sealed-pocket handling (raised near plane) keeps the camera out of geometry and restores the near plane, and the new tests would fail on the round-1 head.",
+      "status": "passed",
+      "evidence": "followCamera.ts:368-381 keeps reach and floor bounded by sol.t, removes the overriding HARD_MIN term, and raises the near plane only below HARD_MIN before restoring NEAR otherwise. Tests at followCamera.test.ts:126-171 cover immediate hits, multiple clear distances and changing look input, restoration to 0.1, and smooth recovery. On the round-1 source, line 369 forced at least HARD_MIN/len, producing a 0.45 m camera distance for clear distances 0 and 0.1, which directly violates the new <=1e-6 and <=0.100001 assertions."
+    },
+    {
+      "criterion": "git diff --check from 710f034 to headRef reports no whitespace errors, and the components/avatar/TalkingAvatar.tsx change in the delta is whitespace only.",
+      "status": "passed",
+      "evidence": "git diff --check 710f03404c18e6bb28ec05e4073c4b8bace5e176..3b285ff52a341f80bf4e5fb23fede169d22f474b exited 0 with no output. The whitespace-ignoring TalkingAvatar diff exited 0 with no output."
+    },
+    {
+      "criterion": "Any correctness, robustness or maintainability defect introduced by the delta is reported as a finding with severity; the owner-accepted known limitations listed in the round-1 contract are not findings.",
+      "status": "passed",
+      "evidence": "The delta was reviewed for camera resolution, projection updates, transitions, disposal, and regression coverage. One minor stale invariant comment is reported; no owner-accepted limitation is reported."
+    }
+  ],
+  "assumptions": [],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "When a hard positioning invariant becomes a soft target that yields to collision clearance, update the adjacent invariant comment along with the resolver and tests."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 2400,
+    "approxLinesWritten": 0,
+    "retries": 0
+  },
+  "crossReview": {
+    "verdict": "approved",
+    "reviewedHead": "3b285ff52a341f80bf4e5fb23fede169d22f474b",
+    "checksRun": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 lint\n> next lint\nOne pre-existing react-hooks/exhaustive-deps warning at components/avatar/useRealtimeChat.ts:224."
+      },
+      {
+        "name": "unit",
+        "command": "npm test",
+        "exitCode": 0,
+        "evidence": "Test Files 30 passed (30)\nTests 637 passed (637)\nDuration 224.15s"
+      },
+      {
+        "name": "build",
+        "command": "npm run build",
+        "exitCode": 0,
+        "evidence": "Creating an optimized production build ...\n\u2713 Compiled successfully\n\u2713 Generating static pages (7/7)\nRoute /: 40.9 kB, First Load JS 125 kB"
+      }
+    ],
+    "findings": [
+      {
+        "severity": "minor",
+        "file": "components/game/followCamera.ts",
+        "line": 310,
+        "trigger": "A maintainer reads the HARD_MIN declaration while reasoning about the newly added sealed-pocket path.",
+        "consequence": "The comment falsely states that 0.45 m is the closest possible camera distance even though the new resolver intentionally allows smaller distances and clips the avatar with the near plane, which can mislead future maintenance or regression-test design.",
+        "evidence": "Line 310 says HARD_MIN is the closest the camera ever gets, while changed lines 374-381 omit HARD_MIN from the resolved t and explicitly handle t * len below HARD_MIN.",
+        "rule": "Comments describing invariants must remain consistent with the behavior implemented by the adjacent code."
+      }
+    ]
+  }
+}

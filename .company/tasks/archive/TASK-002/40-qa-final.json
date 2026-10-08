@@ -1,0 +1,257 @@
+{
+  "workItemId": "TASK-002",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "stageId": "40-qa-final",
+  "assignee": "qa-engineer",
+  "objective": "Full deep QA of the final revision 3b285ff (Milestones 1 to 5 plus the cross-review camera fix) against every work-item acceptance criterion, run once per the user's token-saving decision, plus the items carried from the M4 and M5 light QAs. Decide approve or reject for delivery.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/work-item.json",
+    ".company/tasks/active/TASK-002/design.md",
+    ".company/tasks/active/TASK-002/reports/36-qa-m5.json",
+    ".company/tasks/active/TASK-002/reports/37-cross-reviewer-final.json",
+    ".company/tasks/active/TASK-002/reports/38-game-dev-xreview-fix.json",
+    ".company/tasks/active/TASK-002/reports/39-cross-reviewer-final-r2.json"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/36-qa-m5.json",
+    ".company/tasks/active/TASK-002/reports/38-game-dev-xreview-fix.json",
+    ".company/tasks/active/TASK-002/reports/39-cross-reviewer-final-r2.json"
+  ],
+  "acceptanceCriteria": [
+    "QA ran npm run typecheck, npm run lint, npm test and npm run build at 3b285ff with exit codes explicitly captured (build in a copy of the tree), output tails recorded (637 tests or more; / route First Load JS within 2 kB of 125 kB), git diff --check 710f034 is clean, the working tree has no uncommitted source changes, and ordinary portfolio browsing (full scroll, talking avatar idle) fetches no game-world, physics or locomotion-only assets and the game modules are not in the initial bundle (work-item criteria 6 and 9).",
+    "Entry and exit on the production build at 1440x900 and 1920x1080: Play is one continuous cinematic transition with no hard cut, staggered chrome fade, smooth canvas growth, camera move behind the avatar and unobtrusive loading, verified with a recorded frame sequence at the frame-rate budget; Exit reverses to the exact hero layout with focus on Play; reduced motion gives a short crossfade; Pause, repeated entry and exit (10 cycles), tab-hide auto-pause and load Cancel restore hero camera, idle avatar, page scroll and focus, and voice chat stays disconnected with the microphone released (work-item criteria 0, 5 and 13).",
+    "Gameplay at 1440x900 with keyboard and mouse: walking, running, jumping, gravity, wall collision, slope and step handling and the collision-aware camera work; all three destinations are reachable on foot and show only data/index.ts and lib/persona.ts content with no invented claims and no testimonials; panels are keyboard accessible with focus handling; the full challenge loop (three cells, beacon hint before three, celebration, completion actions, Restart, reload persistence, storage blocked) completes; during drops, landings and camera drags at the tower passage, outer Lab wall and three other walls, 0 frames have the head or torso hidden or the camera below ground or inside geometry (work-item criteria 1, 2, 3, 14 and 15; criterion 15 is judged against the Boss-recorded refinement that in a sealed pocket under 0.45 m the camera stays within clear space and the near plane clips the avatar).",
+    "Touch in labelled CDP emulation at 390x844 and 844x390: joystick walk and run, simultaneous camera drag, Jump and context Interact work, all three destinations including the Skills Workshop in landscape are reached in continuous runs, the touch jump in the tower passage shows no camera clipping of the avatar, controls are at least 44 px and clear of safe areas (work-item criterion 4 and carried M4 F5).",
+    "Failures and resources on the production build: asset download failure, physics init failure, WebGL unavailable, context loss and invalid save each leave the portfolio usable (work-item criterion 7); a 50-cycle Play and Exit run shows listeners, DOM nodes, geometries, textures and programs constant and the post-GC JS heap plateauing (carried M5 F2), with the numbers recorded; rAF p95 under 17.5 ms walking the campus at 1440x900 with host load recorded; axe-core reports 0 serious or critical violations on the HUD, pause menu, every panel and the completion panel.",
+    "The automated tests cover game-state transitions, load cancellation, input normalization and blur release, grounding and jump eligibility, collectible uniqueness, completion and restart, storage fallback, entry and exit cleanup and project-panel focus handling, and QA spot-checks at least three of them for assertions that could fail (work-item criterion 8). QA states approve or reject with every finding given a severity and an owner, lists the known limitations it confirms, and notes the round-2 cross-review minor finding (stale HARD_MIN comment at components/game/followCamera.ts:310) as pending."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not edit implementation files; never run git stash, reset or checkout; do not commit.",
+    "Dev server runs on http://localhost:3100 from this worktree and must stay up; for production checks run next start from a copy on another free port (never 3000) and stop it by exact PID; never pkill by name, not even on your own script path.",
+    "Every Chrome you launch must use a --user-data-dir inside your stage output directory, deleted on exit and failure via exit and SIGTERM handlers; check free disk before and during and stop under 5 GB; delete build copies; never write evidence under the repository or .company.",
+    "Do not start voice chat against the live API; verify disconnected state and microphone release without opening a real session.",
+    "Record host load with every timing measurement; under heavy load rerun a timing-out test file alone with a raised --testTimeout before calling it a regression.",
+    "Reuse harness scripts from upstream evidence directories; keep logs on disk and read only tails.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "QA report with browser evidence, screenshots for the PR, and approve or reject decision"
+  ],
+  "reportPath": "reports/40-qa-final.json"
+}

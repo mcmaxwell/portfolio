@@ -1,0 +1,260 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "22-graphics-engineer-visual-pass",
+  "assignee": "graphics-engineer",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Visual pass for the Milestone 3 campus: turn the flat primitive blocks into the spec's small technology campus at dusk (sky and fog, lighting, natural ground and paths, finished building materials with green-cyan accents, trees and props, illuminated installations) without changing layout, colliders, gameplay or camera behaviour, inside the performance and asset budgets.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/spec-implementation-plan.md",
+    ".company/tasks/active/TASK-002/design.md",
+    ".company/tasks/active/TASK-002/reports/21-game-dev-m3.json",
+    "components/game/world/campus.ts",
+    "components/game/world/builders.ts",
+    "components/game/world/WorldView.tsx",
+    "components/game/world/resources.ts",
+    "components/game/GameScene.tsx",
+    "components/avatar/TalkingAvatar.tsx",
+    "app/globals.css"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/21-game-dev-m3.json"
+  ],
+  "acceptanceCriteria": [
+    "Before and after screenshot pairs at 1440x900 on the real GPU, from spawn, at each destination forecourt and entrance, inside each hall, and at the beacon, show a coherent dusk campus: a sky gradient and distance fog instead of flat black, warm-to-cool dusk key and fill lighting with soft shadows on the avatar and buildings, ground that reads as paving, grass and paths instead of one flat colour, buildings with finished materials and trim, green-cyan accents consistent with the site's terminal palette, readable signs, and trees and props that no longer look like single boxes; no surface is overexposed or clipped (the beacon pad and tower doorway frame read as lit installations, not flat white-cyan slabs).",
+    "The avatar stays the same person: skin, shirt, pants and shoes keep their colours and the clothing bake shows no specks under the new lighting (zoomed avatar crops before and after at idle and walk), and the hero (talking-avatar) view outside the game is pixel-identical in a canvas-hidden-free screenshot comparison.",
+    "Layout, colliders, interactables, signs placement, camera behaviour and gameplay are unchanged: layout.test.ts, followCamera.test.ts, player.physics.test.ts and interactions.test.ts pass unmodified, and the M2 entry cinematic still has no blank, T-pose or flash frame and fades the world in smoothly (frame montage).",
+    "Performance and budgets hold on the real GPU while walking and running through the whole campus at 1440x900 and 1920x1080: rAF p95 under 17.5 ms and no frame over 25 ms, draw calls and triangles recorded before and after (instancing or merging used for repeated props), shadow map size justified, any new textures or models recorded in ASSETS.md with source and licence, and total additional game assets stay under 8 MB.",
+    "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the / route First Load JS stays within 2 kB of 125 kB, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "Do not change campus layout data positions or sizes, colliders, interactables, camera code or gameplay; only materials, lighting, sky, fog, decorative visual-only geometry and their resources. If a layout change seems necessary, report it as a question instead of making it.",
+    "Prefer procedural materials and runtime canvas textures; only add downloaded assets with a recorded CC0 or equivalent licence, and never add network-fetched runtime dependencies.",
+    "Do not touch public/avatar.glb, the clothing bake, components/avatar/* or any design section 9 do-not-touch file.",
+    "Always close every Chrome you launch; never pkill by name, kill only PIDs you started.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "materials and lighting",
+    "decorative geometry",
+    "screenshots",
+    "measurements"
+  ],
+  "reportPath": "reports/22-graphics-engineer-visual-pass.json"
+}

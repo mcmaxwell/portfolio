@@ -1,0 +1,122 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "36-qa-m5",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "approved",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Standard-profile light QA: ran typecheck, lint, test and a copy-tree production build myself, verified the diff scope and the TalkingAvatar guard, then ran the production build on a private port with reused CDP harnesses plus two new probes (Cancel path, hero layout restore) at host load 20-43; stopped the server by exact PID and removed build copy and Chrome profiles.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "All five criteria pass with first-hand evidence on the production build: gates green (635 tests, / 125 kB), page inert and every failure row recovers to a usable portfolio with focus on Play, p95 16.8 ms, cold click swap 710-756 ms (report 709), 0 idle freezes, 0 game requests while browsing, M4 findings fixed, axe 0 violations, loop, camera sweep, Exit layout and touch intact. Approve for M5 commit. Findings are low: partial cold-load gain (known limitation) and a decelerating heap creep (about 0.04 MB per cycle by cycle 15, listeners flat).",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "tsc --noEmit -p . no errors; typecheck.exit 0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'; lint.exit 0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "30 files, 635 passed",
+      "evidence": "Test Files 30 passed (30); Tests 635 passed (635); Duration 231.93s; test.exit 0"
+    },
+    {
+      "command": "npm run build (rsync copy, node_modules symlinked, copy deleted)",
+      "exitCode": 0,
+      "result": "built",
+      "evidence": "/ 40.9 kB 125 kB; First Load JS shared by all 84.6 kB; build.exit 0"
+    },
+    {
+      "command": "node failures.mjs on production build :3297 (9 rows)",
+      "exitCode": 0,
+      "result": "all rows pass",
+      "evidence": "failures.log"
+    },
+    {
+      "command": "node a11y.mjs (axe-core, Tab sweeps, AX tree) on production build",
+      "exitCode": 0,
+      "result": "11 scans 0 violations; AX 32 nodes",
+      "evidence": "a11y.log"
+    },
+    {
+      "command": "node cancel.mjs / layout.mjs / hint.mjs / f3.mjs / rm.mjs (own probes and reused harness)",
+      "exitCode": 0,
+      "result": "see criteria",
+      "evidence": "h/out/*.json"
+    },
+    {
+      "command": "node perf.mjs 1440x900; ab.mjs evalclick x3 and hoveronly x2; bytes.mjs; cycles.mjs N=5 and N=15",
+      "exitCode": 0,
+      "result": "p95 16.8 ms; cold swap 710-756 ms; 0 idle long tasks; 0 game requests browsing; listeners flat, heap creeps ~0.04 MB per cycle",
+      "evidence": "perf.log, h/out/ab-cold-*.json, bytes.log, h/out/cycles15.json; load 20-43"
+    },
+    {
+      "command": "node loop.mjs, qpass.mjs x2, nav.mjs (touch) on production build",
+      "exitCode": 0,
+      "result": "loop complete; 0 inside 0 occluded frames; touch walk and Interact ok",
+      "evidence": "loop.log, h/out/qp*.json, touch/port.out"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build were each run by QA with exit codes explicitly captured (build in a copy of the tree), output tails recorded (635 tests or more; / route First Load JS within 2 kB of 125 kB), the uncommitted diff against 9847be9 touches only files named in report 35, and the components/avatar/TalkingAvatar.tsx change is limited to the no-WebGL guard (design section 9 permits hero changes only in that file).",
+      "status": "passed",
+      "evidence": "Own runs from the worktree (HEAD 9847be9): typecheck exit 0 (typecheck.exit), lint exit 0 with only the pre-existing useRealtimeChat.ts 224:6 warning, npm test exit 0: 'Test Files 30 passed (30); Tests 635 passed (635)' load 20-30. Build in a rsync copy with node_modules symlinked (copy deleted): build.exit 0, '/ 40.9 kB 125 kB' and 'First Load JS shared by all 84.6 kB' (within 2 kB of 125 kB). git status: 17 modified plus 5 new source files, identical to the 22 files named in report 35 (the untracked .company ADR-001..006 and task records are task records, not source). TalkingAvatar.tsx diff is exactly +8/-1 lines: a webgl && guard around the Canvas (with a comment), a webgl && guard around the Play button, and removal of '|| !webgl' from its disabled expression; no hero look, camera, avatar or animation change."
+    },
+    {
+      "criterion": "Inert page and failures verified in QA's own browser runs on the production build: while playing, Tab never leaves the game overlay and the page behind it is absent from the accessibility tree; after Exit, Cancel, a forced asset download failure, WebGL unavailable and a forced context loss, the portfolio is usable with focus on Play (or, without WebGL, the page renders with no Play button and no blank screen); an invalid save starts at 0/3 with no visible error.",
+      "status": "passed",
+      "evidence": "Production build in a copy on :3297 (own Chrome profiles in the stage dir, deleted). failures.mjs (failures.log): asset download failure and game-chunk-blocked both show the dialog, Retry while still blocked keeps the dialog, Back returns to hero with focusOnPlay true, inert 0 attributes added back (19 baseline aria-hidden), nav link scrolls to 1883, Play works after unblock and Exit lands on Play; physics reject (0.3 s) and hang (20.2 s) dialogs likewise; webgl-unavailable: webgl false, playButton false, h1 and 5 nav links present, nav click scrolls, no errors, no blank page; forced context loss: dialog 'Graphics were interrupted', Back lands focus on Play, hero canvas present, Play works again; invalid saves (not JSON, wrong shape, version 99) all start at 'Energy cells 0/3', visibleErrorText false, bad value overwritten only on the next save. a11y.mjs (a11y.log): AX tree while playing 32 non-ignored nodes, only main, the avatar region, pause and exit buttons; Tab sweeps escapedToPage false for HUD, pause, 7 panels and completion. Own cancel.mjs: with clips requests held, Cancel takes focus, 6 Tabs never reach a page link (focus stays on Cancel or body), 8 inert elements while loading; after Cancel experience hero, focusOnPlay true, 0 inert, body position static. layout.mjs and loop.mjs end with exit-focus 'BUTTON:[ play / explore ]'."
+    },
+    {
+      "criterion": "Performance claims spot-checked by QA on the production build with host load recorded: rAF p95 under 17.5 ms walking the campus at 1440x900; Play to playable on a cold click is not slower than the report's figure by more than 20 percent; the hero stays free of freezes over 50 ms while idle after a Play hover; no main-thread work or game assets are fetched on ordinary portfolio browsing; heap and listener counts do not grow monotonically over 5 Play and Exit cycles. QA judges whether the partial cold-load gain (about 600 ms of the targeted 1.1 s) is acceptable and records it as a finding or a known limitation.",
+      "status": "passed",
+      "evidence": "Host load 20-43 throughout (never quiet; recorded per run). perf.mjs 1440x900 real GPU (perf.log): 3119 frames over 52 s, p50 16.7, p95 16.8, p99 16.8, max 16.8 ms, 0 frames over 20 ms (load 30.5 to 22.9). Cold click (ab.mjs evalclick, fresh profile each, load 25-26): click to game swap 710, 713, 756 ms vs the report's 709 ms (limit 851 ms); click to Game started 2232, 2247, 2279 ms. Hover only, 6 s idle (2 runs, load 26 and 30): 0 long tasks over 50 ms and 0 rAF gaps over 40 ms. bytes.mjs: 70 requests while browsing and scrolling the whole page, browsingGameLike [] (no game chunk, clips or textureWorker); first play 944,993 B gzip, 13 requests. cycles.mjs N=5 and N=15: listeners 480 / jsListeners 505, DOM nodes 453, geometries 19, textures 66, programs 47 constant from cycle 1 to 15, focus on Play every cycle. Heap (after GC) 11.5 baseline, 17.19 after cycle 1, then 17.55, 17.76, 17.84, 17.95 ... 18.58 at cycle 15: increments shrink from 0.36 to about 0.04 MB per cycle, so heap is not flat over 5 cycles (+0.76 MB) but decelerating and bounded; listener counts do not grow. Judgement: the partial cold-load gain (about 600 ms of 1.1 s; 710 ms swap vs 1311 ms base per dev A/B) is acceptable as a recorded known limitation, not a blocker: the click still hands over in under 0.8 s on a load-30 host and it is a strict improvement with 0 hero freezes; heap creep is a low finding."
+    },
+    {
+      "criterion": "M4 findings verified fixed: .vitest/ is git-ignored; approaching the beacon before three cells shows the non-interactive hint on desktop and in labelled touch emulation and E or Interact does nothing; at 390x844 the guidance chip and Exit button are at least 8 px apart from DOM rects. Reduced motion yields the short crossfade and a fade-only celebration. An axe-core scan of the HUD, pause menu and completion panel reports 0 serious or critical violations.",
+      "status": "passed",
+      "evidence": "git check-ignore -v .vitest/x -> .gitignore:15:/.vitest/ and the diff adds that line. hint.mjs on the production build: desktop 0 cells and 2 cells at the beacon show the chip 'Collect 3 energy cells to power the beacon' / 'Collect 1 more energy cell ...' (data-interaction-hint, no key, aria-hidden, with an sr-only status sentence); E leaves counter and hint unchanged, 0 dialogs; touch emulation (390x844, mobile, coarse, iPhone UA) 0 cells: same hint, E does nothing, 0 dialogs (no Interact button is rendered when nothing is focusable). f3.mjs 390x844 mobile coarse, 3/3 seeded: Exit bottom 60, guidance top 72 -> vertical gap 12 px (>= 8), rects do not intersect. rm.mjs: reduced motion ph leaving 4/192 then game 719/895 ms (150 ms-class crossfade), celebration 999 ms, ambient peak 0.975 with 1 direction change and camera span 0 0 0 (fade only); normal run 3600 ms, peak 1.25, entry 709 then game 2243. axe-core (a11y.log): HUD, HUD whole document, pause menu, project 1/2/3, all-projects, skills, experience, contact, completion: total 0 violations and 0 serious or critical in all 11 scans."
+    },
+    {
+      "criterion": "Short regression: the full challenge loop completes with the keyboard at 1440x900, the tower passage camera sweep has 0 frames inside geometry or with the avatar hidden, Exit restores the exact hero layout with focus on Play, and touch walking plus Interact still works at 390x844 in emulation. New content has no em dash or machine-local path, and QA states approve or reject with every finding given a severity and an owner.",
+      "status": "passed",
+      "evidence": "loop.mjs at 1440x900 keyboard only, fresh profile: 0/3 -> 1/3 -> 2/3 -> 3/3, guidance text, 'Press E to Light the beacon', celebration, 'Challenge complete' panel, completed saved, Explore more, reload persists 3/3, Restart resets to 0/3 and storage, recollect 1/3 persists across reload, exit-focus BUTTON:[ play / explore ], errs []. One 'waypoint-missed' note ([0,6]) during the post-restart leg is the scripted steering timing out at load 30+ and the run recovered (collected the tower cell). qpass.mjs tower passage camera sweep (drag yaw/pitch sweep, 848 and 859 frames, with and without wall hug): inside 0, occluded 0, minDist 0.803 and 0.602 m (avatar never hidden), badIdx 0. layout.mjs: 55 #talk elements before Play and after Exit, same keys, same boxes and styles except the terminal typing line and blinking cursors (5 entries: typed-text width 170.8 vs 206.8 and cursor opacity), which are animation state; html style, body style, scrollY 0, inert 0 and aria-hidden 19 identical; focusPlayAfter true. Touch (m4-touch driver, 390x844 mobile, coarse, safe-area insets): joystick walk to the tower beacon prompt 'View contact options', Interact tapped, panel opened and closed, jump ok (0.60 -> 1.55 m), HUD 'Energy cells 1/3'. Added-line scan (977 added/new-file lines excluding .company): 0 em dashes, 0 machine-local paths. Verdict approve; findings below with severity and owner."
+    }
+  ],
+  "assumptions": [
+    "FINDING F1 (low, owner game-dev, known limitation, not blocking): cold-load gain is about 600 ms of the 1.1 s target (swap 1311 -> 710-756 ms); press and hover gains are smaller. Revisit in M6 only if the Boss wants more.",
+    "FINDING F2 (low, owner game-dev, M6): heap after GC keeps creeping across Play/Exit cycles (17.19 MB at cycle 1 to 18.58 MB at cycle 15, increments shrinking 0.36 -> ~0.04 MB); listeners, DOM nodes, geometries, textures and programs are constant, so no app-object leak is shown, but strict 'not monotonic' is not met; a 50-cycle plateau check belongs in M6 deep QA.",
+    "FINDING F3 (info, owner product-designer/game-dev): failure dialog buttons read '[ retry ]' and '[ back to portfolio ]' rather than the design wording; clear and consistent with the terminal style, no functional impact, not blocking.",
+    "FINDING F4 (info, owner boss): untracked .company ADR-001..006 and task records are not source and were not in report 35's list; decide at commit time whether they ship with M5.",
+    "Host load was 20-43 during all timings, never quiet; hero-gap and p95 figures are therefore conservative. No physical phone; touch checked in CDP emulation only. Mutation-testing the inert and no-WebGL guards was not run (smoke-level reliance on the failures.mjs behavioural evidence, including the dev's documented pre-fix blank page)."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "Harness helper Chrome processes can outlive the main process kill and keep the --user-data-dir alive: after each probe grep ps for the stage dir and kill leftovers by exact PID before deleting profiles."
+  ],
+  "selfUsage": {
+    "filesRead": 22,
+    "approxLinesRead": 1800,
+    "approxLinesWritten": 150,
+    "retries": 0
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "workItemId": "TASK-003",
+  "stageId": "04-game-dev-restart-latch",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Added a per-item exit latch in createChallenge, rewrote the re-collect tests, proved the new tests fail on eb7b6c1 by temporarily restoring the old file with git show, verified Restart and walk-back in headless Chrome on :3101, ran the full checks.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Restart in place no longer re-collects the trophy or a cell: collection needs one observed exit from the radius first, and a load inside the radius starts disarmed. 4 tests fail on eb7b6c1 and pass now; browser run confirms cup returns after Restart and walk-off-and-on collects with the dance. Full checks exit 0.",
+  "filesChanged": [
+    "components/game/challenge.ts",
+    "components/game/__tests__/trophy.test.ts",
+    "components/game/__tests__/challenge.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "eb7b6c1",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/challenge.ts",
+      "components/game/__tests__/trophy.test.ts",
+      "components/game/__tests__/challenge.test.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npx vitest run trophy.test.ts challenge.test.ts (challenge.ts restored from eb7b6c1)",
+      "exitCode": 1,
+      "result": "4 failed, 28 passed (expected)",
+      "evidence": "     \u00d7 restart clears the cells and the completion, keeps settings, and the loop can be played again 5ms\n     \u00d7 Restart in place brings the cup back and does not re-collect it on the next frames 6ms\n     \u00d7 a load that starts inside the radius does not auto-collect until the player has left once 1ms\n     \u00d7 energy cells share the latch: a Restart standing on a cell, or a load inside it, does not re-collect it 1ms\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 4 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\n FAIL  components/game/__tests__/challenge.test.ts > beacon gating, completion and restart > restart clears the cells and the completion, keeps settings, and the loop can be played again\n FAIL  components/game/__tests__/trophy.test.ts > collection > Rest"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "tsc --noEmit -p . no output"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed, one pre-existing warning",
+      "evidence": "useRealtimeChat.ts\n224:6  Warning: React Hook useCallback has a missing dependency: 'gestureRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps\n\ninfo  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules\n"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "32 files, 674 tests passed",
+      "evidence": "Test Files  32 passed (32); Tests  674 passed (674)"
+    },
+    {
+      "command": "git diff --check eb7b6c1",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "After Restart, and after a page load that starts the player inside the trophy radius, the trophy cannot be collected until the player has left the trophy radius once (an exit latch or equivalent), so Restart visibly restores the cup and collection always requires a deliberate walk in; energy cells get the same protection if they share the defect.",
+      "status": "passed",
+      "evidence": "challenge.ts now keeps an exit latch per item: an item is collectable only after the player was seen outside its reach while it was uncollected; it starts disarmed (load inside the radius) and a collected item disarms (Restart in place). Cells and trophy share it. Browser: after Restart standing on the trophy, 8 samples over 3.2 s showed trophy=false and the cup visible (footScale 0.51), no move, mode playing; screenshot latch-8-restart-cup-back.png."
+    },
+    {
+      "criterion": "trophy.test.ts replaces the same-position re-collect assertion with tests that fail on eb7b6c1: restart in place does not re-collect, leaving and re-entering does collect, and a reload inside the radius does not auto-collect.",
+      "status": "passed",
+      "evidence": "trophy.test.ts: the same-position re-collect test is replaced by 4 tests (restart in place does not re-collect, leave and re-enter collects with the dance, load inside the radius does not auto-collect, cells share the latch); challenge.test.ts adapted (arming from away, restart-in-place). On eb7b6c1 challenge.ts (restored via git show, then put back) 4 tests fail: 3 new trophy.test.ts tests plus the adapted challenge.test.ts restart test; log fail-on-old.log. With the fix 32/32 pass in both files."
+    },
+    {
+      "criterion": "Verified in the browser on the dev server at 1440x900: collect the trophy, pause on the spot, Restart; the cup reappears and stays; walk off and back on, and it is collected with the dance.",
+      "status": "passed",
+      "evidence": "Headless Chrome 1440x900 on :3101 (host load average 12 to 32): collected trophy (dance, RightHand range 0.37 m), Esc pause on the spot, Restart: cup back and stayed 3.2 s; walked west to 1.0 m off, walked back: trophy=true, cup hidden, announce Trophy collected, RightHand range 0.34 m (dance). Screenshots in h/out/latch-*.png. A trailing log line in the harness threw a ReferenceError after all evidence was logged (browser.log exit 1 on the last run); an earlier identical run exited 0. Profile dirs deleted; dev server stopped by exact PID, :3100 untouched."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint and npm test exit 0 with exit codes explicitly captured, git diff --check eb7b6c1 is clean, no em dash, and no commit is made.",
+      "status": "passed",
+      "evidence": "npm run typecheck exit 0, npm run lint exit 0 (one pre-existing useRealtimeChat warning), npm test exit 0 (32 files, 674 tests), git diff --check eb7b6c1 exit 0, 0 em dash in the diff, no commit made."
+    }
+  ],
+  "assumptions": [
+    "Cells share the latch (they had the identical defect); a Restart while standing on an item keeps it uncollected until the player leaves and re-enters."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "Any collect-on-proximity rule needs an exit latch: state resets (Restart, load) while the player stands in reach must not re-trigger.",
+    "Check item radius against the real layout (trophy x=-17, platform 3 m wide) before scripting walk-off steps in browser harnesses."
+  ],
+  "selfUsage": {
+    "filesRead": 12,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 260,
+    "retries": 0
+  }
+}

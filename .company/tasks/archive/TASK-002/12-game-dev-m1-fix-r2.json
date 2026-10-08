@@ -1,0 +1,259 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "12-game-dev-m1-fix-r2",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Fix round 2 for Milestone 1 QA round 2 rejection: the hard landing must plant the feet on the ground with a real crouch (QA F1), and the follow camera must not end up inside level geometry during drops (QA F6).",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/11-qa-m1-r2.json",
+    "scripts/strip-clips.mjs",
+    "components/game/animator.ts",
+    "components/game/clips.ts",
+    "components/game/config.ts",
+    "components/game/GameAvatar.tsx",
+    "components/game/GameScene.tsx",
+    "components/game/followCamera.ts",
+    "components/game/__tests__/animator.test.ts",
+    "components/game/__tests__/clips.test.ts",
+    "ASSETS.md"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/11-qa-m1-r2.json",
+    ".company/tasks/active/TASK-002/reports/05-game-dev-m1-fix-clips.json"
+  ],
+  "acceptanceCriteria": [
+    "QA F1 is fixed: during the whole land state after a drop of 1.6 m and of 4 m, both feet stay within 0.05 m of the ground (toe and foot bones measured in the browser against the grounded capsule), the hips visibly crouch, and the blend from fall into land and from land into idle or walk shows no pop; the mechanism (for example a vertical hips offset derived from the source clip applied in game code, or a different source) is explained with evidence.",
+    "Every clip that changes stance (idle, walk, run, jump, fall, land) is covered by an automated test that evaluates the clip on the avatar skeleton (or a faithful fixture) and asserts the lowest foot height relative to the ground at grounded frames stays within a stated tolerance, and the test fails on the current land clip setup before the fix (red) and passes after (green).",
+    "QA F6 is fixed: walking off the end of the 30 degree ramp (4 m drop) and off its side, the camera never ends inside or behind a level block for any frame (camera position checked against every collider each frame in the browser, plus screenshots of the drop), using the existing obstacle query with a probe that does not get stuck, and followCamera tests cover the drop case.",
+    "Screenshots of the hard landing from the side, behind and three-quarter front, at three moments of the land state, show feet on the ground and a natural crouch, and walk, run, idle and jump still look as approved in QA round 2.",
+    "npm run lint, npm test and npm run build exit 0 with output tails recorded (build in a copy of the tree so the dev server's .next is not clobbered), only game-owned files are changed, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "A graphics-engineer stage runs in parallel in the same worktree and owns scripts/bake-avatar-look.mjs, scripts/lib/avatar-bake.mjs, scripts/__tests__/avatar-bake.test.mjs and public/avatar.glb; do not edit them.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "code",
+    "tests",
+    "clips",
+    "screenshots"
+  ],
+  "reportPath": "reports/12-game-dev-m1-fix-r2.json"
+}

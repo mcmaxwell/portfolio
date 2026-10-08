@@ -1,0 +1,256 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "25-game-dev-m3-fix",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Milestone 3 fix round 1 for QA rejection reports/24-qa-m3.json: the camera pocket case (camera inside a wall and head hidden while the avatar hugs a wall during a full yaw and pitch sweep), plus the smaller findings fixed along the way: head clipping into the boundary hedge on a jump, a lamp filling the foreground at the workshop entrance, and the stray separator pattern in the Experience panel text.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/24-qa-m3.json",
+    "components/game/followCamera.ts",
+    "components/game/__tests__/followCamera.test.ts",
+    "components/game/world/campus.ts",
+    "components/game/world/decor.ts",
+    "components/game/content.ts",
+    "components/game/ui/panels.tsx",
+    "components/game/player.ts",
+    "lib/persona.ts"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/24-qa-m3.json",
+    ".company/tasks/active/TASK-002/reports/21-game-dev-m3.json"
+  ],
+  "acceptanceCriteria": [
+    "F-M3-1 is fixed: with the avatar pressed against any camera-blocking wall (tower passage side and end walls, outer Lab wall, and at least two more walls QA did not test) during a full 360 degree yaw sweep with pitch pushed to both limits, the camera centre is never inside a collider, never below the ground and the head and torso line of sight is never blocked on any rendered frame, while the camera keeps a usable view (never inside the avatar); a unit test that hugs a wall and sweeps yaw and pitch fails on the current followCamera.ts and passes after, and QA's qpass.mjs and qsweep.mjs probes report 0 inside and 0 occluded frames on the production build.",
+    "The avatar's head and body never visibly penetrate the boundary hedge or any other level geometry when jumping or walking into it (head bone clearance measured on every frame of the edge-w scenario and two other boundary jumps), and the workshop entrance view no longer has a lamp filling the foreground (camera-facing props near the camera fade or are avoided), with before and after screenshots.",
+    "The Experience panel shows each role, company and period cleanly with no stray separator or empty field, using only lib/persona.ts content, covered by a panels test, and every other panel's text is unchanged.",
+    "No regression: npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the earlier camera scenarios (drops, tower passage, plaza pitch limits, stairs) stay at 0 inside and 0 occluded, rAF p95 stays under 17.5 ms walking the campus, layout positions and interactables are unchanged, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "A graphics-engineer stage runs in parallel and owns components/game/world/materials.ts, textures.ts, sky.ts, warm.ts, resources.ts, WorldView.tsx and GameAvatar.tsx; do not edit them. decor.ts may be edited only for the lamp placement fix and you must say so in the report.",
+    "Every harness must delete its Chrome --user-data-dir profile directory on exit and failure, and every server you start must be stopped by exact PID; the disk filled from leaked profiles last round.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "camera fix",
+    "tests",
+    "screenshots"
+  ],
+  "reportPath": "reports/25-game-dev-m3-fix.json"
+}

@@ -1,0 +1,132 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "10-graphics-engineer-bake-avatar-look",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Ported the dilation and bind-space coverage logic into a glTF-Transform bake (scripts/lib/avatar-bake.mjs plus scripts/bake-avatar-look.mjs), baked public/avatar.glb from the committed original, removed the runtime avatarLook mechanism, then verified by headless Chrome CDP before/after captures (original asset without runtime fix vs baked asset) against the running dev server, plus lint, vitest and a build in a copy of the tree.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "The shirt fix is now baked into public/avatar.glb (padded shirt texture, single-sided shirt, 170 covered pants triangles removed, and a 0.7 mm / 1.5 mm normal lift for pants and shirt that replaces the runtime polygon offset). avatarLook.ts, its test and both call sites are deleted, and the hero and game show a clean collar, sleeve and hem from the first frame. Lint, tests (100) and build exit 0 and no commit was made.",
+  "filesChanged": [
+    "public/avatar.glb",
+    "scripts/bake-avatar-look.mjs",
+    "scripts/lib/avatar-bake.mjs",
+    "scripts/__tests__/avatar-bake.test.mjs",
+    "vitest.config.mts",
+    "package.json",
+    "package-lock.json",
+    "ASSETS.md",
+    "components/avatar/avatarLook.ts (deleted, was untracked)",
+    "components/avatar/__tests__/avatarLook.test.ts (deleted, was untracked)",
+    "components/avatar/Avatar.tsx (fix lines removed, now identical to HEAD)",
+    "components/game/GameAvatar.tsx (fix lines removed, now identical to HEAD)"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "public/avatar.glb",
+      "scripts/bake-avatar-look.mjs",
+      "scripts/lib/avatar-bake.mjs",
+      "scripts/__tests__/avatar-bake.test.mjs",
+      "vitest.config.mts",
+      "package.json",
+      "package-lock.json",
+      "ASSETS.md",
+      "components/avatar/Avatar.tsx",
+      "components/game/GameAvatar.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original <original> --out <a> and <b>; cmp a b",
+      "exitCode": 0,
+      "result": "two bakes byte-identical (13942060 bytes each); public/avatar.glb is identical to a fresh re-bake",
+      "evidence": "baked ... 13942060 bytes {\"removedTriangles\":{\"avaturn_look_0\":170},\"shirtTextures\":1,\"singleSided\":1}; cmp: no output; DETERMINISTIC"
+    },
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original <baked file> --out <x>",
+      "exitCode": 1,
+      "result": "refused",
+      "evidence": "refusing to re-bake: the input already carries the avatarLookBake marker."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors (one pre-existing react-hooks warning in useRealtimeChat.ts)",
+      "evidence": "lint exit 0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "6 files, 100 tests passed (11 new bake tests)",
+      "evidence": "Test Files  6 passed (6)  Tests  100 passed (100)"
+    },
+    {
+      "command": "npm run build (in a copy of the tree, node_modules linked)",
+      "exitCode": 0,
+      "result": "build succeeded; no avaturn_look or applyAvatarLook string in .next/static",
+      "evidence": "build exit 0; bundleGrep done (no matches)"
+    },
+    {
+      "command": "node bakehero.mjs after/before + node game2.mjs after/before (CDP, dev server)",
+      "exitCode": 0,
+      "result": "hero first frame, rest, gesture and 3 views x idle/walk/run captured for both assets",
+      "evidence": "first frame after ms 9181 (baked) / 8780 (original); 10 s idle window TaskDuration 224 ms vs 221 ms, ScriptDuration 124 ms vs 125 ms"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "A committed, re-runnable script (for example scripts/bake-avatar-look.mjs) reads the original avatar and writes the fixed public/avatar.glb: the shirt texture padding dilated, the shirt material single-sided, the pants triangles fully covered by the shirt removed, and only the minimum other changes needed; running it twice produces the same bytes, and it refuses to re-bake an already baked file or reads from a recorded original so it cannot compound.",
+      "status": "passed",
+      "evidence": "scripts/bake-avatar-look.mjs plus scripts/lib/avatar-bake.mjs (files are written but not committed, per the no-commit constraint). Output has the dilated shirt JPEG, shirt doubleSided=false, 170 covered avaturn_look_0 triangles removed (Body_Mesh had none), and the minimum extra: a normal lift of 0.7 mm (pants) and 1.5 mm (shirt) that replaces the runtime polygon offset, since without it the collar and sleeve specks returned (verified by screenshot). Two runs are byte-identical. The script checks the input against the recorded original sha256 d8d0a77e... and refuses an input that carries the avatarLookBake marker (exit 1). Re-baking requires the original via --original (git show a891bc4:public/avatar.glb)."
+    },
+    {
+      "criterion": "The runtime fix is gone: components/avatar/avatarLook.ts and its scheduling are removed, Avatar.tsx and GameAvatar.tsx are back to their pre-fix shape for this concern, and a CDP measurement shows no clothing-related main-thread work after hero load.",
+      "status": "passed",
+      "evidence": "avatarLook.ts and its test deleted; scheduleAvatarLook and applyAvatarLook calls and imports removed, and git diff for Avatar.tsx and GameAvatar.tsx is now empty (identical to HEAD). grep finds no avatarLook reference in source, and the built bundle has none. CDP over a 10 s window after the first rendered frame: TaskDuration 224 ms and ScriptDuration 124 ms with the baked asset vs 221 ms and 125 ms with the original asset and no runtime fix, so the baked asset adds no main-thread work. Long tasks seen at 1 to 8 s are dev-mode page load and appear for the original too. Limit: headless software GL; the earlier 264 to 973 ms look task no longer exists, but I did not trace stacks to prove each remaining long task is non-clothing."
+    },
+    {
+      "criterion": "Hero screenshots from the first rendered frame and during a gesture, and game screenshots at idle, walk and run from behind, side and three-quarter front, show the collar, sleeve, hem and neck artifacts absent, and a pixel diff of the hero outside the shirt and pants region shows no change in identity, colors or framing versus the pre-fix hero.",
+      "status": "passed",
+      "evidence": "Screenshots in the bake output folder: before/after-hero-first-frame, -hero-rest(-zoom), -hero-gesture(-zoom), {behind,threeq,side}-{idle,walk,run}, sheet-hero-first-frame.png (before, after, diff), sheet-game-before-after.png. The collar, sleeve and hem specks and the dark hem line are visible before and absent after in the first frame, the gesture and all 9 game views. Pixel diff (ImageMagick compare, fuzz 6%) of the hero first frame outside the shirt and pants box: left and right background strips 0 changed px, text and buttons region 6 px (cursor blink), head region 134 px (hero rest: 0, 8 and 630 px). The head-region diff in the diff image is 1 px outlines from idle sway timing, with no colour or identity change. Gesture frames cannot be pixel-diffed because the dance phase differs between runs, so that criterion half is judged visually. The pre-fix hero is the original asset served with no runtime fix, not the pre-bake runtime-fixed hero."
+    },
+    {
+      "criterion": "The avatar.glb size before and after, the mesh, material, texture and morph target inventory before and after (proving only the intended items changed), and the skeleton and morph targets used by lip-sync, gestures and head-follow are recorded as unchanged; ASSETS.md records the bake and how to re-run it.",
+      "status": "passed",
+      "evidence": "Size 13,986,728 to 13,942,060 bytes. A per-accessor hash comparison of original vs baked shows counts identical (66 nodes, 11 meshes, 11 materials, 31 textures, 1 skin with 54 joints, 1 animation). Morph targets are identical per mesh (Eye 11, EyeAO 32, Eyelash 31, Head 72, Teeth 20, Tongue 21; every target accessor hash is equal) and so are the skin joints and inverse bind matrices, the animation channels, every attribute of the non-clothing meshes, and every other texture. The only differences are: avaturn_look_0 index (1390 to 1220 triangles), avaturn_look_0 and avaturn_look_1 POSITION data (the lift), the shirt material doubleSided true to false, the shirt texture bytes, the root marker extras, and bone node scale values within 1e-7 of 1 that the glTF writer normalises to exactly 1. ASSETS.md has an Avatar clothing bake section with the original sha256, the changes and the re-run command. Limit: the inventory script was a throwaway in the scratch area, not committed."
+    },
+    {
+      "criterion": "Tests cover the bake transforms on a small fixture (dilation, covered-triangle removal, idempotence guard); npm run lint, npm test and npm run build exit 0; new content has no em dash or machine-local path; and no commit is made.",
+      "status": "passed",
+      "evidence": "scripts/__tests__/avatar-bake.test.mjs: 11 tests (dilation of raw texels and JPEG, covered-triangle removal, untouched non-clothing mesh, nothing covered, single-sided shirt and padded texture, welded-normal lift, marker plus re-bake refusal, determinism, no-shirt error); vitest.config.mts include extended to scripts/__tests__. lint exit 0, npm test 100 passed, build exit 0 (in a tree copy). A grep for the em dash and machine-local home paths over the new scripts, the tests and the ASSETS.md additions finds nothing. No git commit, stash, reset or checkout was run."
+    }
+  ],
+  "assumptions": [
+    "Pants and shirt vertices are lifted along normals (0.7 mm and 1.5 mm) because glTF cannot carry polygon offset, and the baked result visually matches the runtime-fixed result in the hero zoom.",
+    "The original is recovered from git (sha256 pinned in the script) instead of committing a second 14 MB copy.",
+    "jpeg-js 0.4.4 was added as an exactly pinned devDependency (pure JavaScript, BSD-3-Clause) because the repo had no JPEG codec and native sharp is not a declared dependency and could change the bytes per platform.",
+    "One minor speck remains at the left sleeve edge in the zoomed hero view, also present in the runtime-fixed version."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Clothing fixes for the Avaturn avatar live in the asset via scripts/bake-avatar-look.mjs, not at runtime; any change to the avatar clothing means editing the bake and re-running it from the pinned original.",
+    "Layering of nearly coincident clothing meshes is done by geometric normal lift in the bake, because glTF has no polygon offset."
+  ],
+  "lessonsProposed": [
+    "When baking a render-state fix (polygonOffset) into glTF geometry, check it first on a zoomed screenshot: dropping it brought the collar and sleeve specks back until a vertex lift replaced it.",
+    "Gate bake scripts with a pinned input sha256 plus an in-file marker so they cannot compound, and keep the original in git history instead of duplicating a large binary.",
+    "In CDP readiness checks use gl.info.render.calls, since info.render.frames is undefined in this three version."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 520,
+    "retries": 2
+  }
+}

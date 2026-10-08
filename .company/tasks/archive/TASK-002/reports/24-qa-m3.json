@@ -1,0 +1,136 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "24-qa-m3",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Standard profile. Reran lint, tests, tsc, online and network-blocked builds in tree copies. Served a production build from a copy and drove real-GPU headless Chrome over CDP for the campus walk, touch emulation, panels, camera, ravine, perf, entry timing and the M2 regression scripts. Ran new independent probes for the terrace drop and the wall-hug camera sweep. Stopped early when the disk filled.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Rejected on the camera criterion: with the avatar pressed against a blocking wall during a full yaw and pitch drag sweep, the camera centre is inside a collider by up to 0.14 m on 39 to 76 frames per run and the head line of sight is blocked on the same frames. Gates, campus walk, panels, touch, performance and most regression runs passed. Visual, static-hero-pixel, no-WebGL and some regression checks were not completed because the disk filled.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/followCamera.ts",
+      "components/game/world/campus.ts",
+      "components/game/ui/panels.tsx",
+      "components/game/content.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint (Node 22)",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "Warning only in components/avatar/useRealtimeChat.ts 224:6 (protected file, unchanged)."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "22 files, 488 tests passed",
+      "evidence": "Test Files 22 passed (22); Tests 488 passed (488)"
+    },
+    {
+      "command": "npm run build in tree copies, online and network-denied",
+      "exitCode": 0,
+      "result": "both build ok, / 40.9 kB, First Load JS 125 kB",
+      "evidence": "/ 40.9 kB 125 kB in both"
+    },
+    {
+      "command": "vitest followCamera.test.ts with the 729f9d6 followCamera.ts in a temp copy",
+      "exitCode": 1,
+      "result": "37 failed, 19 passed of 56",
+      "evidence": "Tests 37 failed | 19 passed (56)"
+    },
+    {
+      "command": "node qpass.mjs and qsweep.mjs (wall hug plus full yaw and pitch sweep, real GPU, production)",
+      "exitCode": 0,
+      "result": "failures reproduced",
+      "evidence": "pass-end: frames 858, inside 76, occluded 76, minClearance -0.141 (tower-wing-l); pass-side: inside 39, minClearance -0.138 (tower-wing-r); hug-lab-side: inside 40, minClearance -0.136 (lab-side-r); minDist about 0.80"
+    },
+    {
+      "command": "node perf.mjs at 1440x900 and 1920x1080 (production, real GPU)",
+      "exitCode": 0,
+      "result": "p95 16.7, max 16.8, 0 frames over 20 ms",
+      "evidence": "calls 56, tris 53.5k, programs 45"
+    },
+    {
+      "command": "M2 regressions on production: cycles, exit, pause, reduced, loading, failures-all physics, clips, context",
+      "exitCode": 0,
+      "result": "all passed",
+      "evidence": "listeners 506 and nodes 896 identical across 15 cycles (one transient 897)"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint, npm test and npm run build were each run by QA on Node 22 with exit codes explicitly captured (build in a copy of the tree, online and with network blocked), output tails recorded (488 tests or more; / route First Load JS within 2 kB of 125 kB), and the bundle and request proof still holds: no game, rapier, clips or world code is requested before Play is hovered, focused or pressed.",
+      "status": "passed",
+      "evidence": "lint 0, test 0 (488 passed), tsc 0, online build 0, network-denied build 0; / is 125 kB in both; bundle.mjs found no game chunk or clip request before hover. The focus trigger was not separately tested."
+    },
+    {
+      "criterion": "The working-tree diff against 729f9d6 was inspected: only files named in reports 21, 22 and 23 changed, data/index.ts, lib/persona.ts, components/avatar and every design section 9 do-not-touch file are unchanged, and new content has no em dash or machine-local path.",
+      "status": "passed",
+      "evidence": "git diff --name-only against 729f9d6 plus untracked source files gives 34 files, equal to the union of filesChanged in reports 21 to 23. The diff over data, lib, app, public, components/avatar and the config files is empty. A scan for the em dash and machine-local or temp paths in the 34 files found no match."
+    },
+    {
+      "criterion": "Campus and destinations: from spawn QA walks on foot without jumping to the Project Lab, Skills Workshop and Contact Tower on the real GPU, each recognizable from the plaza with a readable sign (screenshot from spawn), the ravine fall respawns at the plaza, every main-route slope and step is walkable, and the deliberate Lab-at-screen-left handedness matches the spec's 'Lab to the left' from spawn.",
+      "status": "passed",
+      "evidence": "walk.mjs reached all destinations with no Space key. The spawn screenshot shows PROJECT LAB at screen left, CONTACT TOWER centre and SKILLS WORKSHOP right with readable signs; spec line 33 says Left of plaza. The ravine fall respawned in 602 ms. The workshop ramp, platform and tower stairs were walked on foot."
+    },
+    {
+      "criterion": "Interactions and panels: every interactable shows the correct prompt (E on desktop, Interact on touch emulation), opens its panel, traps focus, closes with Escape and Close and returns focus to the game; every panel text, link and image matches data/index.ts and lib/persona.ts exactly, links open only on activation in one tab with rel noopener noreferrer, no testimonial or invented claim appears anywhere, and the AX tree shows each panel as a named modal dialog.",
+      "status": "passed",
+      "evidence": "Desktop walk (E) and touch run (Interact, CDP touch) for all 7 interactables. All panel strings found verbatim in data/index.ts and lib/persona.ts; the only added text is 3 workshop section headings, Technologies labels and existing status tags. AX tree shows each dialog as modal and named. One activation per link with target _blank and rel noopener noreferrer; mailto has no target; no testimonial text."
+    },
+    {
+      "criterion": "Camera: on every rendered frame of the scripted drops (including QA round 3's run-sideways drop off a raised block), wall hugs, the tower passage and a full pitch and yaw drag sweep, the camera is never inside a collider, never below the ground, never closer than CAMERA.minDistance to the avatar, and the avatar's head and torso are never hidden by level geometry; the new followCamera tests fail on the Milestone 2 camera in a temp copy.",
+      "status": "failed",
+      "evidence": "Drops, tower passage and plaza pitch sweep were clean, and 37 of 56 followCamera tests fail on the M2 camera. But with the avatar pressed to a wall during a full yaw and pitch sweep, the camera centre was inside a camera-blocking block on 39 to 76 frames (up to 0.14 m deep; blocks tower-wing-l, tower-wing-r and lab-side-r) and the head line of sight was blocked on the same frames. Cause: followCamera.ts pullIn() applies Math.max(reach, minDistance/len) even when the solved clear distance is smaller."
+    },
+    {
+      "criterion": "Visuals judged by eye and by numbers at 1440x900 on the real GPU: a coherent dusk campus (sky and fog, dusk lighting with soft shadows, textured ground and buildings, readable signs and screens, trees and props, lit installations), no clipped-white surfaces, no avatar specks in zoomed idle and walk crops, static hero pixels unchanged, and no visual defect QA would not ship; every defect seen is a finding with a screenshot.",
+      "status": "failed",
+      "evidence": "INCOMPLETE (disk full), recorded as failed by the Boss. By eye on production screenshots the campus is coherent (dusk sky, fog, shadows, textured surfaces, readable signs and screens, lit trim, trees and lamps). Not done: static hero pixel comparison, clipped-white statistics, zoomed avatar crops. Defects noted: a pale halo around the hair in top-down views (cause unconfirmed), a lamp filling the right foreground at the workshop entrance, and the head clipping into the boundary hedge on a jump."
+    },
+    {
+      "criterion": "Entry and performance: warm (hover) and cold Play on the production build show no blank, T-pose, duplicate-avatar or flash frame, the world fades in as a smooth ramp (QA's judgement by eye plus the frame luminance trace), the hero never freezes more than 50 ms during loading, input is enabled within about 2.5 s of click when warm, rAF p95 stays under 17.5 ms with no frame over 25 ms walking and running the whole campus at 1440x900 and 1920x1080, and the cold-load time from click to input is recorded.",
+      "status": "passed",
+      "evidence": "No blank or T-pose frame in the entry montage; opacity ramp 0.057 to 0.498 onward; largest luminance step 6.9 to 7.1 (ratio 2.03 cold, 2.23 warm, the Boss-accepted ramp); hero gap max 27 ms cold and 23 ms warm; warm click to game 1.91 to 1.93 s, cold 2.68 to 2.78 s; perf p95 16.7 and max 16.8 at both resolutions with 0 frames over 20 ms."
+    },
+    {
+      "criterion": "No regression of Milestones 1 and 2: locomotion and landing on the campus, Exit pixel-exact with focus on Play, loading strip and Cancel, pause and tab-hide pause, failure dialogs, reduced motion, and a 10 Play and Exit plus 5 Play and Cancel cycle run with identical listener and DOM counts.",
+      "status": "failed",
+      "evidence": "INCOMPLETE (disk full), recorded as failed by the Boss. Passed on production: locomotion and landing, Exit geometry identical with focus on Play (283 of 1,034,729 px differ outside avatar and hint), loading strip and Cancel, pause and tab-hide, reduced motion, physics, clips and context-loss failure dialogs, 10 plus 5 cycles with listeners 506 and nodes 896 identical (one transient 897). Not run: the no-WebGL failure dialog."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed; the Boss-accepted items recorded in work-item.json decisions (entry luminance ratio 2.27 as a monotone ramp, the longer cold load, faint interior wall streaks) are reported but are not grounds for rejection unless QA finds them visibly wrong.",
+      "status": "failed",
+      "evidence": "Boss-accepted items reported and not counted. Criterion 5 failed and criteria 6 and 8 are incomplete, so approval is not allowed. Main finding F-M3-1: followCamera.ts pullIn(), the Math.max(reach, minDistance / len) line, medium, trigger wall hug plus full yaw and pitch sweep, consequence camera centre up to 0.14 m inside a wall on 39 to 76 frames with blocked head line of sight, rule: camera never inside a collider."
+    }
+  ],
+  "assumptions": [
+    "Headless Chrome 155 on this Mac's GPU was the real GPU for every number.",
+    "Boss transcription: the disk filled while this report was being written, so its transcript copy was never saved; the Boss transcribed the delivered report, keeping every status and the key evidence, and recorded partial criteria as failed. Smaller findings also reported: hedge head clip 0.07 to 0.10 m on a jump (cosmetic), workshop-entrance lamp filling the foreground, Experience panel text shows a stray '|' and comma pattern, exit diff 283 px (animation noise)."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Fix the camera pocket case: when the forced minimum distance would put the camera inside a blocker, prefer a position that stays clear, and add a wall-hug plus yaw-sweep unit test.",
+    "Add a disk-space guard to harnesses: delete Chrome profile directories on exit."
+  ],
+  "lessonsProposed": [
+    "Always sweep yaw and pitch fully while pressed against the narrowest wall; a yaw wiggle does not cover the pocket case.",
+    "Harnesses must delete their Chrome profile directories on exit; leaked profiles (about 150 MB each, about 950 of them) filled the disk."
+  ],
+  "selfUsage": {
+    "filesRead": 60,
+    "approxLinesRead": 3500,
+    "approxLinesWritten": 650,
+    "retries": 5
+  }
+}

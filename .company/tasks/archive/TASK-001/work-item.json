@@ -1,0 +1,59 @@
+{
+  "workItemId": "TASK-001",
+  "feature": "portfolio-onboarding",
+  "projectId": "portfolio",
+  "targetBaseCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+  "tier": "MEDIUM",
+  "verificationProfile": "standard",
+  "objective": "Onboard the portfolio project by refreshing its source index and populating its .company/memory project profile and module setup with evidence-backed facts, changing no product code.",
+  "acceptanceCriteria": [
+    "The company-map index is fresh at the current target commit, verified by scripts/company-map status portfolio.",
+    ".company/memory/project-profile.md records the verified stack, runtime, package manager, key commands, and high-level architecture, each with concrete evidence (file path/line, package.json entry, or index data).",
+    ".company/memory/modules.md records one concise verified section per real module (app router, site/avatar components, lib, data, realtime-session API) using the template fields, each fact backed by evidence.",
+    "Security-sensitive boundaries (the app/api/realtime-session route and .env.local usage) are flagged in memory without exposing any secret value.",
+    "Every recorded fact is evidence-backed; nothing is invented or assumed. Unverifiable items are omitted or explicitly marked as hypothesis.",
+    "No product code or any tracked product file is modified; pre-existing dirty files (README.md, untracked AGENTS.md, CLAUDE.md) are preserved untouched."
+  ],
+  "constraints": [
+    "Subscription-only execution (authType subscription); no API keys or paid inference.",
+    "Do not modify product code or any tracked file outside .company/memory/ and .company/tasks/.",
+    "Do not fix, stage, or revert the pre-existing dirty files README.md, AGENTS.md, CLAUDE.md in the target.",
+    "Never store secrets, credentials, raw auth output, or machine-absolute paths in .company/.",
+    "Stack is TypeScript + Next.js 14 App Router; follow the target's existing conventions."
+  ],
+  "outOfScope": [
+    "Any product code or feature change.",
+    "Running deployments or executing a full next build.",
+    "Editing README.md, AGENTS.md, or CLAUDE.md.",
+    "Adding tests to the product (the project currently defines no test runner)."
+  ],
+  "estimatedUsage": {"tokenRange": [20000, 55000], "capacityRisk": "low"},
+  "approvals": [],
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "project profile stack modules architecture entrypoints commands app components lib data",
+    "indexCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "relevantFiles": [
+      "app/api/realtime-session/route.ts",
+      "app/layout.tsx",
+      "app/opengraph-image.tsx",
+      "app/page.tsx",
+      "app/provider.tsx",
+      "app/robots.ts",
+      "app/sitemap.ts",
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/site/Projects.tsx"
+    ],
+    "symbols": ["Projects", "GET", "RootLayout", "OpengraphImage", "Home", "ThemeProvider", "robots", "sitemap", "AskHints"],
+    "connections": [
+      {"from": "app/layout.tsx", "type": "imports", "to": "app/provider.tsx", "evidence": "app/layout.tsx:6", "confidence": "exact"},
+      {"from": "components/avatar/TalkingAvatar.tsx", "type": "imports", "to": "components/avatar/Avatar.tsx", "evidence": "components/avatar/TalkingAvatar.tsx:7", "confidence": "exact"},
+      {"from": "components/avatar/TalkingAvatar.tsx", "type": "imports", "to": "components/avatar/AskHints.tsx", "evidence": "components/avatar/TalkingAvatar.tsx:8", "confidence": "exact"}
+    ]
+  },
+  "notes": "MEDIUM audit/onboarding task with crisp user-provided acceptance criteria and no product-behavior design; product-manager mini-spec deliberately skipped as ceremony (Boss right-sizing, Constitution rule 7). Index refreshed by the Boss via scripts/company-map build portfolio before delegation.",
+  "status": "in-progress"
+}

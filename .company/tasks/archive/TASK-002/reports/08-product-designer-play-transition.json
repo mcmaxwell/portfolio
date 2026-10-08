@@ -1,0 +1,84 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "08-product-designer-play-transition",
+  "agent": "product-designer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Read the stage contract, design.md, TalkingAvatar.tsx, page.tsx, Nav.tsx and the current components/game files (useExperienceShell, followCamera, GameScene, GameAvatar) read-only. Then wrote the single spec file. No browser or prototype run.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Wrote .company/tasks/active/TASK-002/play-transition.md: a beat-by-beat Play timeline (chrome exit, canvas to fixed, swap and world reveal, camera pull-back and fov, avatar turn and walk, HUD), a loading case with an inline non-blocking strip, hover prefetch, Exit as the reverse sequence, reduced-motion and mobile variants, mapping to design.md, minimal additions, hero risks and 13 QA steps. Key design choice: the entry camera starts in front of the avatar at spawn, so the avatar turns 180 degrees and no camera orbit is needed. Warm click to control is about 1.86 s.",
+  "filesChanged": [
+    ".company/tasks/active/TASK-002/play-transition.md"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      ".company/tasks/active/TASK-002/play-transition.md"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "Grep for em dash and machine-local home paths in play-transition.md (output_mode count)",
+      "exitCode": 0,
+      "result": "0 matches",
+      "evidence": "No matches found. Found 0 total occurrences across 0 files."
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "A transition spec at .company/tasks/active/TASK-002/play-transition.md gives a beat-by-beat timeline for Play (time offsets in ms, property animated, easing, and owner element or object for each beat) covering page chrome exit, canvas growth to full screen, camera move from hero framing to the follow position, avatar turn and walk into the world, and HUD entry, totaling about 1.5 to 2.5 s once assets are ready.",
+      "status": "passed",
+      "evidence": "Sections 2.1 to 2.6 have tables with offset, owner, property from-to and easing for chrome exit (A), canvas fixed and FLIP (B), swap and fog reveal (C), camera (D), avatar turn and walk (E), HUD (F). Total click to input enabled is 1860 ms, HUD complete by about 2160 ms. Timings are proposals, not run in a browser. Canvas growth is a no-op at scroll 0 because the hero canvas is already viewport sized, and the spec says so."
+    },
+    {
+      "criterion": "The spec defines the loading case (assets not ready when Play is clicked): what the user sees while waiting without a blocking screen, how progress and Cancel are shown, and how the sequence resumes when ready, plus prefetch of the game chunk on Play hover or focus.",
+      "status": "passed",
+      "evidence": "Section 3: chrome exits as normal, avatar stays live, an inline strip with percentage, 2 px progress line and [ cancel ] appears only after 400 ms (min 300 ms visible), Escape cancels. 3.1 covers resume at S = GO without replaying beat A, 3.2 covers cancel and failure, and 3.3 covers loader.prefetch() on hover, focus and pointerdown (code only on touch or saveData, code plus clips otherwise)."
+    },
+    {
+      "criterion": "The spec defines Exit as the reverse sequence returning to the exact pre-Play hero layout, scroll position and focus, plus the prefers-reduced-motion variant and the mobile variant (touch controls entry).",
+      "status": "passed",
+      "evidence": "Section 4 (X1 game leaves and camera returns to hero framing, X2 swap with ordered dispose, scrollTo restore and reverse FLIP, X3 chrome returns, focus with preventScroll). Section 5 is the reduced-motion variant (about 360 ms). Section 6 is the mobile variant, including touch controls fading in during beat F, active only at ENTRY_DONE, and skip on first touch."
+    },
+    {
+      "criterion": "The spec maps each beat to the existing design (design.md sections for the shell, followCamera.beginEntry, the entering session state and scripted auto-walk) and lists the minimal additions, keeps game code out of the initial portfolio bundle, and names any risk to the talking-avatar hero.",
+      "status": "passed",
+      "evidence": "Section 7.1 maps each beat to D-2.1, 2.2, 2.3, 2.7, 3.1, 3.3, 3.4 and 4.2 and marks same or changed. 7.2 lists 10 minimal additions with no new dependency. 7.4 keeps all tween and entry code behind import of components/game/entry, with the shell holding only constants and CSS. 7.5 lists 8 hero risks, including the pose pop at swap, T-pose first frame, lighting mismatch, AskHints restart and the mic cut."
+    },
+    {
+      "criterion": "The spec lists measurable verification steps for QA (recorded frame sequence, no layout jump or hard cut, frame-time budget during the transition), and new content has no em dash or machine-local path.",
+      "status": "passed",
+      "evidence": "Section 9 has 13 steps: frame-sequence checkpoints at offsets, a frame-diff rule for hard cuts (swap pair at most 2x neighbour median, no T-pose or blank frame), per-frame rect logging for layout jump, a frame-time budget (proposed: p95 20 ms, p99 33 ms, max 50 ms desktop), and checks for scrolled start, exit exactness, loading, prefetch, reduced motion, cycles, mobile, keyboard and mic. Grep for em dash and machine-local home paths in the file returned 0 matches."
+    }
+  ],
+  "assumptions": [
+    "Hero avatar faces +z toward the camera, and the game entry can be staged with the camera starting on the spawn-backward side so the avatar turns 180 degrees away instead of the camera orbiting.",
+    "gl.compileAsync can warm world materials before the swap. If three skips invisible objects, the fallback in 7.3 holds a near-static frame. This needs a graphics-engineer check.",
+    "scrollbar-gutter: stable keeps the fixed canvas width unchanged when overflow is locked. This is not verified and is listed as a QA item.",
+    "Timings and frame budgets are proposals, not measured.",
+    "The M2 bundle proof in D-7.5 is amended so that hover, focus or press on Play is allowed to trigger the prefetch."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Stage the entry so the camera starts in front of the avatar and the avatar turns 180 degrees away, with no 180 degree camera orbit. This amends D-2.7 entry orbit.",
+    "Keep the page chrome mounted and animate it until C + 360 ms. Move scroll lock and the canvas switch to fixed to click time, with a FLIP translate for a scrolled hero.",
+    "Show the loading state as an inline strip with Cancel after 400 ms instead of a blocking dialog. Keep the dialog only for failures.",
+    "Add loader.prefetch() on Play hover, focus or pointerdown. Amend D-7.5 so the no-request proof means no request until Play is hovered, focused or pressed."
+  ],
+  "lessonsProposed": [
+    "A disabled button loses focus. Use aria-disabled during transitions and call focus({ preventScroll: true }) when restoring focus, or the exact-scroll-restore guarantee breaks.",
+    "When the target file is hero-adjacent, check for fixed or z-indexed siblings such as the nav (z-40) that sit outside the hero file. A cross-cutting transition then needs a documentElement data attribute plus a CSS rule instead of an edit to an untouched file."
+  ],
+  "selfUsage": {
+    "filesRead": 12,
+    "approxLinesRead": 1900,
+    "approxLinesWritten": 330,
+    "retries": 0
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "30-qa-m3-r3",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Ran typecheck, lint and the full test suite on the worktree. Built a copy of the tree and served it with next start. Built a second copy with the clearance pass disabled and served it as an A/B control. Probed 11 wall and prop scenarios at 4 runs each with a per-frame bone-to-solid, root-offset and foot trace, then captured frames around pops. Did not re-run the round-2 regression suites (see criterion 4).",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "F-M3-2 is fixed: head, neck, chest and hips stayed outside every non-ground solid on every frame in 11 scenarios x 4 runs (min 0.119 m, none under 0.05 m), and the new clearance tests fail with the pass disabled. The pass introduces a new visible artifact: the visual root snaps 0.15 to 0.34 m sideways in a single frame at the landing-crouch onset (hips up to 18.5 m/s against a 2.3 m/s ceiling with the pass off) and slides 0.1 to 0.57 m during wall jumps, so criterion 3 fails and the milestone is rejected.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "bodyClearance.ts",
+      "bodyClearance.test.ts",
+      "GameScene.tsx",
+      "GameAvatar.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "tsc --noEmit -p . then rc=0, no diagnostics"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "useRealtimeChat.ts 224:6 Warning react-hooks/exhaustive-deps (file not in the diff)"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "541 passed (24 files)",
+      "evidence": "Test Files 24 passed (24) / Tests 541 passed (541) / Duration 166.21s"
+    },
+    {
+      "command": "npm run build (in a copy of the tree, node_modules symlinked)",
+      "exitCode": 0,
+      "result": "built",
+      "evidence": "/ 40.9 kB, First Load JS 125 kB; build rc=0"
+    },
+    {
+      "command": "vitest run bodyClearance.test.ts in a temp copy with apply() returning at once (pass disabled)",
+      "exitCode": 1,
+      "result": "6 failed | 8 passed (14)",
+      "evidence": "facing, diagonal, diagonal-other, sideways-left, sideways-right and back-to-wall wall-clearance tests all fail; the reproduces-F-M3-2-without-the-pass test passes"
+    },
+    {
+      "command": "run3.mjs on the production build, 11 scenarios x 4 runs, headless Chrome with GPU, on a 1440x900 viewport",
+      "exitCode": 0,
+      "result": "core bones (Head, Neck, Spine2, Hips) min clearance 0.119 m, 0 frames under 0.05 m, 0 frames under 0 m",
+      "evidence": "Scenarios: lab-side-l-inner, lab-plinth-newsstocks, lab-plinth-apex, lab-plinth-xecsuite, lab-kiosk, workshop-plinth-skills, workshop-machine-0, plaza-bench-0, plaza-planter-0, tower-passage-left, edge-e-hedge. errs [] in every run. Crouches with head height 0.65 to 0.79 m occurred in several runs."
+    },
+    {
+      "command": "A/B on lab-side-l-inner and lab-kiosk, 4 runs each: production build (pass on) vs build with the pass disabled",
+      "exitCode": 0,
+      "result": "pass on: hips frame speed 6.7 to 18.5 m/s and a single-frame pop of 0.15 to 0.34 m in 7 of 8 runs; pass off: hips frame speed 2.2 to 2.6 m/s, no pops",
+      "evidence": "Sample: lab-kiosk run 2, frames 40 to 41 (22 ms): push 0.000 to 0.281 m, hips xz moved 0.31 m in one frame as the head dropped from 1.62 m to 1.15 m. maxPush 0.468 to 0.572 m, 73 and 49 frames with push change over 3 m/s. Pass off: hand bones inside the wall on 110 to 177 of about 330 frames (hand min -0.2 m), so the clearance pass is real; this is a separate issue from the pop."
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build were each run by QA on Node 22 with exit codes explicitly captured (build in a copy of the tree), output tails recorded (541 tests or more; / route First Load JS within 2 kB of 125 kB), and the diff since round 2 is only the four files named in report 29.",
+      "status": "passed",
+      "evidence": "Node v22.23.2. typecheck rc 0, lint rc 0, test rc 0 with 541 passed, build rc 0 with / at 125 kB. Files newer than the report-28 stage are only bodyClearance.ts, bodyClearance.test.ts, GameScene.tsx and GameAvatar.tsx (plus the git-ignored tsconfig.tsbuildinfo)."
+    },
+    {
+      "criterion": "F-M3-2 is confirmed fixed on the production build: QA's hedge.mjs lab-side-l-inner scenario and at least five other wall and prop scenarios QA chooses (including exhibit stands, kiosks, benches and planters, not only walls) show head, neck, chest and hips outside every non-ground solid on every frame across 4 runs each, including hard-landing crouches, and the new body-clearance tests fail with the pass disabled in a temp copy.",
+      "status": "passed",
+      "evidence": "lab-side-l-inner (3 sessions of 4 runs) plus 10 other scenarios: the three Lab exhibit plinths, the Lab kiosk, a Workshop plinth, a Workshop machine, plaza bench-0, plaza planter-0, the tower passage wall and the east hedge. Core minimum 0.119 m, 0 frames under 0.05 m. 6 of 14 clearance tests fail with the pass disabled. Caveats: bench and planter runs hopped over the props or never pressed them (min clearance 0.37 to 1.07 m), so those two are weak probes. The check covers 8 bones; leg and foot bones are not covered. The Boss's concern about the leg overlapping the Lab stand is therefore not verified either way."
+    },
+    {
+      "criterion": "The body-clearance push creates no new visible artifact: in screencasts of wall and prop landings, wall hugs and walking along walls, the avatar never visibly slides, snaps or teleports, the feet stay planted with no skating beyond the walk and run clips' own, the avatar stays on its shadow and never floats or sinks, it never penetrates the exhibit stands, kiosks or other props it is pushed toward, and in open ground the animation is unchanged; QA judges this by eye and by per-frame root offset and foot height traces, with screenshots.",
+      "status": "failed",
+      "evidence": "The root offset trace shows snaps and slides. At the landing-crouch onset the visual root jumps 0.15 to 0.34 m in one frame (popD 0.15, 0.19, 0.21, 0.25, 0.28 and 0.34 m in 7 of 8 A/B runs). The hips reach 14 to 18.5 m/s on the pass-on build, against a maximum of 2.6 m/s on the pass-off control. During wall jumps the root slides 0.1 to 0.57 m for about 900 to 1300 of 1500 frames. The same pattern appears at plinths, machines and the tower wall: maxPush 0.31 to 0.57 m, max push speed 7.8 to 20.5 m/s. Planted-foot speed p95 is equal to the control (1.4 vs 1.1 m/s, 4.1 vs 4.1 m/s), so no extra foot skating beyond the clips was found, but the avatar pops sideways with the feet. Open ground (east hedge, planter): push 0, so unchanged. The shadow is the real shadow-map of the moved mesh, so it cannot detach. The frame-sequence crops are inconclusive because the camera pulls in during the crouch, so my visible-pop verdict rests on the traces, not on the images. This is the only failing criterion."
+    },
+    {
+      "criterion": "Everything approved in round 2 still holds: camera pocket sweeps at the tower passage, outer Lab wall and three more walls with 0 frames inside, below ground, inside the avatar or with head or torso hidden; hedges, lamps, Experience panel and hair; entry warm and cold with no hero freeze over 50 ms; rAF p95 under 17.5 ms with no frame over 25 ms at 1440x900 and 1920x1080; Exit pixel-exact with focus on Play; loading, pause, failures and a 10 plus 5 cycle run with identical listener and DOM counts.",
+      "status": "failed",
+      "evidence": "Not re-run in this round: I stopped the browser regression suites once criterion 3 failed. Only the unit and gate suites were re-run (541 pass, including followCamera tests). Changed files since round 2 are limited to the avatar-visual clearance pass, which does not touch camera or physics code. I therefore have no first-hand browser evidence for the camera sweeps, entry timing, rAF, Exit, or the 10 plus 5 cycle run. Because the criterion is unverified I must not mark it passed. Frames in the A/B runs exceeded 25 ms (max 33 to 182 ms) while two Chrome instances and the harness hooks were running, so I do not count them as a performance regression."
+    },
+    {
+      "criterion": "No evidence or scratch file is written under .company/ or anywhere in the repository, and every finding is reported with file, line, severity, trigger, consequence, evidence and rule; the verdict is approved only if every criterion above passed.",
+      "status": "passed",
+      "evidence": "All evidence is in the QA scratchpad outside the repository. Build copies, servers (stopped by exact PID) and Chrome profiles are deleted. Disk 17 GB free. Finding F-M3-3 is listed under lessonsProposed. The verdict is rejected because criteria 3 and 4 are not passed."
+    }
+  ],
+  "assumptions": [
+    "Core bones means Head, Neck, Spine2 and Hips; hands and shoulders are reported separately. Hands reach 0.002 to 0.014 m outside a solid in some runs, never inside, because the pass margin for hands is 0.1 m and conflicting solids limit it.",
+    "One-frame pops are judged visible without a screencast because the camera follows the physics position, which the push does not change: a 0.2 to 0.34 m body shift in 16 to 22 ms is far above the 2.3 m/s a clip ever produces.",
+    "Tree crowns and other collide:false blocks were excluded from the solids, matching solidsOf."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Replace the instant push-in with a smoothed or rate-limited approach: anticipate the crouch pose, or ramp the push over about 80 to 120 ms. The push must never exceed the pose's own speed by an order of magnitude, since any instant push is a visible snap."
+  ],
+  "lessonsProposed": [
+    "F-M3-3 (high): components/game/bodyClearance.ts, apply(), roughly lines 180 to 240: ox/oz are set to the full required push in the same frame the pose needs it ('instant in, smooth release'). Trigger: a jump or landing crouch next to a Lab wall, kiosk, plinth, machine or the tower wall. Consequence: the avatar root snaps 0.15 to 0.34 m sideways in one frame at the crouch onset, with slides of 0.1 to 0.57 m during wall jumps and a hips speed up to 18.5 m/s (control 2.3 m/s). Evidence: A/B traces, the popD values, lab-kiosk run 2 frame 41. Rule: Constitution rule 1 (first-hand evidence) and acceptance criterion 3 (never visibly slides, snaps or teleports).",
+    "Add a QA check: per-frame root offset speed limit (visual root speed minus physics speed under 3 m/s) for any visual-only avatar adjustment.",
+    "Suggest an open check: the legs and feet are not covered by CLEARANCE_BONES, and QA did not verify the Boss's observed leg overlap with the Lab stand. A follow-up should add the lower-leg and foot bones to the probe."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 260,
+    "retries": 0
+  }
+}

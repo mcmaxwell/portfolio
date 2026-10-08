@@ -173,3 +173,46 @@ button:focus-visible {
   box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25),
     0 0 18px -6px rgba(74, 222, 128, 0.5);
 }
+
+/* ---------- Play transition (components/game/shell, play-transition.md) ---------- */
+@keyframes play-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.animate-play-press {
+  animation: play-press 80ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* The side navigation lives outside the hero (app/page.tsx and Nav.tsx are untouched), so the
+   shell drives it with html[data-experience]. Without these rules the game canvas (z-50) would
+   cover it with a hard cut. */
+html[data-experience] nav {
+  transition: opacity 300ms cubic-bezier(0.4, 0, 1, 1), translate 300ms cubic-bezier(0.4, 0, 1, 1);
+}
+html[data-experience="leaving"] nav,
+html[data-experience="game"] nav {
+  opacity: 0;
+  translate: 24px 0;
+  pointer-events: none;
+}
+html[data-experience="returning"] nav {
+  transition: opacity 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1);
+}
+/* The game owns touch gestures on the canvas; the hero keeps pan-y (rule above). */
+html[data-experience="game"] #talk canvas {
+  touch-action: none !important;
+}
+
+/* Reduced motion: the global rule above removes all transitions; the transition is a short
+   crossfade with no travel instead (play-transition.md 5). */
+@media (prefers-reduced-motion: reduce) {
+  html[data-experience] nav,
+  [data-xfade] {
+    transition-duration: 150ms !important;
+    translate: none !important;
+  }
+  [data-xfade-fast] {
+    transition-duration: 100ms !important;
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "31b-mobile-dev-m4-touch",
+  "agent": "mobile-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Audited the existing TouchControls (joystick, look area, Jump, context Interact already present), added release on window blur, hidden tab and non-play modes, a run-range ring and a jsdom test file, then drove the real game with CDP touch emulation (coarse pointer, safe-area override) in both orientations.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "TouchControls now releases stick and look on blur, hidden tab, pause or panel and unmount, shows a dashed run ring, and has an 11-test file (vector normalization, run range, pointercancel, two pointers, blur, buttons). In CDP touch emulation at 390x844 and 844x390 the avatar walked to the Project Lab, Skills Workshop and Contact Tower prompts, opened and closed each panel via the Interact button and close button, and jumped; one touch-emulation-only caveat: no real phone. One integration edit outside my files: a one-line style in Hud.tsx InteractionPrompt so the touch chip clears the controls.",
+  "filesChanged": [
+    "components/game/ui/TouchControls.tsx",
+    "components/game/__tests__/TouchControls.test.tsx",
+    "components/game/ui/Hud.tsx"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/ui/TouchControls.tsx",
+      "components/game/__tests__/TouchControls.test.tsx",
+      "components/game/ui/Hud.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "tsc --noEmit clean",
+      "evidence": "<scratchpad>/m4-touch/typecheck.log, typecheck.exit=0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; pre-existing react-hooks/exhaustive-deps warnings only",
+      "evidence": "<scratchpad>/m4-touch/lint.log, lint.exit=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "Test Files 28 passed (28), Tests 617 passed (617), includes TouchControls.test.tsx 11 tests",
+      "evidence": "<scratchpad>/m4-touch/test.log, test.exit=0"
+    },
+    {
+      "command": "npm run build (in a copy of the tree, copy deleted)",
+      "exitCode": 0,
+      "result": "Next build completed, route table printed",
+      "evidence": "<scratchpad>/m4-touch/build.log, build.exit=0"
+    },
+    {
+      "command": "node js/nav.mjs (CDP touch emulation, portrait full run)",
+      "exitCode": 0,
+      "result": "lab, workshop, tower each reached prompt, panel opened and closed, jump ok (y 0.60 -> 1.55); Energy cells 3/3",
+      "evidence": "<scratchpad>/m4-touch/nav-portrait-full.out, nav-portrait.log"
+    },
+    {
+      "command": "node js/nav.mjs (CDP touch emulation, landscape full run then tower-only rerun)",
+      "exitCode": 0,
+      "result": "lab and workshop reached, opened, closed, jump ok; tower missed in the full run (steering stuck on podium edge) and reached, opened, closed in the tower-only rerun",
+      "evidence": "<scratchpad>/m4-touch/nav-landscape-full.out, nav-landscape-tower.out, nav-landscape-tower.log"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "Mobile: on a phone-sized viewport (390x844 and 844x390, coarse pointer, touch events, safe-area insets) a left joystick moves the avatar with outer range for run, a right-side drag area turns the camera, and Jump and context-sensitive Interact buttons work, walking and camera drag work simultaneously with two pointers tracked independently, pointercancel and blur release everything, targets are at least 44 px and clear of safe areas, the HUD and panels are readable and usable, and TouchControls.test.tsx covers vector normalization, run range, pointercancel and two pointers.",
+      "status": "passed",
+      "evidence": "Existing component verified and hardened. Joystick (radius 56 px, run past 0.85 via INPUT.joystickRunThreshold, dashed run ring added), right-half look area, Jump and context Interact exist; stick and look track separate pointer ids; pointercancel, lostpointercapture, window blur, hidden tab, pause or panel and unmount all release stick, look and the knob. Measured in emulation with safe-area insets 47/34 (portrait) and 47/21/47 (landscape): joystick 144x144 at left 16 (portrait) and 47 (landscape), Jump 64x64, Interact 92x64, HUD buttons 44 px high, all inside the insets. TouchControls.test.tsx 11 tests pass: vector normalization, walk below and run above the range, pointerup and pointercancel release, two pointers independent, foreign pointer ignored, blur and pause release, Jump and Interact edges. Caveat: emulation only; the 44 px target and safe-area claims are measured rects, not a real phone. HUD readability judged from screenshots: Energy cells counter, prompt chip and controls do not overlap after the Hud one-line fix."
+    },
+    {
+      "criterion": "In touch emulation at 390x844 and 844x390 (labelled as emulation; a real phone reported unavailable unless attached) the avatar can walk to each destination, open and close a panel with Interact, and jump, with one screenshot per orientation.",
+      "status": "passed",
+      "evidence": "CDP touch emulation (labelled emulation; real phone unavailable). Portrait 390x844: full run reached Project Lab (View project: NewsStocks.live), Skills Workshop (View skills), Contact Tower (View contact options) with the stick and look drag together; Interact tapped, dialog opened, [ close ] tapped, dialog closed; jump y 0.60 -> 1.55. Landscape 844x390: lab and workshop in the full run, tower in a tower-only rerun after steering was made stop-and-turn for large errors; each opened and closed; jump ok. Screenshots: screenshot-portrait-tower.png (390x844) and screenshot-landscape-tower.png (844x390) in the output dir. Not one single unbroken landscape run covered all three destinations; the tower leg was a separate run."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the desktop keyboard and mouse controls are unchanged, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "typecheck, lint, npm test (28 files, 617 tests) and build in a copy (deleted) all exit 0, codes captured in the .exit files. input.ts untouched and keyboard and mouse handlers untouched, so desktop controls are unchanged (input.test.ts passes); the only Hud.tsx change is a style prop applied only when touch is true. No em dash and no machine-local path in the changed files (grep clean). No commit made, no stash, reset or checkout."
+    }
+  ],
+  "assumptions": [
+    "The Hud.tsx InteractionPrompt one-line style edit (bottom: calc(13rem + safe-area) on touch) was made because the chip overlapped the joystick and Jump on 390x844 in the first screenshot; Hud.tsx is being edited by game-dev, so the edit was an anchored single-line insert.",
+    "Camera heading and avatar position for the emulated driver were read from the three.js renderer via __THREE_DEVTOOLS__ observe hook and a patched render, in the test browser only; nothing was added to the source.",
+    "Safe-area insets were emulated with Emulation.setSafeAreaInsetsOverride (top 47, bottom 34 portrait; left/right 47, bottom 21 landscape)."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "On touch the InteractionPrompt chip sits at calc(13rem + env(safe-area-inset-bottom)); game-dev should keep that style when it edits Hud.tsx."
+  ],
+  "lessonsProposed": [
+    "CDP Input.dispatchTouchEvent: touchEnd releases exactly the points it lists (empty list releases all); touchMove with fewer points releases nothing. Multi-touch emulation scripts must list the finger being released.",
+    "Headless game driving under host load 80-130 needs closed-loop steering from renderer-hooked camera yaw and stop-and-turn for large errors; time-based dead reckoning fails.",
+    "Kill browser harnesses with a SIGTERM handler that kills Chrome and removes the profile, otherwise a stopped run leaves Chrome processes and a profile behind."
+  ],
+  "selfUsage": {
+    "filesRead": 18,
+    "approxLinesRead": 1500,
+    "approxLinesWritten": 420,
+    "retries": 0
+  }
+}

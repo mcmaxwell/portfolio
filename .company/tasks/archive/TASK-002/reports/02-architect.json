@@ -1,0 +1,111 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "02-architect",
+  "agent": "architect",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read the constitution, the architect insights, the stage contract, the work item, the spec, the M0 audit, the project memory and every contextFile, plus Contact.tsx, Projects.tsx, Nav.tsx, eslint.config.mjs, .gitignore and the persona exports. Designed the work around the audit findings without re-deriving them. Wrote one design.md and six ADRs in the worktree only. No Bash was available, so nothing was installed or run.",
+  "actualModel": "claude-opus-5-5",
+  "summary": "I wrote design.md. It specifies one shared canvas and avatar, where the hero subtree and the game subtree are mutually exclusive and each owns the mixer, camera and head motion in its own mode. Physics uses @react-three/rapier 1.5.0 only for setup and teardown; the game steps the raw Rapier world itself at a fixed 60 Hz, with a cap on catch-up and its own interpolation, and the movement logic is plain TypeScript tested against real Rapier in Node. Locomotion clips are stripped offline into small rotation-only files, and a lint rule makes the single dynamic import of components/game/entry.ts the only way into game code. Per-dev constraints are in design.md section 9 (do-not-touch list and rules), section 8 (milestone-to-files table with tests and gates) and section 10 (assumptions A1-A7 and risks R1-R4, each tied to the milestone that checks it).",
+  "filesChanged": [
+    ".company/tasks/active/TASK-002/design.md",
+    ".company/memory/decisions/ADR-001-physics-rapier-fixed-step.md",
+    ".company/memory/decisions/ADR-002-single-canvas-shared-avatar.md",
+    ".company/memory/decisions/ADR-003-locomotion-retarget-strategy.md",
+    ".company/memory/decisions/ADR-004-test-runner-vitest.md",
+    ".company/memory/decisions/ADR-005-progress-storage-versioning.md",
+    ".company/memory/decisions/ADR-006-lint-gate-and-game-import-boundary.md"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      ".company/tasks/active/TASK-002/design.md",
+      ".company/memory/decisions/ADR-001-physics-rapier-fixed-step.md",
+      ".company/memory/decisions/ADR-002-single-canvas-shared-avatar.md",
+      ".company/memory/decisions/ADR-003-locomotion-retarget-strategy.md",
+      ".company/memory/decisions/ADR-004-test-runner-vitest.md",
+      ".company/memory/decisions/ADR-005-progress-storage-versioning.md",
+      ".company/memory/decisions/ADR-006-lint-gate-and-game-import-boundary.md"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [],
+  "criteria": [
+    {
+      "criterion": "A design document at .company/tasks/active/TASK-002/design.md defines every module from the spec section 10 (experience shell, game loader, game session, input controller, player controller, character animator, follow camera, world, interaction system, game interface, progress storage, game configuration) with its file path under a single game directory, its public interface in TypeScript signature form, what it owns, and what it must never touch.",
+      "status": "passed",
+      "evidence": "design.md section 2 (directory map under components/game/) and sections 2.1-2.12, one per module, each with TypeScript signatures plus 'Owns' and 'Must never' lines. Section 2.13 covers the entry module."
+    },
+    {
+      "criterion": "The design states how the hero and the game share one avatar and one canvas or justifies two canvases, including which component owns the AnimationMixer, the camera, and the head mouse-follow in each mode, and how the Realtime voice session is torn down before the game starts.",
+      "status": "passed",
+      "evidence": "design.md section 3: one canvas with the reasons given. Section 3.1 lists the exact TalkingAvatar.tsx changes. Section 3.2 is an ownership table for hero, loading and game covering avatar scene, mixer, head-follow, camera, lights, Rapier, renderer, voice, scroll and focus. Section 3.3 step 1 calls stopVoice (disconnect, useRealtimeChat.ts:57-79,226-229) synchronously on Play, and Play is disabled while connecting to avoid the F17 race (useRealtimeChat.ts:144-145). Sections 3.4-3.5 cover exit and failure. ADR-002."
+    },
+    {
+      "criterion": "The design specifies the physics integration using @react-three/rapier 1.5.0 with a fixed 60 Hz timestep, capped catch-up, interpolation, capsule dimensions derived from the audit bounds, and which Rapier KinematicCharacterController features implement step, slope, snap, and grace-period jump.",
+      "status": "passed",
+      "evidence": "design.md section 4.1 (packages and Physics paused), section 4.2 (frame driver: dt 1/60, max 4 steps, 0.25 s clamp, backlog dropped, alpha interpolation), section 4.3 (capsule radius 0.3 m, half-height 0.6 m, skin 0.01 m, derived from the audit's 1.865 m height), section 4.4 (feature table: enableAutostep, setMaxSlopeClimbAngle/setMinSlopeSlideAngle, enableSnapToGround, computedGrounded plus game-side coyote and buffer timers). ADR-001."
+    },
+    {
+      "criterion": "The design specifies the locomotion animation pipeline: which clip tracks are kept or dropped per the audit retargeting findings, how stripped game-only clips are produced and where they live, how clip speed is matched to controller speed, and the state machine transitions with their guards.",
+      "status": "passed",
+      "evidence": "design.md section 5.1 (scripts/strip-clips.mjs writes public/game/clips/*.glb; explicit keep and drop lists; rest-delta correction as an M1 option), section 5.2 (runtime toGameClip, skeleton.pose reset), section 5.3 (guard table and crossfade and phase sync), section 5.4 (timeScale formula and clamp, risks R1 speed mismatch and R2 sideways run). ADR-003."
+    },
+    {
+      "criterion": "The design lists the exact dependency additions with pinned versions, the Vitest test setup files, the lint-gate fix (so npm run lint actually lints) and root .gitignore handling, and confirms that no game module is reachable from the initial portfolio bundle by naming the dynamic-import boundary.",
+      "status": "passed",
+      "evidence": "design.md section 7.1 (pinned table; gltf-transform version resolved by an npm view command recorded at M1), section 7.2 (vitest.config.mts, vitest.setup.ts, scripts), section 7.3 (full .eslintrc.json, delete eslint.config.mjs, build-lints consequence), section 7.4 (.gitignore force-added, ASSETS.md format), section 7.5 (the only boundary is import(\"@/components/game/entry\") in components/game/shell/gameLoader.ts, with a build-output and network proof). ADR-006."
+    },
+    {
+      "criterion": "The design maps each milestone M1 to M5 to the files it creates or changes, the tests it adds, and the observable gate check, so each later stage contract can be written from it.",
+      "status": "passed",
+      "evidence": "design.md section 8 table: rows M1-M5 with files created, changed or deleted, named test files and what they assert, and observable gate checks. Section 9 gives the per-stage constraints."
+    },
+    {
+      "criterion": "One or more ADRs under .company/memory/decisions/ (numbered from ADR-001 for this project) record the lasting decisions: physics engine choice, single-versus-dual canvas and avatar ownership, locomotion retarget strategy, test runner, and progress storage format versioning.",
+      "status": "passed",
+      "evidence": "ADR-001 physics, ADR-002 single canvas and ownership, ADR-003 locomotion retarget, ADR-004 Vitest, ADR-005 progress versioning, plus ADR-006 lint gate and import boundary. Each has Status, Date 2026-10-06, Work item TASK-002, Context, Decision, Consequences, Alternatives and Rollback Plan."
+    },
+    {
+      "criterion": "Every design claim about the current code cites a file and line from the project; assumptions are labeled; nothing in the design or ADRs contains a machine-local absolute path.",
+      "status": "passed",
+      "evidence": "design.md section 1 lists facts F1-F30, each with file:line, and later sections reference them. Assumptions A1-A7 are labelled in section 10 with the milestone that verifies each. A Grep for an em dash, a home-directory prefix and the worktree root across design.md and ADR-*.md returned no matches."
+    }
+  ],
+  "assumptions": [
+    "A1: R3F 8 error boundaries inside the Canvas catch game errors without taking down the page. Verify in M2.",
+    "A2: in @react-three/rapier 1.5.0, useRapier().world is the raw RAPIER.World and the paused prop stops all internal stepping. Verify in M1 against the installed .d.ts.",
+    "A3: the KinematicCharacterController method names in design.md 4.4 match rapier3d-compat 0.14.0. Verify in M1.",
+    "A4: world.free() releases character controllers. This is mitigated by removing the controller explicitly in an ordered dispose that runs before unmount.",
+    "A5: the rapier3d-compat build initializes in Node under Vitest. The first M1 physics test proves or disproves it.",
+    "A6: webpack retries a failed import() chunk on the next call, so Retry works. Verify in M2.",
+    "A7: the owner downloads the Mixamo idle, jump, fall and land clips ('Without Skin') and converts them to GLB. Until then the fallbacks in design.md 5.1 apply.",
+    "Vitest and testing-library versions come from the audit's npm view checks and were not install-tested."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "ADR-001: @react-three/rapier 1.5.0 and rapier3d-compat 0.14.0 pinned exactly. Physics paused is used only for init and disposal; the game owns stepping at 60 Hz with max 4 steps and a dropped backlog. Colliders are built imperatively from layout data shared with the tests.",
+    "ADR-002: one canvas. The hero subtree and the active game subtree are mutually exclusive, so exactly one owner holds the avatar scene, mixer, head motion and camera. Avatar.tsx is not edited.",
+    "ADR-003: game clips are stripped offline into public/game/clips/ (rotation only, no Hips, no root motion). Animation state comes from measured speed and grounded state; playback rate is matched to speed within a clamp.",
+    "ADR-004: Vitest with jsdom opted in per file, and physics tests run against real Rapier in Node.",
+    "ADR-005: one localStorage record 'portfolio.game.progress' with an integer version, ordered migrations, reset to default on invalid data, and an in-memory fallback.",
+    "ADR-006: .eslintrc.json extending next/core-web-vitals and deletion of eslint.config.mjs. no-restricted-imports enforces the game import boundary and bans testimonials in game code. Note: next build will now lint and fail on errors, so M1 must handle the pre-existing lint baseline.",
+    "Owner action needed before the M1 visual gate for jump, fall, land and idle: download the Mixamo clips and record them in ASSETS.md (A7)."
+  ],
+  "lessonsProposed": [
+    "Adding the first .eslintrc to a Next 14 repo makes next build lint too and fail on errors. Plan the pre-existing lint baseline into the same milestone as the lint fix, not later.",
+    "When a hook's async connect assigns a resource after an await with no cancellation check (useRealtimeChat.ts:144-145), a teardown during 'connecting' can be undone. Disable the triggering UI during that state rather than relying on idempotent cleanup.",
+    "Compare the spec's movement speeds with the measured clip ground speeds at design time. Here the defaults are about 2x the clip speeds, which guarantees foot sliding unless tuned or re-sourced."
+  ],
+  "selfUsage": {
+    "filesRead": 24,
+    "approxLinesRead": 2300,
+    "approxLinesWritten": 900,
+    "retries": 0
+  }
+}

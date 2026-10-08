@@ -1,0 +1,211 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "21-game-dev-m3",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Read the design, spec and carried findings (F7, F8, minDistance). Authored the campus as data (world/campus.ts, world/builders.ts) and verified it with layout and real-Rapier walk tests. Reworked the follow camera test-first: new tests, proof they fail on the Milestone 2 camera, then the fix. Built interactions, content adapters, panels, prompt and HUD wiring. Verified on the real-GPU headless Chrome with a walk to every destination, every panel, per-frame camera sampling, regression scripts from QA's harness and an rAF perf walk. Lint and tests in the worktree, production build in a copy of the tree. No commit.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "The test arena is replaced by the CAMPUS (plaza, Project Lab, Skills Workshop, Contact Tower, ravine with stepping stones, terrace) with interactions, accessible panels from existing content only, and a camera rework that closes F7, F8 and the minDistance finding. 482 tests pass (24 of the 56 followCamera tests fail on the M2 camera), lint and build exit 0, / stays at 125 kB, and a real-GPU browser walk reached every destination and opened every panel with 0 camera-inside, 0 occluded frames and 0 frames over 20 ms. One deliberate deviation from design.md: the Lab is at +x because screen-left is +x when the camera looks along +z. Touch Interact is verified in jsdom only.",
+  "filesChanged": [
+    "components/game/world/campus.ts",
+    "components/game/world/builders.ts",
+    "components/game/world/layout.ts",
+    "components/game/world/colliders.ts",
+    "components/game/world/resources.ts",
+    "components/game/world/WorldView.tsx",
+    "components/game/followCamera.ts",
+    "components/game/config.ts",
+    "components/game/session.ts",
+    "components/game/interactions.ts",
+    "components/game/content.ts",
+    "components/game/GameScene.tsx",
+    "components/game/shell/Dialog.tsx",
+    "components/game/shell/useExperienceShell.ts",
+    "components/game/ui/panels.tsx",
+    "components/game/ui/GameInterface.tsx",
+    "components/game/ui/Hud.tsx",
+    "components/game/ui/TouchControls.tsx",
+    "components/game/__tests__/layout.test.ts",
+    "components/game/__tests__/interactions.test.ts",
+    "components/game/__tests__/content.test.ts",
+    "components/game/__tests__/panels.test.tsx",
+    "components/game/__tests__/followCamera.test.ts",
+    "components/game/__tests__/player.physics.test.ts",
+    "components/game/__tests__/shell.test.tsx",
+    "components/game/__tests__/GameInterface.test.tsx"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/world/campus.ts",
+      "components/game/world/builders.ts",
+      "components/game/world/layout.ts",
+      "components/game/world/colliders.ts",
+      "components/game/world/resources.ts",
+      "components/game/world/WorldView.tsx",
+      "components/game/followCamera.ts",
+      "components/game/config.ts",
+      "components/game/session.ts",
+      "components/game/interactions.ts",
+      "components/game/content.ts",
+      "components/game/GameScene.tsx",
+      "components/game/shell/Dialog.tsx",
+      "components/game/shell/useExperienceShell.ts",
+      "components/game/ui/panels.tsx",
+      "components/game/ui/GameInterface.tsx",
+      "components/game/ui/Hud.tsx",
+      "components/game/ui/TouchControls.tsx",
+      "components/game/__tests__/layout.test.ts",
+      "components/game/__tests__/interactions.test.ts",
+      "components/game/__tests__/content.test.ts",
+      "components/game/__tests__/panels.test.tsx",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/game/__tests__/player.physics.test.ts",
+      "components/game/__tests__/shell.test.tsx",
+      "components/game/__tests__/GameInterface.test.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors; 1 pre-existing warning (react-hooks/exhaustive-deps in useRealtimeChat.ts, a protected file)",
+      "evidence": "lint exit 0 ... ./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "21 files, 482 tests passed (M2 baseline was 353)",
+      "evidence": "test exit 0  Test Files  21 passed (21)  Tests  482 passed (482)"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "result": "no type errors",
+      "evidence": "tsc 0"
+    },
+    {
+      "command": "npm run build (in a copy of the tree, node_modules symlinked)",
+      "exitCode": 0,
+      "result": "build exit 0; / is 40.9 kB, First Load JS 125 kB (unchanged from M2)",
+      "evidence": "build exit 0  Route (app) / 40.9 kB 125 kB  + First Load JS shared by all 84.5 kB; same single useRealtimeChat warning"
+    },
+    {
+      "command": "followCamera.test.ts against the Milestone 2 followCamera.ts (swapped in temporarily, then restored byte-identical)",
+      "exitCode": 1,
+      "result": "24 failed, 32 passed of 56 (new code: 56 passed)",
+      "evidence": "Failed: minDistance with a wall behind, always-blocked query, smoothed restore min distance, F8 floor at any pitch, F7 pivot-lag wall, doorway zone, probe contract, side drops (F7 occlusion) at several yaws, tower passage yaw 150/180, drag-around passage, lab, workshop, stairs, terrace"
+    },
+    {
+      "command": "node cam-browser.mjs (real GPU, every rendered frame sampler on the live scene, avatar head bone to camera, all camera-blocking blocks)",
+      "exitCode": 0,
+      "result": "2955 frames over 5 runs: 0 camera-inside-block frames, 0 head-occluded frames, closest approach to the avatar 0.807 m, camera y never under 0.2 over the ground",
+      "evidence": "tower-passage-in-and-out frames 520 inside 0 occluded 0 minDist 0.807; lab 950/0/0/1.603; workshop 1038/0/0/0.81; plaza-pitch-limits 286/0/0/minY 0.2 (ground-main); tower-stairs 161/0/0/0.866; errs []"
+    },
+    {
+      "command": "node walk.mjs (real GPU, 1440x900): spawn to all three destinations on foot, no Space pressed, press E at each of 7 interactables",
+      "exitCode": 0,
+      "result": "every forecourt, entrance and interactable reached; correct prompt text at each; each dialog opened, 12 Tab presses never left it, Escape closed it and focus returned to the game overlay; errs []",
+      "evidence": "lab-xecsuite prompt 'Press E to View project: XecSuite' ... tower-contact; 'tab escapes 0' for all 7; 'after escape dialog null activeIsOverlay true'"
+    },
+    {
+      "command": "node perf.mjs (rAF logger while walking and running the whole campus incl. both halls, ramp, stairs and the passage)",
+      "exitCode": 0,
+      "result": "1440x900: 7292 frames, p50 16.7 p95 16.7 p99 16.8 max 16.8 ms, 0 over 20 ms. 1920x1080: 3122 frames, p95 16.8 max 16.8, 0 over 20 ms. gl.info: about 105-119 draw calls, about 22.6k triangles, 15 shader programs",
+      "evidence": "perf-1440x900.json and perf-1920x1080.json: over20 0; headless Chrome 155 (new headless, no swiftshader flags) on the dev server; the rAF is vsync locked so the numbers prove no frame over 20 ms but not the headroom"
+    },
+    {
+      "command": "node a11y.mjs (Chrome accessibility tree of an open project panel, keyboard-only activation, 390 px wide viewport)",
+      "exitCode": 0,
+      "result": "dialog modal=true named by its heading; Close button first and focused; heading, image with alt, list, link 'opens in a new tab'; Enter on the link recorded one activation target _blank rel noopener noreferrer; phone width 390: panel 348 px wide, scrolls vertically, no horizontal scroll; Close target 98 x 44 px",
+      "evidence": "a11y.json: dialogAxTree, openedOnEnter [[href,'_blank','noopener noreferrer']], phone {w:348,hscroll:false}"
+    },
+    {
+      "command": "node ravine.mjs (walk into the ravine void)",
+      "exitCode": 0,
+      "result": "fell to y -10.49, respawned at the plaza spawn about 0.6 s later, camera behind the avatar",
+      "evidence": "minY -10.485, respawnAtMs 623, after [0.61, 0.0001, -6.03]"
+    },
+    {
+      "command": "QA harness regressions copied from m2-qa-r2: cycles.mjs 10 5, pause.mjs, failures-all.mjs physics|clips|context|nowebgl, exit.mjs 0, reduced.mjs, loading.mjs, hover.mjs, seq.mjs warm + metrics.mjs warm",
+      "exitCode": 0,
+      "result": "10 Play/Exit and 5 Play/Cancel cycles: listeners 509 and nodes 1341 identical on every cycle, hero camera, head follow, idle, gesture and talk button healthy at cycles 1, 5, 10; pause/resume/tab-hide as in M2; four failure dialogs unchanged; exit pixel diff 0 of 1,034,729 (hints and avatar excluded) and rAF p95 18.4; reduced motion: no travel, no auto-walk, input at once; loading strip and cancel unchanged; prefetch fetches the game chunk and clips only after hover",
+      "evidence": "warm Play: S at C+424 (M2 419-426), entry done C+1945 (M2 1945-1948), HUD opaque S+1270 (M2 1272), rAF p95 18.4, 0 T-pose rows, 0 blank frames; arena run of the same script: C+1941, p95 17.1. The network-failure scenario was not run (its script hard-codes a production chunk hash)"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The test arena is replaced by the CAMPUS layout from design.md and spec-implementation-plan.md: Arrival Plaza at the centre with the spawn and beacon pad, Project Lab to the left, Skills Workshop to the right, Contact Tower beyond the plaza, each reachable on foot from spawn without jumping, each recognizable from the plaza by shape, light and a readable sign (screenshot from spawn), with every main-route ramp at or under 40 degrees and every main-route step at or under 0.25 m, falling off the map respawns at the plaza, and the Milestone 2 entry still lands the avatar on the plaza with the same cinematic.",
+      "status": "passed",
+      "evidence": "world/campus.ts is the default world (readLayoutParam returns campus; ?arena=test keeps the M1 arena for QA). Plaza 16 m with spawn (0,0,-6) and a beacon pad and pedestal at (0,0,1.5); halls at the V of the plaza; tower on the garden path; hedge boundary; ravine with 3 stepping stones; 3-platform terrace; ~150 blocks. layout.test.ts (14 tests): main ramp (one, 8 degrees) at or under 40, main steps (3 treads of 0.2 m) measured from the geometry at or under 0.25, interactables on walkable ground, all 3 signs face the spawn and their whole board is inside the follow camera frustum at 16:9 and 16:10 and at least 24 px tall at 1280x720. player.physics.test.ts 'campus (M3)' (7 tests, real Rapier): scripted walk with no jump input reaches every destination entrance and every interactable radius, climbs stairs and ramp, boundary and walls block, ravine fall respawns at spawn. Browser: walk.mjs reached all of them on foot; ravine.mjs fell to y -10.5 and respawned at the plaza. Screenshots from spawn at 1440x900 and 1280x720 (spawn.png, spawn-1280x720.png) show PROJECT LAB, CONTACT TOWER and SKILLS WORKSHOP fully readable with cyan, green and cyan light trims and distinct shapes (flat-roofed glowing hall, gabled hall with chimney, tall tower with a lit gateway and crown). Entry: same cinematic by metrics (see criterion 6) and frame montage (black stage, world fades in as the camera pulls back, identical first frame). DEVIATION: the Lab is at +x. The camera looks along +z, so screen-left is +x; design.md's 'negative x' contradicts the spec's 'Lab to the left'. layout.test.ts asserts the screen-visible placement. Judged by eye only: 'recognizable by shape and light' (the graphics pass refines it)."
+    },
+    {
+      "criterion": "Interactions: near an interactable a prompt shows the key (E on desktop, the Interact button on touch) and the action name; nearest and front-facing item wins, unavailable items are skipped; opening a panel pauses movement, traps focus, closes with Escape or a Close button and returns focus to the game, and it is fully keyboard and screen-reader operable.",
+      "status": "passed",
+      "evidence": "interactions.ts: pickFocus (nearest in front wins, falls back to nearest behind, other floors ignored, unavailable skipped, tie-break by list order) plus a system with edge hysteresis and a switch margin, clearing focus in every mode except playing. interactions.test.ts 21 tests incl. an assertion that each campus interactable wins when stood on. Prompt: Hud.tsx InteractionPrompt shows kbd 'E' (or 'Interact' on a coarse pointer) with 'View project: XecSuite' etc., plus a polite live region 'Press E to ...'; panels.test.tsx covers keyboard and touch wording, and the touch Interact button (aria-label, shown only with a focus, calls pressTouch). Opening a panel: OPEN_PANEL releases input (test: held W is released and ignored), HUD buttons become inert, a blur or tab hide does not pause over it. Dialog: focus starts on Close, Tab and Shift+Tab wrap, Escape and Close close once, closing returns focus to the game overlay and announces 'Panel closed. Back in the game.'; Escape still closes when focus left the dialog. Browser: all 7 panels, 12 Tab presses each stayed inside, Escape closed, overlay focused; Chrome AX tree of the project panel shows a modal dialog named by its heading, labelled controls, image alt and 'opens in a new tab' links; Enter on the link recorded one activation. LIMITS: touch path (Interact button) verified in jsdom only, no touch device or emulated touch walk (touch controls belong to M4); no real screen reader run, AX tree only; the hero page behind the game is not inert (pre-existing M2 behaviour: Tab from the HUD can reach hero links), so an outside-the-dialog AX node list is non-empty."
+    },
+    {
+      "criterion": "Panels use only existing content: Project Lab shows the three featured projects from data/index.ts (XecSuite, NewsStocks, Apex Mind) with titles, descriptions, technologies and links exactly as in the data, plus an All projects panel; Skills Workshop shows skills grouped into a few readable groups plus an experience panel; Contact Tower shows the existing contact options and links; links open only on explicit activation, in one tab, with rel noopener noreferrer; no testimonial text, invented claim or result appears anywhere (tested in content.test.ts).",
+      "status": "passed",
+      "evidence": "content.ts reads only projects (@/data) and owner, skills, experience, education (@/lib/persona); no data file touched. content.test.ts (25 tests): featured ids are exactly 1,2,3 in order with data titles, description, icons, screenshot, tag and link equal to the data; all 9 projects with the site's http-only link rule; skills split without loss and shown in 3 groups (Front-end and e-commerce, AI systems, Automation and tooling) holding every persona line once and unchanged; experience and education equal persona; contact is exactly email, LinkedIn and site (phone excluded); every adapter string is a substring of data or persona; no testimonial quote or name or 'Placeholder' in any adapter output or rendered panel; no file under components/game imports testimonials; new files contain no em dash and no machine-local path. panels.test.tsx (27 tests): project panels show title, description, screenshot alt, icon list (decorative, the data has no technology names, so none are invented), tag, exactly one link equal to the data with target _blank and rel 'noopener noreferrer'; panels never call window.open; all-projects lists all 9 with 'private' where the data has no link and 10 http links all noopener noreferrer; contact has mailto (no target), LinkedIn and site in one tab each. Browser walk confirmed the same hrefs and rels in the live panels. The two test files import testimonials only to prove absence, each with a justified eslint-disable-next-line."
+    },
+    {
+      "criterion": "Camera rework closes the carried findings: the follow camera keeps the avatar's head and torso visible (head-to-camera line of sight against every camera-blocking collider on every rendered frame), never goes below the ground surface at any pitch, enforces CAMERA.minDistance on pull-in (never inside the avatar), never shows building interiors in the narrowest passage, and restores smoothly; followCamera tests cover each case and fail on the Milestone 2 camera code.",
+      "status": "passed",
+      "evidence": "followCamera.ts resolves the camera every frame from the avatar's true upper body, not the lagging pivot, under five rules: sphere path clear; head (1.65 m) and torso (1.2 m) rays clear (bisection to the farthest clear point); camera y at least the floor under the avatar plus the probe radius (so F8 holds with no ground collider at all, and the campus ground is also a camera blocker); never closer than minDistance (next to a wall the camera climbs to a higher pitch, continuous, instead of sinking in; a pocket nothing clears falls back to minDistance); with the avatar outside a building (not within 1 m of it) the camera stays outside it (CameraZone from layout.rooms), so the 2.4 m tower passage never shows the camera inside. Pull in at once, restore smoothly (monotone, steps under 0.2 m per frame, tested). followCamera.test.ts: 56 tests, 24 FAIL on the M2 camera (F7 side drops at several yaws, F8 floor, minDistance with a wall and with an always-blocked query, pivot-lag wall, doorway zone, tower passage at 150 and 180 degrees, drag-around, lab, workshop, stairs, terrace) and all pass on the new one. Every Rapier frame checks clearance, analytic head and torso line of sight against all camera-blocking blocks, minDistance, floor and interiors, over the 30 degree ramp drops (F6 cases kept) and campus routes at 7 yaws. Browser, every rendered frame on the real GPU: 2955 frames, 0 inside, 0 occluded, closest 0.807 m, floor y 0.2 at the pitch limit, in the passage while dragging the camera around. Screenshots cam-pitch-low.png, cam-pitch-high.png, cam-tower-passage-end.png. Unit tests on a fake world show the pivot-lag fix; no hand-built reproduction of QA's exact 13-frame run-sideways drop in the browser (the Rapier drop tests reproduce it and are red on M2)."
+    },
+    {
+      "criterion": "The automated tests listed for M3 in design section 9 exist and pass (interactions, content, layout, followCamera, player.physics on CAMPUS with a scripted walk reaching every destination radius, panels), and a browser run on the real GPU walks from spawn to all three destinations and opens every panel, with screenshots of each destination and panel.",
+      "status": "passed",
+      "evidence": "interactions.test.ts (21), content.test.ts (25), layout.test.ts (14), followCamera.test.ts (56), player.physics.test.ts 'campus (M3)' (7 added to 21), panels.test.tsx (27) all pass in npm test (482 total). Browser: walk.mjs on the real GPU (headless Chrome 155, no software-GL flags) walked spawn to the Lab, Workshop and Tower and opened all 7 panels. Screenshots in the m3-dev scratch folder: spawn.png, spawn-1280x720.png, walk-lab-1-forecourt.png, walk-lab-2-entrance.png, walk-lab-3-lab-xecsuite-prompt.png, walk-lab-3-lab-newsstocks-prompt.png, walk-lab-3-lab-apex-prompt.png, walk-lab-3-lab-all-prompt.png, walk-workshop-1-forecourt.png, walk-workshop-2-entrance.png, walk-workshop-3-workshop-skills-prompt.png, walk-workshop-3-workshop-experience-prompt.png, walk-tower-1-forecourt.png, walk-tower-2-entrance.png, walk-tower-3-tower-contact-prompt.png, panel-lab-xecsuite.png, panel-lab-newsstocks.png, panel-lab-apex.png, panel-lab-all.png, panel-workshop-skills.png, panel-workshop-experience.png, panel-tower-contact.png, panel-phone-sized.png, ravine-*.png, cam-*.png."
+    },
+    {
+      "criterion": "Milestones 1 and 2 behaviour does not regress (locomotion, landing, Play and Exit cinematic, loading strip, pause, failures, cycles), rAF p95 stays under 20 ms on the real GPU while walking through the campus at desktop resolution, and the game chunk plus campus assets stay within the 8 MB additional-asset budget (sizes recorded).",
+      "status": "passed",
+      "evidence": "All 353 M2 tests plus new ones pass unchanged apart from three justified edits (campus default layout, the announce region now selected by data-game-announce because the prompt adds a second status region, and the focus-store field on the game handle). Browser regressions (reg scripts, real GPU): see testsRun: cycles 10+5 stable, pause, 4 failure dialogs, exit pixel diff 0, reduced motion, loading strip, prefetch, warm Play C+1945 and p95 18.4 as in M2, 0 T-pose and 0 blank frames. The same-script arena run shows the swap pixel step ratio 1.6 versus 3.37 on the campus: not a pop (frame montage: first game frame is the last hero frame, world fades in over 300 ms), the campus simply has more geometry to reveal. Performance walking and running through the campus: 1440x900 7292 frames p95 16.7, max 16.8; 1920x1080 3122 frames p95 16.8, max 16.8; 0 frames over 20 ms (vsync locked, so headroom is unmeasured; 105-119 draw calls, about 22.6k triangles). Sizes (production build): game code chunk 63.5 KB raw, 21.8 KB gzip; rapier chunk 765 KB gzip; clips 184 KB on disk; no sign textures downloaded (drawn on a canvas at runtime): about 0.97 MB additional, far under 8 MB. No rapier or game code in the / route chunks. JS heap after the first Play is about 32 MB versus 15 MB in M2 (world resources are cached for the page's life) and grows 0.15 MB per cycle, as in M2. NOT re-run: the M1 hard-landing and foot-contact visual checks and sideways-run visuals (unit tests stance, animator and clips pass, no animation or clip file changed), the voice-session shutdown, the offline network failure scenario, touch devices, Firefox, Safari."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the / route First Load JS stays within 2 kB of 125 kB, the hero is unchanged, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "lint exit 0, npm test exit 0 (482 passed), build exit 0 in a copy (tree rsynced without node_modules, .next and .company, node_modules symlinked): / 40.9 kB, First Load JS 125 kB. components/avatar has no diff (0 lines); the only shell change is the optional wide prop on Dialog.tsx, which is in the hero chunk but leaves / at 125 kB. content.test.ts scans the new and changed game sources for the em dash character and machine-local and temp paths: clean. No commit, stash, reset or checkout was made; data/index.ts, lib/persona.ts and every section 9 do-not-touch file are untouched. Dev server on :3100 left running (never restarted)."
+    }
+  ],
+  "assumptions": [
+    "Left and right follow the screen from spawn (camera looks along +z), so Lab is +x and Workshop is -x; design.md's literal 'negative x' was treated as a handedness slip.",
+    "The delegation names HEAD 729f9d6 as the base (Milestone 2 accepted), the contract names 710f034; the diff is against 729f9d6.",
+    "'Real GPU' is headless Chrome 155 (new headless) on this Mac with only --ignore-gpu-blocklist, no software-GL flags; the GPU model was not read.",
+    "Technologies are shown as the existing decorative icons because the data has no technology names; no mapping from file names to names was invented.",
+    "Skills are grouped under three headings I added (Front-end and e-commerce, AI systems, Automation and tooling); every persona line is shown unchanged and an unmapped line would land in a 'More' group.",
+    "Camera-only colliders (collide false, blocksCamera true) are used for tree crowns, so a canopy blocks the camera but not the player; the camera rework does not depend on them.",
+    "The visual pass (graphics-engineer) is expected to replace the primitive trees, screens and trim; geometry, colliders and materials are separate (visualOnly flag, material names, EMISSIVE table).",
+    "Boss normalization: targetEvidence.targetBaseCommit set to the contract value 710f034 (work-item base); the stage diff was taken against 729f9d6 as the agent states."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Campus handedness: with the camera looking along +z the Lab is at +x (screen-left) and the Workshop at -x; update design.md section 2.8 accordingly.",
+    "The follow camera casts from the avatar's true position, uses head and torso line-of-sight probes, a code-level floor, a minDistance lift, and keeps out of rooms the avatar is not at: a ground or room collider is no longer needed for F7 and F8 correctness.",
+    "Layout data gains collide:false (visual only, or camera-only with blocksCamera), signs, destinations and rooms; surfaceHeightAt in layout.ts is the shared way to check that things stand on walkable ground.",
+    "The page behind the game should become inert while the game is active (pre-existing M2 gap, found while reading the AX tree): propose it for the M5 accessibility pass."
+  ],
+  "lessonsProposed": [
+    "Screen-left is world +x when the camera looks along +z; check handedness against a screenshot, not the text of a layout spec.",
+    "A test that fails on the previous implementation should be proven by swapping the old file in (and restoring it byte-identical), not asserted.",
+    "A second role=status region in the overlay broke QA's harness selector (data-game-overlay role=status picks the first one): keep one announce region first in DOM order and select by a data attribute in tests.",
+    "Camera field of view with a shoulder offset is not symmetric: signs on the right edge clip first, so test whole sign boards against the frustum at 16:9 and 16:10 instead of centres.",
+    "vitest hides console.log by default; use --disableConsoleIntercept when debugging a physics trajectory. macOS sed needs -i with an empty suffix, so use python for file edits in scripts.",
+    "Harness walks with straight-line steering stall on small colliders (a bench, the beacon base); give scripted routes waypoints around them."
+  ],
+  "selfUsage": {
+    "filesRead": 55,
+    "approxLinesRead": 6500,
+    "approxLinesWritten": 3600,
+    "retries": 0
+  }
+}

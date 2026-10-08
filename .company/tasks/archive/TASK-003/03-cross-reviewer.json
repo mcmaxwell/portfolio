@@ -1,0 +1,53 @@
+{
+  "assignee": "cross-reviewer",
+  "executionMode": "headless",
+  "vendor": "codex",
+  "authType": "subscription",
+  "requestedModelTier": "top",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "constraints": [
+    "Read-only: do not modify, stage, commit, stash or reset anything; the working copy is snapshotted and fingerprinted.",
+    "Run checks exactly as listed; do not substitute shorter commands. Use Node 22 if an nvm switch is needed.",
+    "Report verdict not-applicable; put the review outcome in crossReview.verdict (approved or changes-requested)."
+  ],
+  "workItemId": "TASK-003",
+  "stageId": "03-cross-reviewer",
+  "targetBaseCommit": "b61b848",
+  "objective": "Independent cross-provider review of the Claude-authored TASK-003 change: the walking posture fix (clip spine pitch bake in scripts/strip-clips.mjs, poseBlend target memory) and the trophy collectible on terrace-2 with progress persistence.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-003/work-item.json",
+    ".company/tasks/active/TASK-003/reports/01-game-dev-lean-trophy.json",
+    "ASSETS.md"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-003/reports/01-game-dev-lean-trophy.json"
+  ],
+  "acceptanceCriteria": [
+    "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+    "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+    "The posture fix is sound: the baked spine pitch and head counter-pitch leave leg tracks unchanged, poseBlend's target memory cannot leak a stale pose between sessions or clips, and posture.test.ts asserts behaviour that would fail on baseRef.",
+    "The trophy is collectible once, persists as an optional field of the version 1 progress record without breaking legacy records, is cleared by Restart, releases its resources on dispose, and its tests assert real behaviour.",
+    "The AT_LIMIT_SHORTFALL tolerance added to components/game/__tests__/bodyClearance.test.ts is judged: either acceptable with reasons, or a finding that the clearance code should be fixed instead; any other correctness, robustness, resource-leak, accessibility or maintainability defect is reported with severity."
+  ],
+  "reviewScope": {
+    "baseRef": "b61b848f0203e0672ada5b6996059f03434e9e2d",
+    "headRef": "eb7b6c1167d8f4a96eeb25ed0b825cb04a02c71b",
+    "requiredChecks": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck"
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint"
+      },
+      {
+        "name": "unit",
+        "command": "npm test"
+      }
+    ],
+    "workdirProvidedByBoss": true
+  },
+  "reportPath": "reports/03-cross-reviewer.json"
+}

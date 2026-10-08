@@ -1,0 +1,45 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "17-frontend-dev-selfhost-font",
+  "assignee": "frontend-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "smoke",
+  "objective": "Remove the build-time network dependency: app/layout.tsx loads JetBrains Mono through next/font/google, so npm run build fails without internet (the Codex review sandbox and any offline CI). Self-host the font with next/font/local so the build is hermetic, with no visible change to the site.",
+  "contextFiles": [
+    "app/layout.tsx",
+    "tailwind.config.ts",
+    "app/globals.css",
+    "ASSETS.md",
+    "next.config.mjs",
+    ".company/tasks/active/TASK-002/reports/16-cross-reviewer-m1.json"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/16-cross-reviewer-m1.json"
+  ],
+  "acceptanceCriteria": [
+    "app/layout.tsx uses next/font/local with JetBrains Mono font files committed under the app (only the weights and styles the site actually uses, woff2, latin subset where available), exposing the same --font-mono CSS variable and font-mono class so no other file needs to change.",
+    "The font files' source, version, OFL license and the exact weights shipped are recorded in ASSETS.md, with the license file included next to the fonts.",
+    "npm run build exits 0 with network access disabled (prove it by running the build in a copy of the tree with outbound network blocked, for example a sandbox or an unresolvable proxy, and record the exit code); the / route First Load JS and the total font bytes transferred for / are recorded before and after.",
+    "Rendered text is visually identical: screenshots of the hero and one content section before and after, at the same viewport, compared with a pixel diff that shows no change in glyph shapes (antialiasing noise only), and no flash of unstyled text on load.",
+    "npm run lint, npm test and npm run build (online) exit 0 with exit codes captured; only app/layout.tsx, the font files and license, and ASSETS.md change; new content has no em dash or machine-local path; no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "A game-dev stage runs in parallel in the same worktree and owns components/game/*, components/avatar/TalkingAvatar.tsx, app/page.tsx and components/site/Nav.tsx; do not edit those. If app/layout.tsx is on the design.md section 9 do-not-touch list, stop and report blocked instead of editing it.",
+    "Pinned sources only: either commit woff2 files from the official JetBrains Mono release or copy them from an exactly pinned @fontsource/jetbrains-mono devDependency; record which.",
+    "Run the production build in a copy of the tree so the dev server's .next is not clobbered.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "code",
+    "font files",
+    "ASSETS.md",
+    "screenshots and diff"
+  ],
+  "reportPath": "reports/17-frontend-dev-selfhost-font.json"
+}

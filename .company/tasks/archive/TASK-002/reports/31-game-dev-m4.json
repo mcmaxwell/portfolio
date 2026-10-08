@@ -1,0 +1,182 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "31-game-dev-m4",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Implemented progress.ts (versioned record, guarded storage, in-memory fallback) and challenge.ts (cell collection by proximity, beacon gating) on top of the existing session, interaction and animator systems; added three cells and the beacon item to the campus layout, instanced cell and beam visuals sharing the world's neon-cyan material, a lighting pulse in WorldView, the existing dance gesture as the celebration, HUD counter and guidance, Restart in the pause menu and a completion panel. Verified with unit tests, a keyboard-only real-GPU Chrome loop on the dev server (with and without blocked storage), a pause-during-celebration check, and a production build in a copy for the regression.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "The challenge and versioned progress are implemented and the full loop (Play, three cells, beacon celebration, completion panel, Restart, reload persistence, Exit) ran in headless Chrome on the real GPU at 1440x900 with the keyboard, also with localStorage blocked. Production regression passed (tower passage sweeps inside 0 and occluded 0, hero gap max 27 ms, rAF p95 16.8 ms, / First Load JS 125 kB, Exit focus on Play); typecheck, lint, test (617 passed) and build all exit 0.",
+  "filesChanged": [
+    "ASSETS.md",
+    "components/game/GameScene.tsx",
+    "components/game/__tests__/animator.test.ts",
+    "components/game/animator.ts",
+    "components/game/clips.ts",
+    "components/game/config.ts",
+    "components/game/interactions.ts",
+    "components/game/session.ts",
+    "components/game/ui/GameInterface.tsx",
+    "components/game/ui/Hud.tsx",
+    "components/game/ui/PauseMenu.tsx",
+    "components/game/ui/panels.tsx",
+    "components/game/world/WorldView.tsx",
+    "components/game/world/campus.ts",
+    "components/game/world/layout.ts",
+    "components/game/world/resources.ts",
+    "components/game/progress.ts",
+    "components/game/challenge.ts",
+    "components/game/__tests__/progress.test.ts",
+    "components/game/__tests__/challenge.test.ts",
+    "components/game/__tests__/challengeUi.test.tsx"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "ASSETS.md",
+      "components/game/GameScene.tsx",
+      "components/game/__tests__/animator.test.ts",
+      "components/game/animator.ts",
+      "components/game/clips.ts",
+      "components/game/config.ts",
+      "components/game/interactions.ts",
+      "components/game/session.ts",
+      "components/game/ui/GameInterface.tsx",
+      "components/game/ui/Hud.tsx",
+      "components/game/ui/PauseMenu.tsx",
+      "components/game/ui/panels.tsx",
+      "components/game/world/WorldView.tsx",
+      "components/game/world/campus.ts",
+      "components/game/world/layout.ts",
+      "components/game/world/resources.ts",
+      "components/game/progress.ts",
+      "components/game/challenge.ts",
+      "components/game/__tests__/progress.test.ts",
+      "components/game/__tests__/challenge.test.ts",
+      "components/game/__tests__/challengeUi.test.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "tsc --noEmit -p . then exit 0 (typecheck.exit)"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "components/avatar/useRealtimeChat.ts 224:6 react-hooks/exhaustive-deps (file not touched)"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "28 files, 617 passed",
+      "evidence": "Test Files 28 passed (28); Tests 617 passed (617); Duration 320.22s. Includes the mobile-dev stage's TouchControls.test.tsx as present at run time."
+    },
+    {
+      "command": "npm run build (in a copy of the tree, node_modules symlinked, copy deleted afterwards)",
+      "exitCode": 0,
+      "result": "built twice (two copies of the final tree)",
+      "evidence": "Route / 40.9 kB, First Load JS 125 kB in both builds (build.log, build2.log)"
+    },
+    {
+      "command": "node loop.mjs (dev server :3100, headless Chrome real GPU 1440x900, keyboard only)",
+      "exitCode": 0,
+      "result": "full loop passed",
+      "evidence": "counter 0/3 -> 1/3 -> 2/3 -> 3/3; guidance text shown; prompt 'Press E to Light the beacon'; completion dialog 'Challenge complete'; stored completed true; reload restored 3/3 and completed; Restart gave 0/3 with settings kept; one cell collected then reload gave 1/3; Exit focus BUTTON [ play / explore ]; errs [] (out/loop.json)"
+    },
+    {
+      "command": "node blocked.mjs (same, localStorage getter throws SecurityError)",
+      "exitCode": 0,
+      "result": "loop completed in memory",
+      "evidence": "blocked SecurityError; counters 1/3, 2/3, 3/3; completion dialog shown; Restart 0/3; page text has no error words; Exit focus on Play; errs [] (out/blocked.json)"
+    },
+    {
+      "command": "node pausecel.mjs (pause during the celebration)",
+      "exitCode": 0,
+      "result": "both variants passed",
+      "evidence": "Resume opens 'Challenge complete' (stored completed true); Restart then resume opens no panel (0/3, completed false); errs [] (out/pausecel.json)"
+    },
+    {
+      "command": "qpass.mjs x3 on the production build (tower passage: centre, hug left wing, hug right wing), 1440x900",
+      "exitCode": 0,
+      "result": "inside 0, occluded 0 in all three",
+      "evidence": "frames 937/872/857; minClearance 0.2/0.2/0.221 m; minDist 0.803/0.804/0.719 m; errs [] (reg/qpass-*.log)"
+    },
+    {
+      "command": "entry.mjs on the production build (hover-warmed Play, and cold Play), screencast plus gl.render hook",
+      "exitCode": 0,
+      "result": "hero gap max 27 ms warm, 29 ms cold",
+      "evidence": "maxGapBeforeSwapMs 27 (warm) and 29 (cold); gapIntoFirstGameFrameMs 32 and 29; screencast max frame gap 82 ms warm and 57 ms cold (screencast jitter, not a render gap); first game render 23 ms with 2 programs compiled (avaturn_hair material and a depth program, not the cell meshes; see assumptions) (reg/out/m-prod.json, m-prod-cold.json)"
+    },
+    {
+      "command": "perf.mjs on the production build, walking the campus, 1440x900",
+      "exitCode": 0,
+      "result": "p50 16.7, p95 16.8, p99 16.8, max 16.8 ms",
+      "evidence": "3123 frames in 52 s, over20 0; programs 47, calls 58 max (reg/out/perf-prod.json)"
+    },
+    {
+      "command": "exit.mjs on the production build",
+      "exitCode": 0,
+      "result": "focus on Play after Exit",
+      "evidence": "exit-focus BUTTON:[ play / explore ]; errs []"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "Challenge: one energy cell near each destination, each reachable on foot and visible from its approach, each collectible once (collecting twice counts once), an accessible HUD counter 'Energy cells n/3' with a polite live-region announcement, guidance back to the plaza after the third (a visible cue plus text), and interacting with the beacon only after all three triggers a short lighting effect and a celebration (the existing celebration-style gesture or clip on the avatar, no new external asset unless recorded in ASSETS.md) followed by a completion panel with Explore more, View projects and Contact actions; challenge.test.ts covers uniqueness, beacon gating, completion and restart.",
+      "status": "passed",
+      "evidence": "Layout: one cell per destination (lab, workshop, tower) 2.0 to 2.6 m inside the door or passage on the approach axis; challenge.test.ts (15 tests) checks one cell per destination near it, a walkable surface at the cell height with open space above, collection within radius and floor only, collecting twice counts once and notifies once, nothing collected outside playing, beacon unfocused and inert before the third cell, focus plus E after it starts celebrating and saves completion, completion panel then close to playing, no second activation, restart then replay. Browser: cell visible through the Lab door from outside (out/1-cell-approach.png), counter 'Energy cells n/3' in a role=status aria-live=polite region (challengeUi.test.tsx asserts it), guidance chip plus a tall cyan beam over the beacon after the third cell (out/3-guidance.png), celebration plays the existing public/animations/dance.glb gesture for 3.6 s with a cyan lighting pulse (out/4-celebration.png; no new asset, ASSETS.md row updated), then the completion panel with Explore more, View projects and Contact (out/5-completion.png; challengeUi.test.tsx covers the three actions). Deviation from design 2.9: the beacon shows no prompt (and no touch Interact button) before the third cell; the counter carries that information."
+    },
+    {
+      "criterion": "Progress: progress is saved locally in a versioned format; reload restores collected cells and completion; Restart in the pause menu clears challenge progress but keeps settings; corrupt JSON, wrong types, an unknown version and a throwing storage getter fall back safely (in-memory when storage is unavailable, with no error to the visitor); progress.test.ts covers each case; in the browser with storage blocked the loop still completes.",
+      "status": "passed",
+      "evidence": "progress.ts versioned record (version 1, key portfolio.game.progress, ADR-005). progress.test.ts (36 tests): round trip, 19 invalid inputs (corrupt JSON, empty string, array, number, null, missing/string/fractional/0/newer version, wrong types, unknown cell, completed without 3 cells, missing settings, bad volume/quality/reducedMotion) all give the default with status invalid; throwing storage getter, throwing getItem, absent storage and setItem quota error all fall back to memory with persistent false and no throw; restart keeps settings. Browser (loop.json): reload restored 3/3 and completed true; Restart from the pause menu gave 0/3 with settings kept; one cell then reload gave 1/3. Storage blocked (blocked.json, localStorage getter throws SecurityError): loop completed 0/3 to completion panel, Restart worked, no error text, errs []. Not testable: the n -> n+1 migration loop has no shipped older version to exercise (only unknown-version rejection is tested)."
+    },
+    {
+      "criterion": "The full loop (Play, collect three cells, beacon celebration, completion panel, Restart, reload persistence, Exit) is completed in the browser on the real GPU at 1440x900 with the keyboard, with one screenshot each of a cell, the counter, the guidance, the celebration and the completion panel.",
+      "status": "passed",
+      "evidence": "loop.mjs on the dev server (not the production build), headless Chrome with the real GPU, 1440x900, keyboard only (W/A/S/D, Shift, E, R, Escape): Play, three cells, beacon celebration, completion panel, Explore more, reload persistence, Restart, reload, Exit all completed (out/loop.json). Screenshots: out/1-cell-approach.png (cell), out/2-counter.png (counter 1/3), out/3-guidance.png (guidance chip and beam), out/4-celebration.png (dance with lighting pulse), out/5-completion.png (completion panel). Blocked-storage run has its own set (out/b-*.png)."
+    },
+    {
+      "criterion": "Short regression on the production build: the round-2 camera wall sweep at the tower passage, entry warm Play with no hero freeze over 50 ms, Exit with focus on Play, and rAF p95 under 17.5 ms walking the campus at 1440x900; the / route First Load JS within 2 kB of 125 kB.",
+      "status": "passed",
+      "evidence": "Production build served from a deleted-afterwards copy on :3150 (killed by PID). Tower passage sweeps with mouse-drag yaw and pitch while hugging centre, left wing, right wing: inside 0, occluded 0, minClearance 0.2 m (reg/qpass-*.log). Entry warm Play: max hero gap 27 ms (cold 29 ms), under 50 ms (reg/out/m-prod.json). Exit leaves focus on [ play / explore ] (reg exit.mjs). rAF p95 16.8 ms walking the campus at 1440x900 (reg/out/perf-prod.json). / route First Load JS 125 kB, 40.9 kB route, unchanged from 125 kB. The round-2 sweep script (qpass.mjs) was reused; the exact round-2 wall scenario list was not available, so the three passage variants are my choice."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), only content from data/index.ts and lib/persona.ts is shown, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "typecheck exit 0, lint exit 0 (one pre-existing warning outside the diff), npm test exit 0 (617 passed), npm run build exit 0 in a copy. Only content from data/index.ts and lib/persona.ts is shown: the new strings are game UI copy (counter, guidance, completion panel text, button labels), no portfolio claims, no testimonials import. grep of the diff and of the new files found no em dash and no machine-local path. No commit was made, no stash, reset or checkout."
+    }
+  ],
+  "assumptions": [
+    "The two programs compiled at the first game frame in the production run (avaturn_hair_0_material and a depth program) are not caused by the cells (the cell and beam meshes share the neon-cyan program and are in the warm-up probes); I did not build a base-commit control to prove they pre-exist, so that is an inference from the program list.",
+    "The celebration is capped at 3.6 s of the 5.2 s dance clip, and skipped to a 1.0 s lighting-only beat under reduced motion; a pause during the celebration skips the rest and opens the completion panel on Resume (verified in the browser), unless Restart cleared the completion.",
+    "A stored record with completed true but fewer than three cells is treated as invalid (reset to default), a small tightening of ADR-005 (which lists wrong shapes as invalid).",
+    "createGame with an explicit storage option gets its own store; without it the page-wide singleton is used so progress survives Exit and re-entry within a visit.",
+    "Beacon is focusable only when ready (3 cells and not completed); after completion it stays inert until Restart."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "ADR-005 addendum: a record with completed true and fewer than three cells is invalid; createGame(storage) bypasses the singleton for tests.",
+    "Integration point for the touch stage: game.focus (already passed to TouchControls) now holds the beacon item only when it can be activated, so the context-sensitive Interact button shows exactly then; cells never take focus (proximity collection)."
+  ],
+  "lessonsProposed": [
+    "A third-person camera with free orbit stays where it is when the player walks back toward it, so a wide beam or prop between the camera and the avatar can hide the avatar; keep celebration props thin and recentre the camera (R) in browser scripts before screenshots.",
+    "When counting shader programs at the first game frame, list the cache keys of programs added after the swap before blaming a new mesh: here the two late programs were the hair material and a depth program."
+  ],
+  "selfUsage": {
+    "filesRead": 45,
+    "approxLinesRead": 4500,
+    "approxLinesWritten": 1500,
+    "retries": 3
+  }
+}

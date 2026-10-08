@@ -1,0 +1,62 @@
+{
+  "workItemId": "TASK-002",
+  "assignee": "cross-reviewer",
+  "executionMode": "headless",
+  "vendor": "codex",
+  "authType": "subscription",
+  "requestedModelTier": "top",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "stageId": "39-cross-reviewer-final-r2",
+  "objective": "Second-round independent cross-provider review: confirm the fixes for the round-1 findings of reports/37-cross-reviewer-final.json (follow camera past the solved clear distance; three whitespace errors) in the delta from the round-1 head, and review that delta for new defects. Together with round 1 (710f034 to 3c888d6, whose other areas had no findings) this covers the final revision.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/37-cross-reviewer-final.json",
+    "components/game/followCamera.ts",
+    "components/game/__tests__/followCamera.test.ts",
+    ".company/memory/conventions.md"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/37-cross-reviewer-final.json",
+    ".company/tasks/active/TASK-002/reports/38-game-dev-xreview-fix.json"
+  ],
+  "acceptanceCriteria": [
+    "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+    "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+    "The round-1 important finding is verified fixed: for every input the follow camera's resolved distance is at most the solved clear distance, the sealed-pocket handling (raised near plane) keeps the camera out of geometry and restores the near plane, and the new tests would fail on the round-1 head.",
+    "git diff --check from 710f034 to headRef reports no whitespace errors, and the components/avatar/TalkingAvatar.tsx change in the delta is whitespace only.",
+    "Any correctness, robustness or maintainability defect introduced by the delta is reported as a finding with severity; the owner-accepted known limitations listed in the round-1 contract are not findings."
+  ],
+  "constraints": [
+    "Read-only: do not modify, stage, commit, stash or reset anything; the working copy is snapshotted and fingerprinted.",
+    "Run checks exactly as listed; do not substitute shorter commands. Use Node 22 if an nvm switch is needed.",
+    "Report verdict not-applicable; put the review outcome in crossReview.verdict (approved or changes-requested)."
+  ],
+  "deliverables": [
+    "crossReview report"
+  ],
+  "reviewScope": {
+    "baseRef": "3c888d6a7d592a739d784b1ae2f3aae7d32986e3",
+    "headRef": "3b285ff52a341f80bf4e5fb23fede169d22f474b",
+    "requiredChecks": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck"
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint"
+      },
+      {
+        "name": "unit",
+        "command": "npm test"
+      },
+      {
+        "name": "build",
+        "command": "npm run build"
+      }
+    ],
+    "workdirProvidedByBoss": true
+  },
+  "reportPath": "reports/39-cross-reviewer-final-r2.json"
+}

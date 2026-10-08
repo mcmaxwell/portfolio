@@ -1,0 +1,86 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "27-game-dev-typecheck",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Replaced spread/for-of over NodeListOf in the Experience panel test with Array.from (same pattern already used at lines 21 and 33), added a typecheck script, ran typecheck, lint, test and build (build in a rsync copy, deleted afterwards).",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Fixed the two TS2802 errors in panels.test.tsx (lines 118 and 120) by wrapping the NodeListOf in Array.from, with no tsconfig change. Added the package.json script typecheck (tsc --noEmit -p .). Typecheck, lint, test and build all exit 0.",
+  "filesChanged": [
+    "components/game/__tests__/panels.test.tsx",
+    "package.json"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/__tests__/panels.test.tsx",
+      "package.json"
+    ],
+    "projectContextUsed": false
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "no errors",
+      "evidence": "tsc --noEmit -p . printed nothing; tc=0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, one pre-existing react-hooks/exhaustive-deps warning in components/avatar/useRealtimeChat.ts:224",
+      "evidence": "lint=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "23 files, 527 tests passed",
+      "evidence": "Test Files 23 passed (23); Tests 527 passed (527); test=0"
+    },
+    {
+      "command": "npm run build (in rsync copy of tree, copy removed)",
+      "exitCode": 0,
+      "result": "build succeeded",
+      "evidence": "build=0; route table printed"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npx tsc --noEmit -p . exits 0 for the whole project including every test file, fixed in the test code without loosening tsconfig (no downlevelIteration or target change unless justified as the better long-term choice in the report), and the panels test still asserts the same behaviour and passes.",
+      "status": "passed",
+      "evidence": "tsc exit 0 via npm run typecheck. Only the iteration form changed (spread and for-of became Array.from, lines 118 and 120); assertions are unchanged; tsconfig untouched; npm test passes 527/527 including panels.test.tsx."
+    },
+    {
+      "criterion": "A package.json script (for example typecheck) runs the full type check and is documented in the report as a required check for every later stage, and running it exits 0.",
+      "status": "passed",
+      "evidence": "Added \"typecheck\": \"tsc --noEmit -p .\". npm run typecheck exits 0. REQUIRED CHECK for every later stage: run npm run typecheck alongside lint, test and build, because lint and build do not type-check test files."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), only the test file and package.json change, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "lint=0, test=0, build=0 (in a copy), tc=0. This stage's edits touch only panels.test.tsx (untracked, new in Milestone 3) and package.json (one added line). grep for em dash and machine-local home paths in both files found nothing. No commit, no stash, reset or checkout. No server or Chrome started."
+    }
+  ],
+  "assumptions": [
+    "panels.test.tsx is untracked in the worktree, so git diff does not list it; the change is verified by grep and tsc."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Make npm run typecheck a required check for every stage that touches TypeScript, next to lint, test and build."
+  ],
+  "lessonsProposed": [
+    "next lint and next build skip test files; only tsc --noEmit covers them. Use Array.from over NodeListOf instead of spread or for-of, since the tsconfig target has no downlevelIteration."
+  ],
+  "selfUsage": {
+    "filesRead": 4,
+    "approxLinesRead": 400,
+    "approxLinesWritten": 3,
+    "retries": 0
+  }
+}

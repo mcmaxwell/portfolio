@@ -63,7 +63,9 @@ function GestureClips({
   mixer: THREE.AnimationMixer;
   actionsRef: React.MutableRefObject<Record<string, THREE.AnimationAction>>;
 }) {
-  const gestureGltfs = useGLTF(GESTURE_URLS);
+  // None of our GLBs use meshopt; the default decoder starts a WebAssembly instantiate nobody awaits,
+  // which logs an uncaught rejection when WebAssembly is blocked.
+  const gestureGltfs = useGLTF(GESTURE_URLS, true, false);
 
   useEffect(() => {
     const map: Record<string, THREE.AnimationAction> = {};
@@ -85,7 +87,9 @@ export function Avatar({
   position = [0, 0, 0],
   scale = 1,
 }: AvatarProps) {
-  const { scene, animations } = useGLTF(url);
+  // None of our GLBs use meshopt; the default decoder starts a WebAssembly instantiate nobody awaits,
+  // which logs an uncaught rejection when WebAssembly is blocked.
+  const { scene, animations } = useGLTF(url, true, false);
 
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
   const gestureActionsRef = useRef<Record<string, THREE.AnimationAction>>({});
@@ -227,6 +231,6 @@ export function Avatar({
 }
 
 export function preloadAvatar(url: string) {
-  useGLTF.preload(url);
-  GESTURE_URLS.forEach((u) => useGLTF.preload(u));
+  useGLTF.preload(url, true, false); // no meshopt decoder, see above
+  GESTURE_URLS.forEach((u) => useGLTF.preload(u, true, false));
 }

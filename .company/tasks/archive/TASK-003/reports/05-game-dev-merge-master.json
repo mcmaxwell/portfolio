@@ -1,0 +1,105 @@
+{
+  "workItemId": "TASK-003",
+  "stageId": "05-game-dev-merge-master",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Combined both sides of the 4 hunks by hand, fixed a render-time guard bug found in browser testing, ran the full checks, and exercised the intro set and unset in headless Chrome against :3101.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "TalkingAvatar.tsx keeps the game's shell, Play, prefetch, busy guard and no-WebGL guard and adds master's IntroVideo (a z-30 cover; Play is ignored while its video is mounted) and ?capture=1. One stale test title expectation was updated for master's content refresh. All checks exit 0.",
+  "filesChanged": [
+    "components/avatar/TalkingAvatar.tsx",
+    "components/game/__tests__/content.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "8386aa1",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/__tests__/content.test.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "tsc --noEmit -p . no output"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed, one pre-existing warning",
+      "evidence": "useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "32 files, 674 tests passed",
+      "evidence": "Test Files  32 passed (32); Tests  674 passed (674)"
+    },
+    {
+      "command": "npm run build (in a copy of the tree)",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "First Load JS shared by all 84.6 kB; routes listed, no errors"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    },
+    {
+      "command": "node intro.mjs MODE=set / MODE=unset (CDP, 1440x900, dev :3101)",
+      "exitCode": 0,
+      "result": "both flows as expected",
+      "evidence": "set: topElementAtPlay VIDEO, afterClickDuringIntro video:true, then inGame overlay:true, afterExit focus BUTTON:[ play / explore ]; unset: video:false, inGame overlay:true, afterExit focus BUTTON:[ play / explore ]"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "components/avatar/TalkingAvatar.tsx keeps both sides' behaviour: the intro video (shown only when NEXT_PUBLIC_INTRO_VIDEO_URL is set, handing off to the live avatar) and every game change (Play entry, prefetch on hover and focus, busy guard, stopVoice on entry, no-WebGL guard hiding the Canvas and Play button); no conflict markers remain anywhere in the tree.",
+      "status": "passed",
+      "evidence": "TalkingAvatar.tsx resolved: master's IntroVideo import and <IntroVideo/> kept, plus ?capture=1 support (section class, scanlines and chrome hidden); every game change kept (Play button gated by webgl, prefetch hover/focus/press, busy guard, stopVoice via shell, Canvas skipped without WebGL, chrome transitions). grep for conflict markers over the tree returns 0 files. Browser: with NEXT_PUBLIC_INTRO_VIDEO_URL set the video mounts; unset it does not."
+    },
+    {
+      "criterion": "The game entry and exit still work in the browser on the dev server at 1440x900: Play enters the campus, Exit restores the hero with focus on Play; the intro video path is exercised once with NEXT_PUBLIC_INTRO_VIDEO_URL set to a local test video and once unset, and Play does not overlap or break the intro (Play is unavailable or the intro is skipped while it plays, whichever master's intro implies); the new project content from master renders.",
+      "status": "passed",
+      "evidence": "Dev server :3101 at 1440x900 (headless Chrome, CDP). Intro env set (/t3-intro.mp4, served same-origin via CDP Fetch because Chrome rejected cross-origin loopback media): during the intro elementFromPoint at Play is the video, a real click and a programmatic click leave the intro playing and no game starts; after the video ends the intro is gone, Play enters the campus (screenshot m-set-3-campus.png), Exit returns to hero with focus on [ play / explore ]. Env unset: no video, Play enters, Exit restores focus to Play. Master's new project content renders (#projects shows 'XecSuite - AI Operating Layer for Supply Chain Teams'). Results in out/result-set.json and result-unset.json. Found and fixed one bug during this: the intro guard first evaluated at render time (stale after the intro ended); now evaluated at click time."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree); git diff --check is clean; no em dash in new content.",
+      "status": "passed",
+      "evidence": "typecheck 0, lint 0 (one pre-existing warning in useRealtimeChat.ts), npm test 0 (32 files, 674 tests), npm run build 0 in a copy of the tree, git diff --check 0. New content has no em dash (pre-existing em dashes from master remain in TalkingAvatar.tsx strings)."
+    },
+    {
+      "criterion": "Only TalkingAvatar.tsx is edited to resolve the merge (plus a test if the combination needs one); do not commit, do not run git merge --abort, stash, reset or checkout; the Boss commits the merge.",
+      "status": "passed",
+      "evidence": "Edited TalkingAvatar.tsx plus one test expectation: components/game/__tests__/content.test.ts expected the old title 'Apex Mind Automation' but master's data now says 'Apex Mind - AI Automation Studio' (shortTitle gives 'Apex Mind'), which made npm test fail 1. No commit, abort, stash, reset or checkout run; file remains UU for the Boss to stage."
+    }
+  ],
+  "assumptions": [
+    "The no-WebGL guard was verified by code inspection of the merged file (webgl gates Canvas and Play), not by a browser run without WebGL.",
+    "Intro test video served same-origin through CDP request interception because headless Chrome 155 rejected a cross-origin loopback video as an unsafe URL; no file was added to the repo."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Intro guard for Play lives in TalkingAvatar and checks for a mounted <video> inside the hero section at click time, so IntroVideo.tsx stays unchanged."
+  ],
+  "lessonsProposed": [
+    "A guard on a child component's private state must be read in the event handler, not during render, or it goes stale when only the child re-renders.",
+    "components/game/content.ts line 49 comment still says Apex Mind Automation (stale after master's rename); harmless, left untouched."
+  ],
+  "selfUsage": {
+    "filesRead": 8,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 60,
+    "retries": 2
+  }
+}

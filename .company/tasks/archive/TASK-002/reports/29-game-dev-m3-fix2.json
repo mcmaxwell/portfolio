@@ -1,0 +1,129 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "29-game-dev-m3-fix2",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Resumed the cut-off run: reviewed the uncommitted body-clearance pass, test and wiring, re-ran typecheck, lint and the full test suite on the current tree, built a before copy (pass disabled) and an after copy, re-measured in real-GPU headless Chrome on production builds (4 runs each from the earlier run plus fresh wall and open-ground captures and rAF), proved the test fails with the pass disabled, then deleted build copies, profiles and servers by PID.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "F-M3-2 is fixed by a general post-animation pass (bodyClearance.ts): after the animator and pose blend, key bones (Head, Neck, Spine2, Hips, shoulders, hands) are measured against every nearby non-ground solid at its true size and the visual root is pushed horizontally away (instant in, smooth release, max 1 m); physics, capsule and camera are untouched and nothing moves in the open. Lab wall crouch head clearance went from 0.07 m (0.19 m inside the wall in the before screenshot) to 0.17 m, wall tests pass, and the open-ground hard landing is visually and numerically unchanged.",
+  "filesChanged": [
+    "components/game/bodyClearance.ts",
+    "components/game/__tests__/bodyClearance.test.ts",
+    "components/game/GameScene.tsx",
+    "components/game/GameAvatar.tsx"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/bodyClearance.ts",
+      "components/game/__tests__/bodyClearance.test.ts",
+      "components/game/GameScene.tsx",
+      "components/game/GameAvatar.tsx"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "no errors",
+      "evidence": "tc.rc=0, tsc printed nothing"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, one pre-existing react-hooks/exhaustive-deps warning in useRealtimeChat.ts:224",
+      "evidence": "lint.rc=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "24 files, 541 tests passed",
+      "evidence": "Test Files 24 passed (24); Tests 541 passed (541); Duration 169.16s; test.rc=0"
+    },
+    {
+      "command": "npm run build (two rsync copies of the tree, after and before variants, copies removed)",
+      "exitCode": 0,
+      "result": "both builds succeeded",
+      "evidence": "build-after2.rc=0, build-before2.rc=0; Compiled successfully, lint and types checked"
+    },
+    {
+      "command": "npx vitest run followCamera.test.ts stance.test.ts",
+      "exitCode": 0,
+      "result": "2 files, 106 tests passed",
+      "evidence": "Test Files 2 passed (2); Tests 106 passed (106)"
+    },
+    {
+      "command": "npx vitest run bodyClearance.test.ts -t facing, in a copy with apply() made a no-op",
+      "exitCode": 1,
+      "result": "fails as required without the pass",
+      "evidence": "x facing ...: terrace-2 x+ drop: Head -0.640 m from terrace-2 at frame 60; full file in the copy: 6 failed | 8 passed (14); copy deleted"
+    },
+    {
+      "command": "node hedge-shot.mjs, scenario lab-side-l-inner, production build before vs after",
+      "exitCode": 0,
+      "result": "before Head -0.187 m (inside wall), after Head 0.17 m",
+      "evidence": "ws-before.log Head -0.187, ws-after.log Head 0.17, errs []"
+    },
+    {
+      "command": "node hedge.mjs, 6 wall scenarios x 4 runs on the after build (earlier run, code unchanged since) and the before build lab-side-l-inner x 4",
+      "exitCode": 0,
+      "result": "after: Head >= 0.17, Neck >= 0.256, Spine2 >= 0.321, Hips >= 0.298 on every frame in all 24 scenario runs; before: Head 0.07 in 4 of 4 runs",
+      "evidence": "after-r1..r4.json and before-r1..r4.json minima; errs []"
+    },
+    {
+      "command": "node perf.mjs (whole-campus walk, 1440x900, real GPU, after build)",
+      "exitCode": 0,
+      "result": "p50 16.7, p95 16.8, p99 16.8, max 16.8 ms, 0 frames over 20 ms",
+      "evidence": "frames 3115 over 51.9 s, errs []"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "F-M3-2 is fixed by a general mechanism, not a per-wall standoff tweak (for example choosing the soft landing or limiting forward lean when a wall is close in front, or keeping the visual body inside the capsule's clear space), so that in every clip and blend (idle, walk, run, jump, fall, land, and their transitions) the head, neck, chest and hips bones stay at least 0.05 m outside every non-ground collider; the landing still looks natural in the open.",
+      "status": "passed",
+      "evidence": "components/game/bodyClearance.ts runs last in the frame driver (after animator and pose blend, via GameScene.tsx and GameAvatar.tsx) for every clip and blend. It measures 8 key bones against every nearby non-ground solid at true size (oriented boxes, no standoff) and pushes the visual root horizontally to a per-bone margin of at least bone radius + 0.05 m; no per-wall or per-clip values. Test drives idle, walk, run, jump, fall, land and transitions at every face. Open ground: no solid near, no push (test asserts maxPush 0) and the screenshots are unchanged."
+    },
+    {
+      "criterion": "An automated test drives real physics and the real animator on the campus: for every wall face generated from the layout (at least 20, including lab-side-l, lab-side-r, lab-back and the tower wings), the avatar jumps and lands pressed against the wall facing it, diagonally and sideways, and per-frame bone clearance never drops below 0.05 m for head, neck, chest and hips; the test fails on the current code and passes after.",
+      "status": "passed",
+      "evidence": "components/game/__tests__/bodyClearance.test.ts uses real Rapier colliders and motor, the real animator with the shipped clips on the avatar skeleton, and the real pass. Faces are generated from CAMPUS blocks (test asserts at least 20 incl. lab-side-l, lab-side-r, lab-back, tower-wing; the generator found 43 with open floor). Six poses (facing, two diagonals, two sideways, back to wall) x repeated jumps, hard drop and running jump per face; per-frame min of Head, Neck, Spine2, Hips never below 0.05 m. Passes in npm test (541/541). With apply() disabled it fails (terrace-2 drop Head -0.640 m, 6 of 14 tests fail), and a dedicated test reproduces F-M3-2 without the pass (Lab drop clearance below 0)."
+    },
+    {
+      "criterion": "In the browser on the production build QA's hedge.mjs lab-side-l-inner scenario and five other wall jump scenarios show head bone clearance at least 0.05 m on every frame across 4 runs each, with screenshots of the landing crouch at the Lab wall before and after; the hard landing in open ground is unchanged (screenshots).",
+      "status": "passed",
+      "evidence": "Production builds, real-GPU headless Chrome. Scenarios lab-side-l-inner, lab-side-r-inner, lab-back-inner, workshop-side-l-inner, tower-wing-l-outer, lab-front-l-outer x 4 runs: Head min 0.17 m (lab-side-l-inner 0.17 in all 4) on every frame, before build Head 0.07 in 4 of 4 runs (lab-side-l-inner). Screenshots in evidence-29: lab-side-l-inner-before.jpg (head inside the wall, hair only visible, -0.187 m), lab-side-l-inner-crouch-after.jpg (crouch at the Lab wall, head clear), lab-back-inner-crouch-after.jpg. Open ground: open-ground-hard-landing-before.jpg vs open-ground-hard-landing-after.jpg are the same pose; crouch head height 0.65 vs 0.64 and 0.64 m, 68 to 70 crouch frames. Note: the bone sampler records bone-centre distance, so the 0.17 floor is the Head bone margin (radius plus 0.05), a stricter figure than the 0.05 asked. Hedge wall scenarios use the sampler's crouch-at-wall hard-landing frames only where the jump sequence produced them (crouchMinHeadRel 1.03 in several runs means soft landings); the hard crouch at walls is covered by the physics test (hard drop mode) and the Lab-wall crouch screenshots."
+    },
+    {
+      "criterion": "No regression: npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the camera pocket tests and stance tests pass, rAF p95 stays under 17.5 ms, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "typecheck 0, lint 0, test 0 (541 passed), build 0 in copies (deleted); followCamera and stance tests pass (106); rAF p50 16.7, p95 16.8, max 16.8 ms over 3115 frames; grep for an em dash and for machine-local paths in the four changed files found none; no commit made, no git stash, reset or checkout run."
+    }
+  ],
+  "assumptions": [
+    "The 0.17 m minimum for Head in the browser sampler is the pass's own margin for that bone (bone radius plus 0.05 m) measured to the true surface, so the 0.05 m acceptance bound holds with room.",
+    "Some hedge wall runs only produced soft landings (crouchMinHeadRel 1.03), so the hard-landing crouch at walls is proven by the physics test hard-drop mode and by the before/after Lab wall screenshots rather than by every browser run.",
+    "The open-ground hard landing was driven by a run across the three terraces and off the top (impact above the 6.5 m/s threshold, crouchMinHeadRel 0.64 to 0.65) because that is the only 2.4 m drop outside the buildings."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Keep the body-clearance pass as the single mechanism that keeps the visible avatar out of level geometry; new clips or poses need no per-wall tuning, and the test in bodyClearance.test.ts enumerates every wall face from the layout."
+  ],
+  "lessonsProposed": [
+    "Animation poses move bones far off the capsule axis (hard-landing crouch puts the head 0.5 m ahead), so a capsule standoff alone never guarantees visual clearance; measure bone-to-solid distance on the finished pose.",
+    "When driving the avatar up the terrace in a browser harness, jump at 0.9 to 1.0 m run-up before each face with Shift held; walking or jumping against the face leaves the capsule hovering on the corner.",
+    "A cut-off stage leaves valuable scratch results; verify them against the current tree timestamps before reusing instead of redoing."
+  ],
+  "selfUsage": {
+    "filesRead": 18,
+    "approxLinesRead": 1400,
+    "approxLinesWritten": 90,
+    "retries": 3
+  }
+}

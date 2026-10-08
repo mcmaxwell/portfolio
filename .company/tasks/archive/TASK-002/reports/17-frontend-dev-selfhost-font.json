@@ -1,0 +1,103 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "17-frontend-dev-selfhost-font",
+  "agent": "frontend-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Checked design.md section 9 (app/layout.tsx and ASSETS.md not on the do-not-touch list). Fetched @fontsource/jetbrains-mono 5.3.0 via npm pack into scratch, copied latin 400 and 700 woff2 plus OFL license into app/fonts/jetbrains-mono, switched layout.tsx to next/font/local, documented in ASSETS.md. Measured before and after from clean git-archive copies of HEAD (because game-dev's in-progress edits currently break type-checking in the worktree), offline build under sandbox-exec deny network, CDP screenshots from production servers with canvas hidden and animations frozen.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "JetBrains Mono is now self-hosted (woff2 latin 400 and 700 from @fontsource/jetbrains-mono 5.3.0) via next/font/local with the same --font-mono variable, so npm run build passes with network blocked (the same build of the old code fails with ENOTFOUND fonts.googleapis.com under the same sandbox). / First Load JS is unchanged at 125 kB; font bytes for / rose from 41,637 to 45,390 bytes (two static files replace one variable file). Screenshots differ only by antialiasing noise (max channel delta 26 of 255, zero pixels above 32).",
+  "filesChanged": [
+    "app/layout.tsx",
+    "ASSETS.md",
+    "app/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2",
+    "app/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2",
+    "app/fonts/jetbrains-mono/OFL.txt"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "app/layout.tsx",
+      "ASSETS.md",
+      "app/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2",
+      "app/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2",
+      "app/fonts/jetbrains-mono/OFL.txt"
+    ],
+    "projectContextUsed": false
+  },
+  "testsRun": [
+    {
+      "command": "npm run build (offline: sandbox-exec deny network*, clean copy of HEAD plus my 3 changes)",
+      "exitCode": 0,
+      "result": "build passed with network blocked",
+      "evidence": "\u250c \u25cb /   40.8 kB   125 kB (no ENOTFOUND in log); control: same sandbox on unmodified HEAD copy exit 1, 'request to https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap failed, reason: getaddrinfo ENOTFOUND fonts.googleapis.com'"
+    },
+    {
+      "command": "npm run build (online, same copy)",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "\u250c \u25cb /   40.8 kB   125 kB"
+    },
+    {
+      "command": "npm run lint (worktree)",
+      "exitCode": 0,
+      "result": "passed, 1 pre-existing warning",
+      "evidence": "useRealtimeChat.ts 224:6 Warning react-hooks/exhaustive-deps"
+    },
+    {
+      "command": "npm test (worktree)",
+      "exitCode": 0,
+      "result": "8 files, 145 tests passed",
+      "evidence": "Test Files  8 passed (8)  Tests  145 passed (145)"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "app/layout.tsx uses next/font/local with JetBrains Mono font files committed under the app (only the weights and styles the site actually uses, woff2, latin subset where available), exposing the same --font-mono CSS variable and font-mono class so no other file needs to change.",
+      "status": "passed",
+      "evidence": "layout.tsx uses localFont with variable --font-mono and two woff2 files (latin 400 normal, 700 normal). Grep shows the site only uses default weight and font-bold, no italic. Browser check: body class __variable_* font-mono, computed font-family starts with the local mono family; tailwind.config.ts and globals.css untouched."
+    },
+    {
+      "criterion": "The font files' source, version, OFL license and the exact weights shipped are recorded in ASSETS.md, with the license file included next to the fonts.",
+      "status": "passed",
+      "evidence": "ASSETS.md new Fonts section: @fontsource/jetbrains-mono exactly 5.3.0 (npm pack, not a repo dependency), OFL-1.1, weights 400 and 700 latin woff2, sizes and sha256 per file; OFL.txt sits in app/fonts/jetbrains-mono next to the fonts."
+    },
+    {
+      "criterion": "npm run build exits 0 with network access disabled (prove it by running the build in a copy of the tree with outbound network blocked, for example a sandbox or an unresolvable proxy, and record the exit code); the / route First Load JS and the total font bytes transferred for / are recorded before and after.",
+      "status": "passed",
+      "evidence": "Offline build exit 0 under sandbox-exec deny network (curl to fonts.googleapis.com failed to resolve inside it; old code failed in the same sandbox with exit 1). Before: / 40.8 kB, First Load JS 125 kB, font bytes 41,637 (1 variable woff2, encoded). After: / 40.8 kB, First Load JS 125 kB, font bytes 45,390 (22,325 + 23,065). Font bytes are about 3.7 KB higher, a trade for shipping only 400 and 700 as static files."
+    },
+    {
+      "criterion": "Rendered text is visually identical: screenshots of the hero and one content section before and after, at the same viewport, compared with a pixel diff that shows no change in glyph shapes (antialiasing noise only), and no flash of unstyled text on load.",
+      "status": "passed",
+      "evidence": "1280x800 screenshots before-hero.png, after-hero.png, before-about.png, after-about.png, diffs diff-hero.png, diff-about.png (canvas hidden, CSS animations frozen so the typewriter and glow are deterministic; an earlier unfrozen run differed only on the typing animation and glow). Hero: 1,222 differing px, max channel delta 26, 0 px above 32; about section: 1,063 px, max 16, 0 px above 32. FOUT: both font files are emitted as link rel=preload as=font, and document.fonts reports both faces loaded at first measurement with display swap, same behaviour as before (before: 1 preload)."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build (online) exit 0 with exit codes captured; only app/layout.tsx, the font files and license, and ASSETS.md change; new content has no em dash or machine-local path; no commit is made.",
+      "status": "passed",
+      "evidence": "lint 0, test 0 (145 passed), online build 0 (run in a clean copy of HEAD plus my files; a build in the live worktree currently fails in components/game/GameScene.tsx:168 WorldView missing props active and handleRef, which is game-dev's in-progress work, not this change). git status for my scope shows only ASSETS.md, app/layout.tsx, app/fonts/. No em dash or local path added (the 4 em dashes in layout.tsx are pre-existing title strings). No commit made."
+    }
+  ],
+  "assumptions": [
+    "Used production servers on separate ports for before and after screenshots instead of the dev server on 3100 for determinism; the dev server was not touched.",
+    "Static 400 and 700 files from @fontsource are used instead of the variable file; weight 400 and 700 glyph outlines render within antialiasing tolerance of the old variable instance."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Self-host fonts with next/font/local from a pinned @fontsource package copy so builds stay hermetic."
+  ],
+  "lessonsProposed": [
+    "Run offline-build proofs under sandbox-exec '(deny network*)' with a negative control on the old code; measure before/after from git archive HEAD copies when a parallel stage leaves the worktree not type-clean."
+  ],
+  "selfUsage": {
+    "filesRead": 8,
+    "approxLinesRead": 400,
+    "approxLinesWritten": 60,
+    "retries": 1
+  }
+}

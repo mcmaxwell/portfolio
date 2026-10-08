@@ -1,0 +1,122 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "13-graphics-engineer-bake-r2",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Colour-coded each skin mesh in the live hero (per-mesh flat shader via the R3F store, scanline overlay hidden) to find which mesh shows through the shirt. Added a skin tuck and a conservative neck-triangle removal to the bake, trying and rejecting a double-sided sleeve hem, a larger tuck and an uneroded neck removal. Re-baked from the pinned original and verified with CDP before/after captures, a speck counter, bake tests, lint, tests and a build in a tree copy.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Cause: skin triangles of the neck mesh (Head_Mesh, chest side of the collar) and arm/torso Body_Mesh triangles lay within a few mm of, or outside, the shirt surface, so they showed through as 1px dots; QA's collar dots were neck triangles and the sleeve and belly dots were arm triangles. The bake now removes covered neck triangles (keeping one ring at the collar) and tucks covered skin vertices under the shirt. Hero at rest went from 4 skin dots to 0 in the colour-coded renders, and the 8x collar and sleeve views show no skin dots on the shirt except one faint warm pixel at the left end of the left sleeve hem. Lint, build and the 17 bake tests pass, but npm test exits non-zero because 3 game-dev tests in stance.test.ts fail identically with the previous avatar.",
+  "filesChanged": [
+    "public/avatar.glb",
+    "scripts/lib/avatar-bake.mjs",
+    "scripts/__tests__/avatar-bake.test.mjs",
+    "ASSETS.md"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "public/avatar.glb",
+      "scripts/lib/avatar-bake.mjs",
+      "scripts/__tests__/avatar-bake.test.mjs",
+      "ASSETS.md"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original <original> --out <a>, again to <b>; cmp a b; cmp a public/avatar.glb",
+      "exitCode": 0,
+      "result": "two bakes byte-identical and equal to public/avatar.glb (13941696 bytes)",
+      "evidence": "{\"removedTriangles\":{\"Head_Mesh\":60,\"avaturn_look_0\":170},\"tuckedVertices\":{\"Body_Mesh\":422,\"Head_Mesh\":55},\"shirtTextures\":1,\"singleSided\":1}; DET_OK"
+    },
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original public/avatar.glb --out <x>",
+      "exitCode": 1,
+      "result": "baked input refused",
+      "evidence": "refusing to re-bake: the input already carries the avatarLookBake marker."
+    },
+    {
+      "command": "throwaway glTF-Transform inventory comparison, original vs baked",
+      "exitCode": 0,
+      "result": "counts identical (66 nodes, 11 meshes, 11 materials, 31 textures, 1 skin with 54 joints, 1 animation, 560 accessors); morph targets, inverse bind matrices and animation unchanged",
+      "evidence": "Body_Mesh moved 422 vertices (max 10.9 mm), Head_Mesh moved 97 vertices in the first variant (max 8.0 mm; the final variant moves 55, max 3 mm). Differences only in Body_Mesh.POSITION, Head_Mesh.POSITION and indices, avaturn_look_0 POSITION and indices, avaturn_look_1 POSITION, shirt doubleSided true to false, shirt texture. Inventory run on the 97-vertex variant; the final bake was not re-inventoried."
+    },
+    {
+      "command": "npx vitest run scripts (bake tests)",
+      "exitCode": 0,
+      "result": "17 passed (6 new: coverage distance, tuck to margin, outside-shirt tuck with cap, deep vertices untouched, neck tuck and eroded removal, null guard)",
+      "evidence": "Tests 17 passed (17)"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors (one pre-existing react-hooks warning in useRealtimeChat.ts)",
+      "evidence": "LINT 0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 1,
+      "result": "142 passed, 3 failed; all 3 failures are in components/game/__tests__/stance.test.ts (game-dev stage, in flux)",
+      "evidence": "Test Files 1 failed | 7 passed (8); Tests 3 failed | 142 passed (145); failing: jump -> fall pelvis snap (0.093 vs 0.05), soft landing feet on ground, walk off ledge pelvis smoothness. The same 3 fail with the previous baked avatar restored (Tests 3 failed | 13 passed (16)), so they do not come from this change. I did not edit game files."
+    },
+    {
+      "command": "npm run build (in a copy of the tree, node_modules linked)",
+      "exitCode": 0,
+      "result": "build succeeded",
+      "evidence": "BUILD 0 (run on the final avatar and bake code, before the test-expectation and ASSETS.md edits)"
+    },
+    {
+      "command": "headless Chrome CDP against the dev server: hero rest and dance frames, game idle/walk/run from behind, side and three-quarter front, before (previous bake) vs after, plus colour-coded debug renders",
+      "exitCode": 0,
+      "result": "captured; hero rest skin-dot count 4 before, 0 after in the debug renders",
+      "evidence": "Debug-render speck counter (1 to 6 px mesh-coloured clusters on the shirt): previous bake 36 over 14 frames, tuck-only variant 12, final bake 12 and 0 at hero rest. The game frames still show 1 to 3 flagged clusters per view in the final, which I did not resolve; the 4 px ones I inspected in the earlier variants were 1 px antialiased edges at the collar and sleeve silhouettes, but I did not inspect the final bake's flagged clusters pixel by pixel, so the game result rests on the before/after sheets only."
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The cause of the remaining collar and sleeve-hem dots (QA F5, hero-collar-6x and hero-sleeve-6x views) is identified with evidence, for example body triangles just inside the collar and sleeve openings, insufficient lift, or texture edge texels.",
+      "status": "passed",
+      "evidence": "Per-mesh colour-coded renders of the live hero (Body red, Head green, pants blue) showed green neck fragments at the left and right collar rim and a red body pixel on the shirt belly. Offline ray measurement on the original: 97 neck vertices and 422 Body_Mesh vertices lie within 4 mm of the shirt surface, with samples up to 5 mm (neck) and 7 mm (body) outside it, against a 1.5 mm shirt lift. Texture edge texels and weight cracks were ruled out: shirt duplicate-position vertices have identical joints and weights (0 differing groups of 178) and the shirt has only 4 boundary loops. Removing the neck triangle removal while keeping the tuck brought the collar specks back, which points to neck triangles specifically. Limit: the one faint pixel left at the left sleeve hem end could not be attributed to a mesh."
+    },
+    {
+      "criterion": "After re-baking from the pinned original, the hero at rest and during a gesture and the game at idle, walk and run from behind, side and three-quarter front show no skin-coloured or dark dots on the shirt at 6x zoom of the collar and sleeve hems, compared side by side with the QA round 2 zoom views, and no new gap or see-through appears at the neck, arms or waist.",
+      "status": "failed",
+      "evidence": "Collar at 8x (sheet-hero-collar-8x-before-after.png): the orange dots on the shirt are gone and 6 consecutive rest frames show a clean collar with no dark mark. Sleeve at 8x (sheet-hero-sleeve-8x-before-after.png): the two QA dots are reduced to one very faint warm pixel (about 180,165,160 against a 185 grey surround) at the left end of the left sleeve hem, which is not zero. Hero rest in the colour-coded render has 0 skin dots; dance frames still show 1 to 2 px clusters at the sleeve hem and underarm in some phases. The game views (sheet-game-behind/threeq/side-before-after.png) look clean to the eye at 2x, but I did not run a 6x pixel-level check of the game collar and sleeve hems. A first version of the fix created a new dark 1 to 2 px mark at the left collar corner (neck triangle removal opened a see-through slit); it was found in a 6-frame check and fixed by keeping one ring of neck triangles, and the final shows no such mark. A double-sided sleeve hem was tried and removed because it did not reduce the specks. Waist: pants lift and coverage are unchanged and the colour-coded renders show no gap at the waist. Marked failed because the faint hem pixel and the dance-phase clusters remain, and the game views were not checked at 6x."
+    },
+    {
+      "criterion": "The bake stays deterministic and guarded (two runs byte-identical, baked input refused), the inventory comparison against the original still shows only clothing data changed, ASSETS.md is updated for any parameter change, and bake tests cover the new behaviour.",
+      "status": "passed",
+      "evidence": "Two bakes byte-identical and equal to public/avatar.glb; baked input refused with exit 1; BAKE_VERSION is now 2. The inventory shows counts identical and morph targets, skin, inverse bind matrices and animation unchanged. The changes are in avaturn_look_0 and avaturn_look_1, the shirt material and texture, and the base POSITION and indices of Body_Mesh and Head_Mesh. Those two skin-mesh changes are confined to vertices under the shirt: the Head_Mesh moves are at y 1.498 to 1.588, with a 3 mm cap in the final bake. Head_Mesh is the face and neck mesh, so a neck-skin change counts as outside pure clothing data. ASSETS.md (Avatar clothing bake section only) lists the tuck, the neck erosion, the new counts and the new size 13,941,696 bytes. The 6 new tests cover coverage distance, tuck margin and cap, no-op cases, the neck's own parameters and eroded removal. The inventory was run on an intermediate 97-vertex variant, not the final bake."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 (build in a copy of the tree), only the bake files, their tests, ASSETS.md and public/avatar.glb are changed, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "failed",
+      "evidence": "lint exit 0 and the build in a tree copy exit 0, but npm test exits 1: 3 failures in components/game/__tests__/stance.test.ts (game-dev stage, in flux), identical with the previous avatar restored, so not caused by this change; all 17 bake tests pass. My edits are limited to scripts/lib/avatar-bake.mjs, scripts/__tests__/avatar-bake.test.mjs, ASSETS.md and public/avatar.glb; other modified files in the worktree belong to other stages. Grep found no em dash and no machine-local or temp path in the changed files. No commit, stash, reset or checkout was run. The build ran before the final test-expectation and ASSETS.md edits, which do not affect it."
+    }
+  ],
+  "assumptions": [
+    "Pixel-level 'skin or dark dot' judgement used a colour-coded render counter plus 8x visual inspection; the counter flags legitimate antialiased skin edges at the collar and sleeve silhouettes, so game counts were not used as pass or fail.",
+    "The pale pink 4 px clusters in the 2x game captures are single-pixel antialiased skin edges, not holes in the shirt (inspected on the earlier variants only)."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Skin meshes under the shirt are tucked inward along normals in the bake: Body 4 mm margin and 12 mm max, neck 2 mm and 3 mm. Neck triangle removal keeps one ring next to the uncovered neck (HIDE_ERODE Head_Mesh 1)."
+  ],
+  "lessonsProposed": [
+    "To find which mesh leaks through a garment, recolour each skin mesh with a flat fragment shader through onBeforeCompile on the live scene and count small mesh-coloured clusters; one run replaces guesswork.",
+    "Check normal (non-debug) frames over several seconds before accepting a geometry bake: the first neck-triangle removal passed the speck counter but opened a dark 1 to 2 px slit at the collar corner that only the plain frames showed.",
+    "A double-sided hem primitive did not reduce the specks; do not retry it before measuring where the remaining pixel comes from."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 1100,
+    "approxLinesWritten": 700,
+    "retries": 5
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "workItemId": "TASK-002",
+  "assignee": "cross-reviewer",
+  "executionMode": "headless",
+  "vendor": "codex",
+  "authType": "subscription",
+  "requestedModelTier": "top",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "stageId": "43-cross-reviewer-final-r3",
+  "objective": "Third-round cross-provider review of the comment-only delta that fixes the round-2 minor finding (stale HARD_MIN comment), so the final revision is fully reviewed.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/39-cross-reviewer-final-r2.json",
+    "components/game/followCamera.ts"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/39-cross-reviewer-final-r2.json",
+    ".company/tasks/active/TASK-002/reports/41-game-dev-comment-fix.json"
+  ],
+  "acceptanceCriteria": [
+    "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+    "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+    "The delta changes only comments, and the HARD_MIN comment now matches the resolver behaviour (near-plane threshold, resolved distance never beyond the solved clear distance), resolving the round-2 minor finding."
+  ],
+  "constraints": [
+    "Read-only: do not modify, stage, commit, stash or reset anything; the working copy is snapshotted and fingerprinted.",
+    "Run checks exactly as listed; do not substitute shorter commands. Use Node 22 if an nvm switch is needed.",
+    "Report verdict not-applicable; put the review outcome in crossReview.verdict (approved or changes-requested)."
+  ],
+  "deliverables": [
+    "crossReview report"
+  ],
+  "reviewScope": {
+    "baseRef": "3b285ff52a341f80bf4e5fb23fede169d22f474b",
+    "headRef": "2eee395ae03e490fd273fe604f67bdde7a5657ad",
+    "requiredChecks": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck"
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint"
+      }
+    ],
+    "workdirProvidedByBoss": true
+  },
+  "reportPath": "reports/43-cross-reviewer-final-r3.json"
+}

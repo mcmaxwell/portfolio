@@ -1,0 +1,139 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "34-qa-m4",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "approved",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Standard-profile light QA: ran typecheck, lint, test and build myself (build in a copy); reviewed the diff and the new modules; drove the challenge with the keyboard on the dev server and a seeded-state probe, the blocked-storage loop, CDP touch emulation in both orientations plus a jump camera probe, and a production regression from a build copy on another port; stopped everything by exact PID and deleted profiles and the build copy.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "All five criteria passed with first-hand evidence. Typecheck, lint, tests (617), build (125 kB) exit 0; challenge, progress persistence, restart, blocked storage, touch in both orientations and the production regression all pass. Approved; five low or informational findings, none blocking.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [],
+    "projectContextUsed": false
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "tsc --noEmit -p . printed no errors"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed with 1 pre-existing warning",
+      "evidence": "./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "28 files, 617 tests passed",
+      "evidence": "Test Files  28 passed (28) / Tests  617 passed (617) / Duration 346.94s (exit code read from the command itself, not through a pipe)"
+    },
+    {
+      "command": "npm run build (in a copy of the tree)",
+      "exitCode": 0,
+      "result": "built",
+      "evidence": "/  40.9 kB  125 kB First Load JS; shared 84.5 kB"
+    },
+    {
+      "command": "node loop.mjs (keyboard challenge loop, dev server :3100, 1440x900)",
+      "exitCode": 0,
+      "result": "pass",
+      "evidence": "0/3,1/3,2/3,3/3; Challenge complete; reload 3/3; restart 0/3; exit-focus play button; errs []"
+    },
+    {
+      "command": "node blocked.mjs (localStorage throws SecurityError)",
+      "exitCode": 0,
+      "result": "pass",
+      "evidence": "stored ERR SecurityError, loop completes, page-text-has-error false, errs []"
+    },
+    {
+      "command": "node probe2.mjs (own probe: beacon inert, cell once, completion buttons, settings kept on restart)",
+      "exitCode": 0,
+      "result": "pass",
+      "evidence": "A-after-E dialog none counter 0/3; B first 1/3 afterReentry 1/3; View projects -> All projects; Contact -> Contact; settings kept after restart; errs []"
+    },
+    {
+      "command": "node nav.mjs 390 844 portrait (CDP touch emulation)",
+      "exitCode": 0,
+      "result": "pass",
+      "evidence": "lab, workshop, tower reached; panels opened and closed; jump ok; HUD 3/3"
+    },
+    {
+      "command": "node nav.mjs 844 390 landscape (CDP touch emulation)",
+      "exitCode": 0,
+      "result": "pass for the criterion",
+      "evidence": "tower-contact reached, opened, closed in one run; workshop prompt not reached by the driver (stopped 1.5 m short)"
+    },
+    {
+      "command": "node nav2.mjs (ORDER=2, jump probe in the tower passage, portrait)",
+      "exitCode": 0,
+      "result": "completed",
+      "evidence": "jump screenshots at 8 instants; no avatar-back clipping with the default camera; close-camera view when orbited to the back wall"
+    },
+    {
+      "command": "qpass.mjs x3 on production build :3191",
+      "exitCode": 0,
+      "result": "pass",
+      "evidence": "inside 0 occluded 0 in mid, left, right; minClearance 0.2, 0.2, 0.221"
+    },
+    {
+      "command": "entry.mjs warm, perf.mjs, exit.mjs on production build",
+      "exitCode": 0,
+      "result": "pass",
+      "evidence": "maxGapBeforeSwapMs 26; rAF p95 16.8 ms over 3125 frames; exit-focus [ play / explore ]"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build were each run by QA with exit codes explicitly captured (build in a copy of the tree), output tails recorded (617 tests or more; / route First Load JS within 2 kB of 125 kB), and the uncommitted diff against 7b6b056 touches only files named in reports 31 and 31b plus the one Boss-accepted touch-only line in components/game/ui/Hud.tsx.",
+      "status": "passed",
+      "evidence": "typecheck exit 0, lint exit 0 (1 pre-existing warning in components/avatar/useRealtimeChat.ts, untouched by M4), npm test exit 0: 28 files, 617 passed (617), build exit 0 in a copy of the tree: '/ 40.9 kB 125 kB' First Load JS (within 2 kB of 125). git diff 7b6b056 --name-only gives 17 files, all in report 31 filesChanged (16 of them) plus Hud.tsx (also 31b); TouchControls.tsx and the new TouchControls.test.tsx are 31b files; untracked new files are challenge.ts, progress.ts, three new test files, .vitest/ and the task records. The Hud.tsx diff for the touch change is exactly one added line: style={touch ? { bottom: 'calc(13rem + env(safe-area-inset-bottom))' } : undefined}. Em dash and machine-local-path scan over all added lines: 0 hits. Logs: <m4-qa>/typecheck.log lint.log test.log build.log; git status before and after identical (status1.txt, status2.txt)."
+    },
+    {
+      "criterion": "Challenge and progress verified in QA's own browser run on the dev server at 1440x900 with the keyboard: three cells each collectible once, the 'Energy cells n/3' counter with a polite live region, guidance after the third, beacon inert before three and celebration plus completion panel (Explore more, View projects, Contact all working) after; reload restores progress; Restart clears progress but keeps settings; with storage throwing, the loop completes with no visible error and no console error. The design 2.9 deviation (no beacon prompt before three cells) is judged acceptable or raised as a finding.",
+      "status": "passed",
+      "evidence": "Dev server :3100, real-GPU headless Chrome 1440x900, keyboard only (loop.mjs, loop.log): counter 0/3 -> 1/3 (lab) -> 2/3 (workshop) -> 3/3 (tower); guidance text present after the third; prompt 'Press E to Light the beacon'; E opens celebration overlay then 'Challenge complete' panel; localStorage record collected 3, completed true; Explore more closes the panel and keeps 3/3 with guidance cleared; reload shows 3/3 persisted; Restart challenge from pause gives 0/3 and stored collected [] completed false; recollect tower then reload gives 1/3; Exit leaves focus on '[ play / explore ]'; errs []. probe2.mjs (own probe): seeded 0 cells, walked to the beacon: prompt empty, E does nothing (no dialog, counter 0/3, stored record unchanged), i.e. beacon inert before three; tower cell collected then left and re-entered: stays 1/3 (collectible once); seeded 3 cells: completion panel then [view projects] opens 'All projects' and [contact] opens 'Contact' (each Esc closes); Explore more verified in loop.log; seeded non-default settings (soundOn false, volume 0.3, quality low): after Restart the stored record keeps those settings with collected [] (D-after-restart). Polite live region: Hud.tsx ChallengeHud counter has role=status aria-live=polite aria-atomic (inspected, lines added in diff) plus a second polite region for guidance. Blocked storage (blocked.mjs, localStorage getter throws SecurityError): full loop completes 0/3 to 3/3, celebration, completion panel, restart works, page text has no error, console errors [] . Design 2.9 deviation (no beacon prompt before three cells): judged acceptable, because the HUD counter says progress and guidance appears after the third; raised as a low finding only for discoverability. Evidence: <m4-qa>/loop.log, blocked.log, probe2.log, game/out/*.png."
+    },
+    {
+      "criterion": "Touch verified in QA's own CDP touch emulation (labelled emulation) at 390x844 and 844x390: joystick walk and run, simultaneous camera drag with a second pointer, Jump, context Interact opens and closes a panel, controls at least 44 px and clear of safe areas, the interaction prompt does not overlap the joystick or Jump, and the Contact Tower is reachable in landscape in one continuous run. The reported camera clipping of the avatar's back in the tower passage after a jump in portrait is reproduced or refuted with a screenshot; if reproduced, QA states whether it is touch-specific or a camera regression from M3.",
+      "status": "passed",
+      "evidence": "Own CDP touch EMULATION (not a real phone; coarse pointer, touch emulation, safe-area override top 47 bottom 34 portrait, left/right 47 bottom 21 landscape), real game on :3100 via the upstream nav driver copied to my dir. 390x844 (port/run.out): joystick walked the avatar spawn to Project Lab, Skills Workshop and Contact Tower with look-drag steering concurrent with the stick (second pointer); Interact opened and [close] closed a panel at each; Jump rose 0.60 to 1.55; final HUD Energy cells 3/3; button rects: pause [16,47,99,44], exit 44 high, Jump 64x64, joystick 144x144, Interact 92x64, close 99x44 (all at least 44 px; left inset 16 and bottom 706+64=770 of 844 leaves 74 px, clear of 34 px safe area). 844x390 (land/run.out): pause at x 47 and Jump right edge 797 = 844-47 (safe area honoured), lab and tower reached, panels opened and closed, jump ok. The interaction prompt (screenshot-portrait.png, screenshot-landscape.png): chip sits between top HUD and controls, no overlap with joystick or Jump. Contact Tower in landscape in one continuous run: reached (spawn to lab to tower, 'tower-contact reached prompt: true', panel open and closed, 'hud Energy cells 2/3'); in that run the driver did not reach the Workshop prompt (stopped at -8.3,13.1 vs target -9.8,13.8), a driver navigation miss, not a product defect, since the same driver reached it in portrait; not required by the criterion. Camera clipping in the tower passage after a jump (jport/, nav2.mjs variant, jump screenshots at 4 instants x 2 rounds, portrait): NOT reproduced as avatar-back clipping with the default behind camera (round 0: camera 4.35 m behind, avatar fully rendered). A close view WAS reproduced after the driver's look drags orbited the camera to the passage back wall (jump-portrait-1-pre.png: camera about 2.3 m from avatar at passage end, jump-pose arm extends into the passage wall). It is not touch-specific: followCamera.ts, cameraProbe.ts, bodyClearance.ts and input.ts are not in the M4 diff, so it is the M3 free-orbit camera behaviour in a 2.4 m wide passage, independent of input device, not an M4 regression. Logged as a low finding for M6. Evidence: <m4-qa>/touch/port, touch/land, touch/jport."
+    },
+    {
+      "criterion": "Short regression on the production build: the tower passage camera sweep with 0 frames inside geometry or with the avatar hidden, entry warm Play with no hero freeze over 50 ms, Exit with focus on Play, rAF p95 under 17.5 ms walking the campus at 1440x900, and desktop keyboard and mouse controls unchanged.",
+      "status": "passed",
+      "evidence": "Production build (next start from a build copy on :3191, stopped by PID 64597, copy deleted), real-GPU Chrome 1440x900: tower passage camera sweep with mouse-drag yaw and pitch, hugging centre, left and right: frames 849/857/853, inside 0, occluded 0, badIdx 0, minClearance 0.2/0.2/0.221 m (reg/qpass-*.log). Entry warm Play (entry.mjs, hover warmed): maxGapBeforeSwapMs 26 (under 50), gapIntoFirstGameFrameMs 29, screencast max frame gap 46 ms. Exit: exit-focus BUTTON:[ play / explore ], errs []. Walking the campus (perf.mjs): 3125 frames over 52.1 s, p50 16.7 ms, p95 16.8 ms (under 17.5), max 16.8, over20 0, errs []. Desktop keyboard and mouse controls unchanged: input.ts, player.ts, followCamera.ts not in the diff; the keyboard loop and the mouse-drag sweep both drove the game with WASD, Shift, E, R, Esc and drag. Caveats: p95 is vsync bound at 16.8, host load average 26 to 45 during runs. Evidence: <m4-qa>/reg/*.log."
+    },
+    {
+      "criterion": "New content has no em dash or machine-local path, the untracked .vitest/ directory is reported as either needing a .gitignore entry or being intentional, and QA states approve or reject with every finding given a severity and an owner (game-dev or mobile-dev).",
+      "status": "passed",
+      "evidence": "Added-line and new-file scan for the em dash character and machine-local path patterns (home, tmp, drive-letter): 0 hits over 17 changed files and all new source and test files. .vitest/ (contains only json/output.json, a vitest json reporter file written 20:05 by an earlier ad hoc run; QA npm test did not rewrite it and the vitest config sets no reporter or outputFile) is stray generated output and is not ignored by .gitignore: needs a .gitignore entry (or deletion) before commit; raised as finding F1. Decision: APPROVE Milestone 4 for commit, with the findings below, each with severity and owner."
+    }
+  ],
+  "assumptions": [
+    "Touch evidence is CDP emulation, not a physical phone.",
+    "rAF p95 is vsync bound at 16.8 ms; host load was 26 to 45 during all runs.",
+    "The Boss-accepted one-line Hud.tsx style insert was verified in the diff and not flagged for ownership.",
+    "Findings F1 to F5 below are carried here because the report schema has no findings field: F1 (low, game-dev): .vitest/ is untracked generated json reporter output and needs a .gitignore entry or deletion before commit. F2 (low, game-dev): no hint at the beacon before three cells (design 2.9 deviation accepted), a visitor who reaches the beacon early gets silence. F3 (low, game-dev): in portrait 390x844 the guidance chip appears to abut the bottom edge of the Exit button (Exit rect ends at y 91, chip top about y 89 in the screenshot); verify the stacking offset in ChallengeHud. F4 (low, game-dev, pre-existing M3, defer to M6): in the 2.4 m tower passage the free-orbit camera can end about 2.3 m from the avatar next to the back wall and the jump-pose arm crosses the passage wall; not touch-specific and not an M4 regression (followCamera.ts, cameraProbe.ts, bodyClearance.ts unchanged). F5 (info, mobile-dev): the touch nav driver did not reach the Workshop prompt in landscape (driver navigation miss), landscape workshop is therefore unverified; recommend including it in the M6 deep QA. Pre-existing lint warning in useRealtimeChat.ts is not an M4 finding."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "Open a Chrome-driving harness copy with the goTo helpers only after the game is started (openGame wait true); a seeded-localStorage probe plus reload is a cheap way to reach late challenge states (beacon ready, completion) without replaying the whole loop."
+  ],
+  "selfUsage": {
+    "filesRead": 22,
+    "approxLinesRead": 1800,
+    "approxLinesWritten": 220,
+    "retries": 1
+  }
+}

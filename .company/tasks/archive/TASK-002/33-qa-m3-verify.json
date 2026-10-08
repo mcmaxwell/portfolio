@@ -1,0 +1,252 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "33-qa-m3-verify",
+  "assignee": "qa-engineer",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Focused verification after Boss arbitration: confirm F-M3-3 (body-clearance pop) is fixed by stage 32, accept the two recorded residuals unless they are visibly worse than described, and run the full browser regression suite that round 3 skipped, so Milestone 3 can be committed.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/30-qa-m3-r3.json",
+    ".company/tasks/active/TASK-002/reports/32-game-dev-m3-fix3.json",
+    "components/game/bodyClearance.ts",
+    "components/game/animator.ts",
+    "components/game/GameScene.tsx",
+    "components/game/GameAvatar.tsx"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/30-qa-m3-r3.json",
+    ".company/tasks/active/TASK-002/reports/32-game-dev-m3-fix3.json"
+  ],
+  "acceptanceCriteria": [
+    "npm run typecheck, npm run lint, npm test and npm run build were each run by QA on Node 22 with exit codes explicitly captured (build in a copy of the tree), output tails recorded (548 tests or more; / route First Load JS within 2 kB of 125 kB), and the diff since round 3 is only the seven files named in report 32.",
+    "F-M3-3 is confirmed fixed on the production build: in QA's own A/B traces at lab-side-l-inner, lab-kiosk, two lab plinths and a workshop machine over 4 runs each, the visual root offset never changes faster than 3 m/s measured on game-time deltas (render-interval jitter reported separately), never exceeds 0.3 m, shows no visible pop or slide by eye in a screencast of the landing, and the hard landing still plays where there is room.",
+    "The two Boss-accepted residuals are confirmed no worse than recorded (toe or knee at most about 6 cm into a prop for at most about 25 frames in plinth and wall corners; occasional render-jitter samples just over 3 m/s) and are not visibly objectionable at normal camera distance; anything worse is a finding.",
+    "The round-2 browser regression suite passes on the production build: camera pocket sweeps at the tower passage, outer Lab wall and three more walls with 0 frames inside, below ground, inside the avatar or with head or torso hidden; hedges, lamps, Experience panel and hair; entry warm and cold with no hero freeze over 50 ms; rAF p95 under 17.5 ms with no frame over 25 ms at 1440x900 and 1920x1080; Exit pixel-exact with focus on Play; loading, pause, failures and a 10 plus 5 cycle run with identical listener and DOM counts.",
+    "No evidence or scratch file is written under .company/ or anywhere in the repository, and every finding is reported with file, line, severity, trigger, consequence, evidence and rule; the verdict is approved only if every criterion above passed."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; scope every command to it; do not edit implementation files; never run git stash, reset or checkout.",
+    "Dev server runs on http://localhost:3100 from this worktree; for production checks run next start from a copy on another free port (never 3000) and stop it by exact PID; never pkill by name.",
+    "Every Chrome you launch must use a --user-data-dir you delete on exit and on failure; check free disk space before and after (df) and stop if under 5 GB free. Delete your build copies when done.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "QA report with browser evidence"
+  ],
+  "reportPath": "reports/33-qa-m3-verify.json"
+}

@@ -1,0 +1,55 @@
+{
+  "workItemId": "TASK-001",
+  "stageId": "01-project-auditor",
+  "assignee": "general-purpose",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Audit the portfolio target read-only and produce an evidence-backed project profile and module inventory as structured JSON facts; write nothing to product code or memory.",
+  "contextFiles": [
+    "./package.json",
+    "./tsconfig.json",
+    "./next.config.mjs"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "project profile stack modules architecture entrypoints commands app components lib data",
+    "indexCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "relevantFiles": [
+      "app/api/realtime-session/route.ts",
+      "app/layout.tsx",
+      "app/page.tsx",
+      "app/provider.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/site/Projects.tsx"
+    ],
+    "symbols": ["Projects", "GET", "RootLayout", "Home", "ThemeProvider", "AskHints"]
+  },
+  "upstreamInputs": [],
+  "acceptanceCriteria": [
+    "Profile facts (language, runtime/engines, framework+version, package manager, key npm scripts, high-level architecture) are each accompanied by concrete evidence: a file path with line or a package.json field.",
+    "A module inventory covers every real top-level source area (app router incl. api, components/site, components/avatar, lib, data, public assets) with responsibility, entrypoints, relevant commands, dependencies/external services, security boundaries, key files, related tests (or 'none'), and a status of verified|hypothesis.",
+    "The realtime-session API route and any .env.local usage are described as security/data boundaries WITHOUT reproducing any secret value or env content.",
+    "Every fact carries evidence; anything not verifiable from source, package.json, or the company-map index is omitted or marked hypothesis.",
+    "No product file and no memory file is modified by this stage (read-only audit)."
+  ],
+  "constraints": [
+    "Read-only: do not use Edit/Write on any product file or any .company/memory file. Return facts only inside your AGENT_REPORT JSON.",
+    "Read only the files you need; start from projectContext.relevantFiles and expand only from concrete import/usage evidence (Constitution rule 11).",
+    "Use scripts/company-map query|symbol|affected portfolio for index-backed evidence; do NOT load .company/index/nodes.jsonl or edges.jsonl wholesale.",
+    "Never copy secret values or machine-absolute paths into your facts. Refer to files by repo-relative path.",
+    "Subscription-only (authType subscription)."
+  ],
+  "deliverables": [
+    "A profileFacts array (each: fact, value, evidence) inside decisionsProposed/summary or an explicit facts block.",
+    "A moduleInventory array (each following the modules.md template fields) with evidence and status.",
+    "An explicit note on security boundaries (realtime-session route, env usage)."
+  ],
+  "reportPath": ".company/tasks/active/TASK-001/reports/01-project-auditor.json"
+}

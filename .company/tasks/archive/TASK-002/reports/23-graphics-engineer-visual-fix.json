@@ -1,0 +1,136 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "23-graphics-engineer-visual-fix",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Reproduced the entry regression on the production build (baseline server on the pre-fix tree). Found the cause by logging per-render program counts and GL call times. Rebuilt the pre-warm as a chunked warm-up in a private scene that mimics the game state, with chunked texture painting, and primed the live scene's light state at the swap. Then reshaped the reveal ramp and rebuilt the flat surfaces as shader-lit installations. Measured before and after on the real GPU in production builds made in a copy of the tree.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Entry is much smoother. Programs compiled on the first 30 game frames went from 10 to 0. The longest hero-time gap went from 99-450 ms to 21-26 ms (hover and cold). The first game render went from about 46 ms to 3 ms. The lab floor strip, neon strips, ceiling panels and interior walls are reworked (before and after crops), and perf holds at p95 16.7 ms with 56 draw calls. One number is not met: the luminance step at the swap fell from 28-31 to 6.8-7.0 but is 2.27x the neighbour median, not the 2x target. Two gaps: wall repetition is reduced but not removed, and the hero and avatar pixel re-checks were not re-run.",
+  "filesChanged": [
+    "components/game/world/warm.ts",
+    "components/game/world/resources.ts",
+    "components/game/world/WorldView.tsx",
+    "components/game/world/textures.ts",
+    "components/game/world/materials.ts",
+    "components/game/world/decor.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/world/warm.ts",
+      "components/game/world/resources.ts",
+      "components/game/world/WorldView.tsx",
+      "components/game/world/textures.ts",
+      "components/game/world/materials.ts",
+      "components/game/world/decor.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; the one pre-existing warning in useRealtimeChat.ts (untouched)",
+      "evidence": "lint_exit=0; useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "22 files pass; same 488 tests as the visual pass (decor.test.ts re-run alone: 6 passed)",
+      "evidence": "test_exit=0; Test Files 22 passed"
+    },
+    {
+      "command": "npx tsc --noEmit -p .",
+      "exitCode": 0,
+      "result": "no type errors",
+      "evidence": "tsc=0"
+    },
+    {
+      "command": "npm run build (rsync copy of the tree with linked node_modules)",
+      "exitCode": 0,
+      "result": "build ok; / is 40.9 kB, First Load JS 125 kB (unchanged from the visual pass and baseline)",
+      "evidence": "build_exit=0; \u250c \u25cb /   40.9 kB   125 kB"
+    },
+    {
+      "command": "entry.mjs: Play click to game start, production build, real GPU, with an in-page gl.render log (program counts, gaps, world opacity); before = pre-fix tree, after = this tree; hover and cold",
+      "exitCode": 0,
+      "result": "BEFORE cold: first game render 46-54 ms, 10 programs compiled on it, loading-phase max gap 450 ms (one 450 ms stall, then 146 ms), luminance step 39.5-44 (neighbour median 0.1). BEFORE hover: gap 127 ms, 10 programs, step 43. AFTER cold: 0 programs on the first 30 game frames, first game render 3 ms, max gap before the swap 26 ms, gap into the first game frame 26 ms, luminance step 6.8 vs neighbour median 3.0 (ratio 2.27). AFTER hover: 0 programs, first game render 3 ms, max gap before the swap 21 ms, gap into the first game frame 27 ms, step 7.0 vs 3.1 (ratio 2.26). M2 had a max step of 4.8.",
+      "evidence": "{\"tag\":\"fin\",\"maxGapBeforeSwapMs\":26,\"progGrowthFirst30\":0,\"lumMaxStep\":6.8,\"lumNeighbourMedian\":3,\"lumRatio\":2.27}; {\"tag\":\"fin1\",\"maxGapBeforeSwapMs\":21,\"progGrowthFirst30\":0,\"lumMaxStep\":7,\"lumRatio\":2.26}; pre {\"maxGapBeforeSwapMs\":450,\"progGrowthFirst30\":10,\"lumMaxStep\":44.2}"
+    },
+    {
+      "command": "perf.mjs, real GPU, production build, 52 s route through the campus, 3 runs each at 1440x900 and 1920x1080",
+      "exitCode": 0,
+      "result": "All 6 runs: p50 16.7, p95 16.7-16.8, max 16.8, 0 frames over 20 ms, 0 over 25 ms; draw calls max 56; triangles 53.5k; shader programs 45 (66 before; the warm-up no longer builds unused state variants).",
+      "evidence": "{\"tag\":\"fix-1920x1080-3\",\"p95\":16.8,\"max\":16.8,\"over25\":0,\"info\":{\"max\":{\"calls\":56,\"tris\":53488},\"progs\":45}}"
+    },
+    {
+      "command": "st2.mjs pixel clip statistics over the 11 after-fix screenshots",
+      "exitCode": 0,
+      "result": "whiteFrac 0 in every shot (no pixel with all channels at 250 or above); max channel-saturation fraction 0.153 percent (beacon), below the 0.19 percent of the visual pass.",
+      "evidence": "fix-02-beacon.png {\"whiteFrac\":0,\"maxChanSat\":0.153}; fix-05-lab-inside.png {\"whiteFrac\":0,\"maxChanSat\":0.081}"
+    },
+    {
+      "command": "grep for em dash and machine-local paths in components/game/world",
+      "exitCode": 0,
+      "result": "no matches",
+      "evidence": "no output from either grep"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The entry cinematic is back to Milestone 2 quality on the real GPU in the production build, hover-warm and cold: every shader program the game draws (world, decor, sky, shadows, avatar in game state) is compiled before the swap in the exact state it is drawn in, so gl.info.programs does not grow on the first 30 game frames; the frame-to-frame mean luminance step at the swap is at most 2x the median of its 10 neighbours; and the longest frame gap while the hero is still on screen during loading is at most 50 ms (record before and after numbers).",
+      "status": "failed",
+      "evidence": "Two of the three sub-conditions pass. Programs on the first 30 game frames: before 10, after 0 (hover and cold). Longest hero-time gap: before 450 ms cold and 127 ms hover (M2 about 42 ms), after 26 ms cold and 21 ms hover. Luminance step: before 39.5-44 against a neighbour median of 0.1-0.4, after 6.8 (cold) and 7.0 (hover) against a median of 3.0-3.1, a ratio of 2.27 and 2.26, so the 2x limit is not met (M2 max step was 4.8, and the after step is not a pop: the steps run 5.6, 6.8, 6.2, 5.4, 4.0, 3.0, 2.3). Causes found and fixed: (1) the depth-pass programs were compiled in a state that did not match the game (three runs the shadow pass with the previous frame's light state, and a depth material re-reads its program only when the kind of mesh changes), so the live scene's light state is now primed with gl.compile in the swap commit and the depth programs are warmed in that state; (2) the Canvas resets shadowMap.enabled at the swap, which made that compile build 21 wrong-state programs (the avatar drew with them, 18-28 ms of GPU round trips), now asserted before the compile; (3) program first-use reads (getUniforms and getAttributes) are done during the warm-up; (4) the warm-up is chunked into units of a few ms in a private scene that mimics the game state, shared between hover and load phase and capped at 2 s; (5) world resources build with the 12 procedural textures painted in slices (each texture alone took 4 to 74 ms) behind Suspense; (6) the reveal opacity is the inverse of the cubic ease so brightness rises about linearly in time. Cost: cold load is about 1.1 s longer in total (the hero keeps animating, frames stay at 17 ms); measured world:resources 680-740 ms plus warm 350-380 ms."
+    },
+    {
+      "criterion": "The Lab floor strip, every neon strip and trim, and the ceiling light panels read as lit installations with falloff or texture rather than flat uniform colour, and interior walls show no obvious texture repetition at 1440x900, shown with before and after crops of the same views; no pixel group is clipped to white.",
+      "status": "passed",
+      "evidence": "Crops in the scratch out directory: crop-lab-strip.png, crop-lab-ceiling.png, crop-wall.png, crop-workshop.png, plus full pairs prefix-* (before) and fix-* (after) for all 11 views. Neon and trim: edge falloff, dimmer module seams every 0.6 m on long strips, end fade (lit-shader in materials.ts, no extra draw call). Ceiling panels: dark bezel, centre-to-edge glow and fine louvre lines. Lab floor strip and workshop machine tops: segmented with falloff, and a floor light spill decal was added from the layout (decor.ts). Interior walls: tile breaking (a second sample at an unrelated scale and turned axis) and macro variation on wall, stone and floor; the wall crop shows the vertical stain repetition is much weaker but faint streaks remain on close inspection, so this part is improved, not eliminated. Clip: whiteFrac 0 in all 11 shots, max channel saturation 0.153 percent. The floor spill is subtle at 0.2 opacity."
+    },
+    {
+      "criterion": "The visual-pass results that passed stay intact: same dusk look, no avatar specks, static hero pixels unchanged, rAF p95 under 17.5 ms and no frame over 25 ms while walking and running the campus at 1440x900 and 1920x1080 on the real GPU (3 runs each), draw calls not above 60.",
+      "status": "failed",
+      "evidence": "Measured and passed: rAF p95 16.7-16.8 ms, max 16.8 ms, 0 frames over 25 ms in 3 of 3 runs at both resolutions; draw calls max 56 (limit 60); same dusk screenshots with the changed surfaces only. Not re-run, so untested: the zoomed avatar crops and the static-hero pixel comparison. Reason for expecting no change: components/avatar/*, the avatar bake, hero lights and fog were not touched, and the warm-up works in a private scene and only reads the hero scene to find the avatar meshes (idle avatar shots were taken by shots.mjs as fix-avatar-idle and fix-avatar-walk but not compared). Marked failed rather than passed because those two sub-claims have no evidence this round."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the / route First Load JS stays within 2 kB of 125 kB, layout, colliders, camera and gameplay files are unchanged, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "lint_exit=0, test_exit=0, build_exit=0 (build in a copy), tsc=0; / is 125 kB First Load JS. This round changed only warm.ts (new), resources.ts, WorldView.tsx, textures.ts, materials.ts and decor.ts in components/game/world; layout.ts, colliders.ts, followCamera.ts, GameScene.tsx and gameplay files were not edited by me (they carry the earlier Milestone 3 changes). The decor spill reads layout blocks and changes none. Grep for em dash and machine-local paths over components/game/world found nothing. No commit, stash, reset or checkout was run."
+    }
+  ],
+  "assumptions": [
+    "The first 30 game frames were counted with a gl.render wrapper from the first render where the world group is visible; gl.compile at the swap and warm-up compiles happen outside render and are therefore not counted as growth.",
+    "The luminance step is taken from screencast frames resized to 144x90, using the single largest step against the median of the 5 steps either side.",
+    "The before numbers come from the production build of the tree as it stood at the start of this stage (the visual-pass result).",
+    "gl.info.programs is 45 at steady state now against 66 before because the old warm-up compiled variants for light states the game never draws.",
+    "Boss answers to the two questions raised by this stage (recorded in work-item.json decisions, 2026-10-07): the 2.27x luminance ratio is accepted as a monotone ramp for QA to judge by eye; the about 1.1 s longer cold load is accepted, with texture generation at prefetch time assigned to the Milestone 5 performance pass. Original questions: The 2x luminance ratio is not reached (2.27). Closing it needs either a slower or later-starting fade in GameScene or transition timing (outside my allowed files) or accepting the current smoothness (largest step 6.8 against M2 4.8). Which does the Boss prefer? | The cold load phase is about 1.1 s longer because the texture painting is paced to one frame budget per frame so the hero keeps animating. Is that acceptable, or should texture generation start earlier (for example on the first pointer movement near Play)?"
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Warm-up lives in world/warm.ts: a private scene with the game's fog and four lights (one shadow caster), units of a few ms spread over hero frames, shared by hover and load phase through a per-renderer run map.",
+    "WorldView compiles the live scene in the swap commit, after asserting shadowMap.enabled, to prime three.js's light state for the first shadow pass.",
+    "World resources load through readWorldResources (Suspense) and buildTextures is async and paced; getWorldResources and the synchronous texture builder were removed.",
+    "Lit neon, panel and spill visuals are shader and decal work only; no layout data changed."
+  ],
+  "lessonsProposed": [
+    "three.js runs a scene's shadow pass before it sets up that frame's lights, so the first game frame's depth programs depend on the previous frame's light state. Prime it with gl.compile in the commit that turns the game on.",
+    "A MeshDepthMaterial does not depend on lights, so three.js re-reads its program only when the mesh kind (plain, instanced, skinned, morph) changes. Warm every kind in the state the game will have.",
+    "The R3F Canvas resets renderer.shadowMap at the swap; any compile there must assert the setting first or it builds wrong-state programs that the game then draws with.",
+    "Program first-use costs real GPU round trips (getProgramInfoLog and uniform layout reads, about 0.4 to 9 ms each). Call getUniforms and getAttributes on gl.info.programs during the warm-up.",
+    "Find a frame hitch by wrapping WebGL2RenderingContext.prototype methods and logging calls over 0.25 ms inside the frame window, then mapping program handles to gl.info.programs entries.",
+    "Per-texture pixel loops of 4 to 74 ms each froze the cold path; async painters with a time-budget pause keep frames at 17 ms.",
+    "A brightness step at a fade start scales with the fade's slope and the scene's brightness gain; use the inverse of the ease on the opacity to get a straight-line ramp."
+  ],
+  "selfUsage": {
+    "filesRead": 30,
+    "approxLinesRead": 3200,
+    "approxLinesWritten": 900,
+    "retries": 9
+  }
+}

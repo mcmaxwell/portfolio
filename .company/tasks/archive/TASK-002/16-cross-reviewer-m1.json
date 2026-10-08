@@ -1,0 +1,63 @@
+{
+ "workItemId": "TASK-002",
+ "stageId": "16-cross-reviewer-m1",
+ "assignee": "cross-reviewer",
+ "executionMode": "headless",
+ "vendor": "codex",
+ "authType": "subscription",
+ "requestedModelTier": "top",
+ "verificationProfile": "standard",
+ "objective": "Independent cross-provider review of the Claude-authored Milestone 1 of the playable 3D portfolio (movement prototype plus its accepted fix rounds): physics motor and slope limit, animation state machine and clip pipeline, follow camera, shared-avatar shell integration, the clothing bake of public/avatar.glb, and the tests. Judge correctness, robustness, maintainability and test honesty; the owner has already accepted two known camera limitations (avatar occluded behind a slab on some drops; camera below ground at minimum pitch) deferred to Milestone 3.",
+ "contextFiles": [
+  ".company/tasks/active/TASK-002/design.md",
+  ".company/memory/conventions.md",
+  ".company/memory/decisions/ADR-001-physics-rapier-fixed-step.md",
+  ".company/memory/decisions/ADR-002-single-canvas-shared-avatar.md",
+  ".company/memory/decisions/ADR-003-locomotion-retarget-strategy.md",
+  ".company/memory/decisions/ADR-006-lint-gate-and-game-import-boundary.md",
+  "ASSETS.md"
+ ],
+ "projectId": "portfolio",
+ "targetBaseCommit": "710f034",
+ "upstreamInputs": [
+  ".company/tasks/active/TASK-002/reports/03-game-dev-m1.json",
+  ".company/tasks/active/TASK-002/reports/12-game-dev-m1-fix-r2.json",
+  ".company/tasks/active/TASK-002/reports/10-graphics-engineer-bake-avatar-look.json",
+  ".company/tasks/active/TASK-002/reports/14-qa-m1-r3.json"
+ ],
+ "acceptanceCriteria": [
+  "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+  "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+  "The hero (components/avatar, lib/persona.ts, app/api) is unchanged except public/avatar.glb, game code is not imported from the initial portfolio bundle (ADR-006 lint boundary), and the clothing bake script is deterministic and guarded as ASSETS.md claims.",
+  "Physics, animator, camera and stance tests assert behaviour that could fail (no end-state-only or always-true assertions), and the 45 degree ramp test, the stance tests and the camera drop tests would fail if their fixes were reverted.",
+  "Any correctness, robustness, resource-leak, accessibility or maintainability defect in the new game code is reported as a finding with severity; the two owner-deferred camera limitations are not findings."
+ ],
+ "constraints": [
+  "Read-only: do not modify, stage, commit, stash or reset anything; the working copy is snapshotted and fingerprinted.",
+  "Run checks exactly as listed; do not substitute shorter commands. Use Node 22 if an nvm switch is needed.",
+  "Report verdict not-applicable; put the review outcome in crossReview.verdict (approved or changes-requested)."
+ ],
+ "deliverables": [
+  "crossReview report"
+ ],
+ "reviewScope": {
+  "baseRef": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+  "headRef": "afd4f0ff43bc21237a0f7e53fe604146042e70e9",
+  "requiredChecks": [
+   {
+    "name": "lint",
+    "command": "npm run lint"
+   },
+   {
+    "name": "unit",
+    "command": "npm test"
+   },
+   {
+    "name": "build",
+    "command": "npm run build"
+   }
+  ],
+  "workdirProvidedByBoss": true
+ },
+ "reportPath": "reports/16-cross-reviewer-m1.json"
+}

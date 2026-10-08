@@ -1,0 +1,146 @@
+{
+  "workItemId": "TASK-003",
+  "stageId": "03-cross-reviewer",
+  "agent": "cross-reviewer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "codex",
+  "authType": "subscription",
+  "planLabel": "ChatGPT subscription",
+  "executionPlan": "Verified the fixed head, inspected the complete committed diff and changed files in context, ran every required check verbatim, and reviewed posture, persistence, lifecycle, accessibility, collision tolerance, and Restart behavior.",
+  "actualModel": "GPT-5 Codex (unverified alias)",
+  "summary": "All required checks passed and the posture correction, optional version-1 progress field, and cached trophy visuals are otherwise sound. Changes are requested because Restart resumes gameplay at the trophy position, allowing the next frame to immediately collect it again.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "b61b848",
+    "targetResultCommit": "eb7b6c1167d8f4a96eeb25ed0b825cb04a02c71b",
+    "targetDiffFiles": [
+      ".company/memory/decisions/ADR-003-locomotion-retarget-strategy.md",
+      ".company/memory/decisions/ADR-005-progress-storage-versioning.md",
+      "ASSETS.md",
+      "components/game/GameScene.tsx",
+      "components/game/__tests__/bodyClearance.test.ts",
+      "components/game/__tests__/challengeUi.test.tsx",
+      "components/game/__tests__/poseBlend.test.ts",
+      "components/game/__tests__/posture.test.ts",
+      "components/game/__tests__/progress.test.ts",
+      "components/game/__tests__/session.test.ts",
+      "components/game/__tests__/trophy.test.ts",
+      "components/game/challenge.ts",
+      "components/game/config.ts",
+      "components/game/poseBlend.ts",
+      "components/game/progress.ts",
+      "components/game/session.ts",
+      "components/game/ui/GameInterface.tsx",
+      "components/game/ui/Hud.tsx",
+      "components/game/world/WorldView.tsx",
+      "components/game/world/campus.ts",
+      "components/game/world/layout.ts",
+      "components/game/world/resources.ts",
+      "public/game/clips/idle.glb",
+      "public/game/clips/run.glb",
+      "public/game/clips/walk.glb",
+      "scripts/lib/posture.d.mts",
+      "scripts/lib/posture.mjs",
+      "scripts/strip-clips.mjs"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed with one pre-existing warning",
+      "evidence": "> next lint\n./components/avatar/useRealtimeChat.ts\n224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "32 test files and 671 tests passed",
+      "evidence": "Test Files 32 passed (32)\nTests 671 passed (671)\nDuration 274.75s"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+      "status": "passed",
+      "evidence": "Inspected git diff --stat and the complete git diff for b61b848f0203e0672ada5b6996059f03434e9e2d..eb7b6c1167d8f4a96eeb25ed0b825cb04a02c71b, plus changed files in context. The finding cites changed line 36 of components/game/challenge.ts."
+    },
+    {
+      "criterion": "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+      "status": "passed",
+      "evidence": "npm run typecheck, npm run lint, and npm test were executed verbatim from the working-copy root; all exited 0 and are recorded in testsRun and crossReview.checksRun."
+    },
+    {
+      "criterion": "The posture fix is sound: the baked spine pitch and head counter-pitch leave leg tracks unchanged, poseBlend's target memory cannot leak a stale pose between sessions or clips, and posture.test.ts asserts behaviour that would fail on baseRef.",
+      "status": "passed",
+      "evidence": "withLean changes values only for Spine, Spine1, Spine2, Neck, and Head; shipped-clip tests verify upright torso/head bounds and unchanged leg positions. PoseBlend target state is scoped to each createPoseBlend invocation and its regression test covers a mixer-unwritten Hips bone. Base clips have the negative pitch documented and exercised by the new assertions."
+    },
+    {
+      "criterion": "The trophy is collectible once, persists as an optional field of the version 1 progress record without breaking legacy records, is cleared by Restart, releases its resources on dispose, and its tests assert real behaviour.",
+      "status": "failed",
+      "evidence": "Legacy parsing, persistence, idempotence, accessibility, and cached visual ownership are covered and sound, but the runtime Restart path resumes at the current position. If the avatar remains inside the trophy radius, components/game/challenge.ts immediately restores trophy:true and starts another dance on the next frame."
+    },
+    {
+      "criterion": "The AT_LIMIT_SHORTFALL tolerance added to components/game/__tests__/bodyClearance.test.ts is judged: either acceptable with reasons, or a finding that the clearance code should be fixed instead; any other correctness, robustness, resource-leak, accessibility or maintainability defect is reported with severity.",
+      "status": "passed",
+      "evidence": "The 4 mm tolerance is acceptable because it applies only when the visual-root push is effectively at its 0.299 m cap, retains at least 46 mm clearance for non-diagonal cases, and preserves the existing penetration, offset-rate, offset-distance, and rarity bounds. Trophy meshes are allocated once in the deliberate page-lifetime WorldResources cache and reuse cache-owned geometry/materials, so repeated game disposal/re-entry does not accumulate resources."
+    }
+  ],
+  "assumptions": [],
+  "questions": [],
+  "decisionsProposed": [
+    "Keep the narrowly scoped 4 mm AT_LIMIT_SHORTFALL tolerance; it preserves the collision pass's safety bounds while accommodating the corrected upright silhouette."
+  ],
+  "lessonsProposed": [
+    "Restart tests for proximity-triggered collectibles must exercise the full UI resume and next-frame update, not only the pure progress reset."
+  ],
+  "selfUsage": {
+    "filesRead": 41,
+    "approxLinesRead": 7200,
+    "approxLinesWritten": 0,
+    "retries": 0
+  },
+  "crossReview": {
+    "verdict": "changes-requested",
+    "reviewedHead": "eb7b6c1167d8f4a96eeb25ed0b825cb04a02c71b",
+    "checksRun": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint",
+        "exitCode": 0,
+        "evidence": "> next lint\n./components/avatar/useRealtimeChat.ts\n224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'."
+      },
+      {
+        "name": "unit",
+        "command": "npm test",
+        "exitCode": 0,
+        "evidence": "Test Files 32 passed (32)\nTests 671 passed (671)\nDuration 274.75s"
+      }
+    ],
+    "findings": [
+      {
+        "severity": "important",
+        "file": "components/game/challenge.ts",
+        "line": 36,
+        "trigger": "Collect the trophy, finish or skip the dance, pause while the avatar is still within the trophy radius, and choose Restart.",
+        "consequence": "Restart clears trophy progress only until gameplay resumes; the next frame immediately collects the trophy again, persists trophy:true, and starts another dance. The trophy therefore is not observably cleared or restored for deliberate recollection as required.",
+        "evidence": "GameInterface's Restart callback clears progress and immediately dispatches RESUME without moving the player or arming an exit-radius latch. This changed condition collects whenever mode is playing, trophy is false, and the unchanged player position remains in reach. The new trophy test at lines 125-133 explicitly demonstrates that a same-position update immediately re-collects after restart instead of testing the real UI boundary.",
+        "rule": "The acceptance criterion requires Restart to clear the trophy; cross-boundary state transitions must remain valid through the next runtime update and be tested at that boundary."
+      }
+    ]
+  }
+}

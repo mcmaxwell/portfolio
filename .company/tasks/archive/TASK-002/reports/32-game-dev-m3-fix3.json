@@ -1,0 +1,140 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "32-game-dev-m3-fix3",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Root-caused the pop and fixed it at the source: (1) three's fadeOut/fadeIn restart from weight 1/0, so a fall cut short by touchdown snapped the pelvis 0.3 m in one frame (also with the pass off); crossfades now start from the current weight. (2) The landing crouch is sampled once from the real animator on a bone copy; during the fall the push is built before touchdown, and where the crouch needs more than 0.2 m of push (or the player walks into the wall during it) the animator plays the soft landing. (3) Whatever correction remains is rate-limited (2.2 m/s), the offset is capped at 0.299 m, the legs and feet are probed, and the solve is tiered (hard 0.05 m at the joints first, comfort margin and hands only with what is left). Verified with a 1920-run physics+animator sweep, mutation checks, a production build in a copy and a real-GPU Chrome A/B against a pass-off control build.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "F-M3-3 is fixed at the source: no pop (unit sweep max offset change 2.2 m/s over 1920 runs, was 4 to 20 m/s; browser max 2.62 m/s except one frame at 3.05 m/s that is a 11.9 ms render-interval artifact), total offset 0.299 m, hard landing kept where there is room, soft landing near walls. Clearance now covers legs and feet and is far better than the control (unit: 8 of 1920 runs short, worst 7 mm from a surface, control 987 runs and 0.64 m inside; browser: 0 to 25 frames per run under 0.05 m, worst toe 6.6 cm inside, control 130 to 196 frames and up to 30 cm inside) but it is NOT fully met: the 0.3 m offset cap and the 0.05 m clearance conflict in corners, so criteria 1 (one browser frame) and 2 (browser frames, Lab plinth toes) are reported failed.",
+  "filesChanged": [
+    "components/game/bodyClearance.ts",
+    "components/game/animator.ts",
+    "components/game/GameAvatar.tsx",
+    "components/game/GameScene.tsx",
+    "components/game/__tests__/bodyClearance.test.ts",
+    "components/game/__tests__/animator.test.ts",
+    "components/game/__tests__/stance.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/bodyClearance.ts",
+      "components/game/animator.ts",
+      "components/game/GameAvatar.tsx",
+      "components/game/GameScene.tsx",
+      "components/game/__tests__/bodyClearance.test.ts",
+      "components/game/__tests__/animator.test.ts",
+      "components/game/__tests__/stance.test.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "tsc --noEmit clean",
+      "evidence": "typecheck rc=0; output is only the tsc invocation line"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing warning in components/avatar/useRealtimeChat.ts (react-hooks/exhaustive-deps, file not touched)",
+      "evidence": "lint rc=0; Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "24 files, 548 passed (541 before; new: 1 animator, 1 stance, 5 clearance)",
+      "evidence": "Test Files 24 passed (24); Tests 548 passed (548); Duration 358.89s"
+    },
+    {
+      "command": "npm run build (in a copy of the final tree, node_modules linked)",
+      "exitCode": 0,
+      "result": "/ route 40.9 kB, First Load JS 125 kB (unchanged)",
+      "evidence": "build rc=0; Route (app) / 40.9 kB 125 kB; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "vitest bodyClearance.test.ts --reporter=verbose",
+      "exitCode": 0,
+      "result": "18 passed: 6 pose sweeps (109 wall and prop faces x jumps, hard drop, run-jump), anticipation, hard-vs-soft landing, walk into wall during crouch, feet skating vs control, open ground exact",
+      "evidence": "Tests 18 passed (18); every sweep asserts offset rate <= 3 m/s, offset < 0.3 m and 0.05 m clearance on head, neck, chest, hips, thighs, shins, feet"
+    },
+    {
+      "command": "mutation checks (temp edits, restored)",
+      "exitCode": 0,
+      "result": "landing anticipation off: 3 tests fail; rate limit off: facing sweep fails with offset rate 4.72 and 7.01 m/s; crossfade from weight 1 restored: stance short-fall test fails with 0.09 m pelvis step",
+      "evidence": "AssertionError: expected 0.0899 to be less than 0.05; offset rate 7.01 m/s; landings with a wall in reach: expected 0 to be greater than or equal to 5"
+    },
+    {
+      "command": "unit sweep statistics, 1920 runs (6 poses x 109 faces x 3 modes, pass on vs off)",
+      "exitCode": 0,
+      "result": "max offset rate 2.2 m/s; max offset 0.299 m; runs under 0.05 m: 8 on (diagonal poses only, worst 0.007 m from a surface) vs 987 off (worst 0.64 m inside); planted-toe p95 median 1.84 on vs 2.09 off",
+      "evidence": "per pose runs under 0.05 m on: facing 0, sideways-left 0, sideways-right 0, back-to-wall 0, diagonal 2, diagonal-other 6"
+    },
+    {
+      "command": "production build, real-GPU headless Chrome 1440x900, 5 spots x 4 runs, pass on vs pass-off control build",
+      "exitCode": 0,
+      "result": "offset rate max 2.62 m/s except one frame 3.05 m/s (render interval 11.9 ms); max offset 0.299 m; frames under 0.05 m per run: side-l-inner 0/0/0/5, kiosk 0/0/0/1, plinth-apex 0/0/1/4, plinth-xecsuite 25/2/11/0, machine-0 7/5/6/7; control 17-25, 165-171, 137-172, 187-196, 128-131; no console errors",
+      "evidence": "worst clearance on: -0.063 m (toe, machine), -0.059 (toe, apex plinth), -0.032 (toe, xecsuite plinth), -0.029 (foot); control worst -0.296 m; planted-toe p95 all runs 4.38 on vs 4.23 off m/s"
+    },
+    {
+      "command": "rAF frame-time walk of the whole campus, production build, 1440x900, real GPU",
+      "exitCode": 0,
+      "result": "3149 frames in 52.5 s, p50 16.7, p95 16.7, p99 16.8, max 16.8 ms, 0 frames over 20 ms",
+      "evidence": "p95 16.7 ms is under 17.5 ms"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "F-M3-3 is fixed: the visual root offset never changes faster than 3 m/s relative to the physics position on any frame (no single-frame pop), measured per frame in a unit test that drives real physics and the real animator through jumps and hard landings pressed against at least 20 generated wall and prop faces, and in the browser on the production build in QA's lab-side-l-inner, lab-kiosk, lab plinth and workshop machine scenarios over 4 runs each; the approach anticipates poses that reach forward (for example measuring the landing pose ahead of time, choosing the soft landing, or limiting lean near solids) instead of correcting after the fact.",
+      "status": "failed",
+      "evidence": "Unit: passes strictly (bodyClearance.test.ts, 109 generated faces x 6 poses x jumps, hard drop, run-jump; max rate 2.2 m/s, was 4 to 20 m/s; a dedicated test shows the push is already 85 percent in place at touchdown, and the test fails with anticipation or the rate limit disabled). Browser (5 spots incl. 2 lab plinths, 4 runs each): max 2.62 m/s on 99.99 percent of frames, but ONE frame measures 3.05 m/s (lab-plinth-apex run 0) because the render timestamp interval was 11.9 ms against the 16.7 ms step the pass used; the pass step itself is 2.2 m/s times its dt. Earlier builds in this session also showed single 3.4 and 3.67 samples at 9.6 to 13.6 ms intervals, so 2.2 leaves about 35 percent headroom for frame jitter but not a guarantee. The anticipation itself is implemented as asked: the landing crouch is sampled from the real animator ahead of time, the push is built during the fall, the soft landing is chosen where the crouch needs more than 0.2 m of push, a crouch is cut short when the player walks into a wall, and the root cause (crossfade restarting from weight 1) is fixed."
+    },
+    {
+      "criterion": "Bone clearance still holds and now covers the legs: head, neck, chest, hips, thighs, shins and feet stay at least 0.05 m outside every non-ground solid on every frame in the same unit test and browser scenarios, and the Lab exhibit stand overlap the Boss noticed is checked and absent.",
+      "status": "failed",
+      "evidence": "Legs, shins, thighs and feet are probed (joints plus segment midpoints, 22 points; ramps and steps are walked on, blocks up to 0.95 m high are jumped onto and are exempt for the legs only, documented in the test). Unit: 4 of 6 poses hold 0.05 m on every frame of every run; the two diagonal poses (corner squeezes) leave 8 of 640 runs short, worst 0.007 m from a surface (nothing inside), versus 987 of 1920 runs short and up to 0.64 m inside with the pass off; shortfalls only occur at the 0.3 m offset limit. Browser: not met. Frames under 0.05 m per run: lab-side-l-inner 0/0/0/5, lab-kiosk 0/0/0/1, lab-plinth-apex 0/0/1/4, lab-plinth-xecsuite 25/2/11/0, workshop-machine-0 7/5/6/7; worst joint 6.3 cm inside (toe) against 29.6 cm inside for the control. The Lab stand overlap is therefore reduced about 5x in depth and 20x in frames but NOT absent: a toe can touch the plinth side for up to 25 frames in a corner jump. Cause: the 0.3 m cap and the 0.05 m clearance cannot both hold in a plinth and wall corner; the cap wins by design."
+    },
+    {
+      "criterion": "The total visual offset from the physics position stays under 0.3 m at all times, open-ground animation is unchanged (push 0), feet show no extra skating versus the pass-off control, and the hard landing still reads as a hard landing where there is room.",
+      "status": "passed",
+      "evidence": "Offset: max 0.299 m in 1920 unit runs and in every browser run. Open ground: unit test asserts push 0, rate 0 and a crouch depth identical to the pass-off control to 6 decimals; open ground was not re-run in the browser by me (the five browser spots are all at walls). Note: the animator crossfade fix also removes a pre-existing 0.3 m pelvis pop at short-fall touchdowns everywhere, so transitions in open ground are smoother than before, not identical (the stance tests still pass). Skating: unit planted-toe p95 median 1.84 m/s on vs 2.09 off, and a test asserts p95 on <= off + 0.4; browser planted-toe p95 4.38 on vs 4.23 off m/s over about 7.3k samples. Hard landing: a test over 109 faces and 3 distances shows the crouch equals the control's wherever nothing is within reach (all landings with room), and is the soft landing, with clearance held, where a wall is in reach."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the camera pocket and stance tests pass, rAF p95 stays under 17.5 ms, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "typecheck rc=0, lint rc=0 (one pre-existing warning in components/avatar/useRealtimeChat.ts, not touched), npm test rc=0 with 548 passed including the followCamera camera-pocket tests and stance tests (one new stance test), build rc=0 in a copy (/ at 125 kB), rAF p95 16.7 ms, max 16.8 ms, 0 frames over 20 ms. grep of the seven changed files finds no em dash and no machine-local path. Nothing committed; the dev server on port 3100 was left running; servers on 3410 and 3411 stopped by exact PID, build copies and Chrome profiles deleted."
+    }
+  ],
+  "assumptions": [
+    "Blocks whose top is at most 0.95 m above the floor under the avatar (jump height 0.9 m plus 0.05) are something to step or jump onto: legs and feet are not kept clear of them; head, neck, chest and hips always are. The Lab plinths (1.0 m), kiosk (1.1 m) and machines stay covered.",
+    "A foot above the top face of a block minus 0.06 m stands on it (the colliders leave the soles a few cm under the visible top, and a capsule resting on an edge sits up to 0.13 m low); ramps and steps are walked on.",
+    "The 0.3 m offset cap takes priority over 0.05 m clearance where they conflict (corners), because the contract states both and the cap is the visible-artifact guard.",
+    "Browser rate is measured on render-hook timestamps like QA's harness; the pass uses the game's own frame delta, so display jitter shows up as measured rate variation.",
+    "The pass-off control build disables the pass but keeps the new animator crossfade, so A/B isolates the pass; the pre-fix pop was reproduced separately in a unit test."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Decision for the user on the residual conflict in corners (Lab plinths, kiosk and machine corners pressed diagonally): (A) accept the current state, toes or knees up to about 6 cm into a prop for a few frames at the 0.3 m cap; (B) allow the offset to exceed 0.3 m only in a squeeze (up to about 0.4 m), which is expected to remove the browser shortfalls at the cost of criterion 3 as written; (C) add 0.1 m of physical standoff to the capsule or the colliders, which removes the need for the push at the source but touches physics, doorway widths and camera pocket tests.",
+    "Keep crossfades in the animator driven by its own per-action weights instead of three's fadeIn/fadeOut (the latter restart from weight 1 and 0 when a fade is interrupted)."
+  ],
+  "lessonsProposed": [
+    "three.js fadeIn/fadeOut always schedule from weight 1/0: an interrupted crossfade pops the pose to the fading clip at full weight (0.3 m pelvis in one frame after a 5-frame fall). Drive weights from the current value and test short states.",
+    "A reactive visual correction cannot be both fast and rate-limited: anticipate (sample the pose from the real animator on a bone copy, look ahead along the velocity, pick the soft variant) and only then rate-limit the remainder; a slow release (1.5 per s) stops the offset from chasing every leg swing.",
+    "Margin-based constraints (radius plus 0.05) are infeasible in corners where the 0.05 m acceptance at the joint is feasible: solve the hard 0.05 m tier first, then add comfort margin only if the hard tier does not get worse, and cull points by solid bounds (apply cost went from 1.3 ms to 0.16 ms per call).",
+    "Test harness fidelity matters: a facing snap when blocked, setup frames after a teleport and standing on an edge with the capsule sphere (feet up to 0.13 m below the visible top) created false failures that look like pass bugs.",
+    "QA check suggestion: measure offset speed on game-time deltas as well as render timestamps, since render intervals jitter between 9 and 17 ms on a 60 Hz display."
+  ],
+  "selfUsage": {
+    "filesRead": 30,
+    "approxLinesRead": 4500,
+    "approxLinesWritten": 1400,
+    "retries": 0
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "assignee": "cross-reviewer",
+  "executionMode": "headless",
+  "vendor": "codex",
+  "authType": "subscription",
+  "requestedModelTier": "top",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "constraints": [
+    "Read-only: do not modify, stage, commit, stash or reset anything; the working copy is snapshotted and fingerprinted.",
+    "Run checks exactly as listed; do not substitute shorter commands. Use Node 22 if an nvm switch is needed.",
+    "Report verdict not-applicable; put the review outcome in crossReview.verdict (approved or changes-requested)."
+  ],
+  "workItemId": "TASK-003",
+  "stageId": "06-cross-reviewer-r2",
+  "targetBaseCommit": "eb7b6c1",
+  "objective": "Second cross-provider review for TASK-003: confirm the round-1 finding (trophy re-collected on Restart) is fixed by the exit latch in 8386aa1, and review the merge of origin/master (043ca76), especially the combined components/avatar/TalkingAvatar.tsx (intro video plus game entry). Master's own content and intro changes were already reviewed in PRs #2 and #3; review their integration, not their copy.",
+  "contextFiles": [
+    "components/game/challenge.ts",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/avatar/IntroVideo.tsx"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-003/reports/03-cross-reviewer.json",
+    ".company/tasks/active/TASK-003/reports/04-game-dev-restart-latch.json",
+    ".company/tasks/active/TASK-003/reports/05-game-dev-merge-master.json"
+  ],
+  "acceptanceCriteria": [
+    "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+    "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+    "The round-1 finding is fixed: an item can only be collected after the player has been outside its reach while it was uncollected, Restart in place and a load inside the radius do not collect, and the tests would fail on eb7b6c1.",
+    "The merged TalkingAvatar.tsx preserves both the intro video behaviour and every game entry change (Play entry, prefetch, busy guard, voice stop, no-WebGL guard), Play cannot start the game while the intro plays, and no handler is stale.",
+    "Any correctness, robustness, resource-leak, accessibility or maintainability defect introduced by the latch or the merge resolution is reported with severity."
+  ],
+  "reviewScope": {
+    "baseRef": "eb7b6c1167d8f4a96eeb25ed0b825cb04a02c71b",
+    "headRef": "043ca7687c1ecd963b5bd8d036055033eb7b1b7b",
+    "requiredChecks": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck"
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint"
+      },
+      {
+        "name": "unit",
+        "command": "npm test"
+      },
+      {
+        "name": "build",
+        "command": "npm run build"
+      }
+    ],
+    "workdirProvidedByBoss": true
+  },
+  "reportPath": "reports/06-cross-reviewer-r2.json"
+}

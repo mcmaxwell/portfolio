@@ -1,0 +1,259 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "01-game-dev-audit",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Milestone 0: record the build/lint baseline, audit the avatar model and walk/run clips, decide physics dependency compatibility, choose the unit test runner, and confirm avatar reuse and asset gaps; no product code changes.",
+  "contextFiles": [
+    ".company/memory/project-profile.md",
+    ".company/memory/features.md",
+    ".company/memory/modules.md",
+    "components/avatar/Avatar.tsx",
+    "components/avatar/TalkingAvatar.tsx",
+    "lib/gestures.ts",
+    "package.json",
+    "next.config.mjs"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [],
+  "acceptanceCriteria": [
+    "npm run build and npm run lint were executed on Node 22 in the isolated worktree and their exit codes and output tails are recorded as the baseline, including any pre-existing failures.",
+    "public/avatar.glb was inspected by parsing its glTF JSON chunk: node count, skin and joint names (including whether Hips, Spine, Head, Neck, LeftFoot, RightFoot exist and the root joint name), mesh and primitive counts, material count, texture and image count with per-image byte sizes, morph target presence, bounding dimensions derived from accessor min/max, and embedded animation count are reported as measured facts.",
+    "public/animations/walk.glb and public/animations/run.glb were inspected the same way: animation track count and target node names, clip duration, whether the files carry their own mesh geometry and textures (redundant with the avatar), and their file sizes are reported.",
+    "The retargeting assumptions in components/avatar/Avatar.tsx (quaternion-only, Hips excluded) are assessed against the measured joint names, and the report states which tracks a locomotion retarget must keep or drop and why, labeled as a recommendation.",
+    "A physics dependency decision is reported with evidence from npm view (peer dependency ranges) for @react-three/rapier against the installed @react-three/fiber, three, and react versions, naming the exact version to install or a concrete reason to choose an alternative, and whether the WASM payload fits inside the 8 MB additional-asset budget.",
+    "A unit test runner is proposed with the exact devDependencies and npm script, based on what works with Next.js 14.1.4 and TypeScript strict without ejecting, and the report explains why.",
+    "The report gives a reuse-or-rebuild decision for the avatar with the concrete evidence behind it, lists asset gaps (jump, fall, land, idle, celebration clips) with a recommended sourcing approach that records license requirements, and lists any initial performance measurement that could not be taken without a browser as an explicit gap rather than a guess.",
+    "No tracked product file was modified; git status in the isolated worktree shows only files under .company/tasks/active/TASK-002/ or scratch files outside the repository."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree whose absolute path the Boss gives in the delegation prompt; scope every git and npm command to it.",
+    "Read-only toward product code: no edits to tracked files; write any inspection script to a scratch location outside the repository or delete it before reporting.",
+    "Use plain Node 22 scripts to parse GLB (12-byte header, JSON chunk) rather than adding dependencies.",
+    "Do not install packages; use npm view for compatibility evidence.",
+    "Separate measured facts from assumptions and recommendations in the report (Constitution rule 3).",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array.",
+    "Embed the full audit findings as a top-level report field named auditFindings (an object) so nothing is lost outside the JSON."
+  ],
+  "deliverables": [
+    "audit report with auditFindings object",
+    "baseline build and lint evidence",
+    "dependency and test-runner decision"
+  ],
+  "reportPath": "reports/01-game-dev-audit.json"
+}

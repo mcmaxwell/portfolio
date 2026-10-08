@@ -1,0 +1,101 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "06-graphics-engineer-shirt",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Drove headless system Chrome over CDP against the running dev server, with a Map.prototype.set hook to read the R3F store. Isolated the cause by hiding body, pants and shirt meshes in hero and game. Layered the clothing materials with polygon offset in a new game-owned avatarLook.ts, wired into GameAvatar's mount and dispose. Took before and after matrices (3 views x idle, walk, run) and a hero check. Added jsdom-free vitest unit tests. Ran lint, test and a build in a scratch copy so the live dev server's .next was not clobbered.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Cause: the Avaturn Body_Mesh, pants (avaturn_look_0) and shirt (avaturn_look_1) are separate skinned meshes with near-coincident or interpenetrating surfaces at the hem, collar and sleeve openings, so depth testing lets the underlying layer win in places. The hero shows the same defect at rest. Fix: game-only polygon-offset layering (shirt over pants over body), saved and restored on dispose, verified by probe to leave the shared materials identical after Exit. It removes most specks, but a few sub-pixel dark dots remain at the back hem in some frames.",
+  "filesChanged": [
+    "components/game/avatarLook.ts",
+    "components/game/GameAvatar.tsx",
+    "components/game/__tests__/avatarLook.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/avatarLook.ts",
+      "components/game/GameAvatar.tsx",
+      "components/game/__tests__/avatarLook.test.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing warning in components/avatar/useRealtimeChat.ts",
+      "evidence": "lint_exit=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "6 files, 93 tests passed (includes 4 new avatarLook tests)",
+      "evidence": "Test Files  6 passed (6) / Tests  93 passed (93)"
+    },
+    {
+      "command": "npm run build (in an rsync copy of the worktree with node_modules symlinked, to protect the live dev server)",
+      "exitCode": 0,
+      "result": "build succeeded, First Load JS shared 84.5 kB",
+      "evidence": "build_exit=0. An earlier build failed on 'for of saved.values()' (downlevel Map iteration); fixed with forEach and rebuilt green."
+    },
+    {
+      "command": "node restore.mjs (CDP probe of material state in hero, in game, after Exit)",
+      "exitCode": 0,
+      "result": "material state restored exactly",
+      "evidence": "hero before play: avaturn_look_0:false/0/0 avaturn_look_1:false/0/0 | in game: look_0:true/-2/-1500 look_1:true/-4/-5000 | after exit: look_0:false/0/0 look_1:false/0/0 (restore-probe.txt)"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The cause of the specks is identified with evidence (for example Body_Mesh triangles penetrating look_0 or look_1 under the retargeted pose, depth precision from the camera near and far planes, or material settings), including whether the same defect appears in the talking-avatar hero view, with before screenshots of both.",
+      "status": "passed",
+      "evidence": "Layer-isolation screenshots: hiding Body_Mesh removes the sleeve flecks (diag-hero-all.png vs diag-hero-nobody.png). Collar flecks are neck skin from the Head mesh, and hem specks come from the pants top: hiding avaturn_look_0 removes them (diag-hero-nolook0.png, diag2-no-avaturn_look_0.png). Hiding avaturn_look_1 shows a black body torso under the shirt (diag-hero-nolook1.png). Depth precision is ruled out: game camera near 0.1 and far 200, 24-bit depth, no log depth; the materials are OPAQUE, double-sided, with no polygonOffset. The same defect appears in the hero (collar, sleeve and hem flecks at rest): hero-before.png, before-hero.png. Game before shots: before-behind-idle.png, before-behind-walk.png, before-behind-run.png (heavy black hem specks) and the other before-* views."
+    },
+    {
+      "criterion": "The fix is applied only in game-owned code (components/game/GameAvatar.tsx or a new components/game/avatarLook.ts), does not mutate the shared cached avatar GLTF in a way that changes the hero (clone or restore any material or geometry it changes on exit), and leaves components/avatar/Avatar.tsx and public/avatar.glb untouched.",
+      "status": "passed",
+      "evidence": "Changes: new avatarLook.ts plus 4 lines in GameAvatar.tsx (import, apply on mount, restore in cleanup). avatarLook saves polygonOffset, factor and units per material and restores them. The CDP probe confirms identical state before Play and after Exit (restore-probe.txt). git status shows no change to components/avatar/Avatar.tsx or public/avatar.glb."
+    },
+    {
+      "criterion": "After screenshots from behind, from the side and three-quarter front, at idle, walking and running, show no body showing through the shirt, compared side by side with the before screenshots of the same views, and the hero view after Exit is pixel-equivalent in the shirt region to the before hero screenshot.",
+      "status": "failed",
+      "evidence": "Mostly met, not fully. Side by side sheets: sheet-before.png vs sheet-after.png (9 views). Collar, sleeve and large hem blotches are gone in all views; the neck line stays as a thin sparse line. Sparse residual 1 to 2 px dark dots remain at the back hem in some frames (see after-behind-walk.png and diag2-all.png at 5x zoom). Those are pants triangles deeper than the bias, so 'no body showing' is not literally achieved. Hero after Exit: material state is identical (probe), but pixel equivalence cannot be demonstrated because the hero idle animation differs per capture. RMSE before-hero.png vs before-hero-after-exit.png (no fix) is 0.111, versus 0.114 for the fixed build, so no measurable difference (sheet-hero.png: same collar and sleeve flecks, only the pose differs). Clip set: first matrix (before-*) and second (after-*) were both taken with clips md5 fall afff88f9, idle 6cc1f39d, jump 3d8e91df (before) then 19ce76d7 (after, changed by the parallel stage), land 5cc01a90, run b1d078de, walk 6d40713f, so the jump clip changed between matrices (jump not shown in any view). Run shots were shortened to 0.7 s after the first run fell off the arena. Software GL only."
+    },
+    {
+      "criterion": "If the hero shows the same defect, the report recommends the smallest hero fix as a decisionProposed with evidence instead of changing the hero.",
+      "status": "passed",
+      "evidence": "Hero shows the defect (hero-before.png, diag-hero-all.png). Proposal recorded in decisionsProposed; the hero was not changed."
+    },
+    {
+      "criterion": "A unit or jsdom test covers the fix mechanism (for example that the body mesh masking or material change is applied on mount and reverted on dispose), npm run lint, npm test and npm run build exit 0, no file owned by the parallel game-dev stage is modified, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "components/game/__tests__/avatarLook.test.ts has 4 tests: layering order, restore of saved prior state, remount idempotence, and unrelated or array materials ignored. lint, test and build all exit 0. I edited none of the game-dev files (the other modified files in git status come from that stage). grep finds no em dash and no machine-local home path in the new files. No commit was made. Caveat: no test covers GameAvatar's useEffect wiring itself; the CDP probe covers it."
+    }
+  ],
+  "assumptions": [
+    "Polygon offset is the right minimal mechanism: it needs no geometry change or shader recompilation and is fully reversible. Values factor -4 / units -5000 (shirt) and factor -2 / units -1500 (pants) were tuned visually under software GL; units are small depth-buffer steps (about 5 cm at 4 m in this camera setup), so GPU depth formats could shift the effective bias slightly.",
+    "Side effect: surfaces within roughly 5 cm of the shirt (a hand held against the hem, for example) can be depth-biased behind it at the game camera distance; none was visible in the 9 views."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Hero shows the same defect (collar flecks, sleeve and hem flecks at rest, hero-before.png). Smallest hero fix is to call applyAvatarLook(scene) from components/avatar/Avatar.tsx on mount and its returned restore on cleanup, or to move the polygonOffset values into the asset pipeline once. Needs approval since Avatar.tsx is out of scope; a stricter alternative is to fix the avatar.glb pants and shirt meshes at the source (tuck pants under the shirt hem)."
+  ],
+  "lessonsProposed": [
+    "Isolate layered-mesh artifacts by toggling each mesh's visibility through a CDP store probe before choosing a fix; here it showed the specks were pants and neck skin, not only the body.",
+    "The R3F store can be captured by wrapping Map.prototype.set via Page.addScriptToEvaluateOnNewDocument (key is the canvas element), because fiber walking from the DOM fails.",
+    "Run npm run build in a copy with node_modules symlinked when a dev server shares the worktree. tsconfig target needs forEach rather than for-of on a Map."
+  ],
+  "selfUsage": {
+    "filesRead": 12,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 330,
+    "retries": 2
+  }
+}

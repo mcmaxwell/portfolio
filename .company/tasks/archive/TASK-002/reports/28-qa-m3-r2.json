@@ -1,0 +1,177 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "28-qa-m3-r2",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Reran typecheck, lint, tests and builds myself (online and with network denied, in copies). Served the production build and the 729f9d6 baseline build on separate ports. Ran my own CDP probes on real-GPU headless Chrome with throwaway profiles that were deleted. Mutation-tested the camera fix in a temp copy. Cleaned up all copies, servers and profiles.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Rejected on one visible defect. During the landing crouch after a jump next to a Lab wall, the head bone sinks up to 0.19 m inside the wall for 12 to 24 frames, and the screenshot shows the head hidden in the wall. This happened in 3 of 4 runs of the Lab left-wall scenario, so the hedge and wall head-clearance fix is incomplete. F-M3-1 is fixed, and the lamp, Experience panel, hair halo, type check and gate fixes hold. The round-1 checks cut off by the disk, and the regression suite, all pass.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck (Node 22)",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "tsc --noEmit -p . printed no errors, rc=0"
+    },
+    {
+      "command": "npm run lint (Node 22)",
+      "exitCode": 0,
+      "result": "0 errors, 1 warning",
+      "evidence": "Only warning is react-hooks/exhaustive-deps in components/avatar/useRealtimeChat.ts:224, an unchanged do-not-touch file"
+    },
+    {
+      "command": "npm test (Node 22)",
+      "exitCode": 0,
+      "result": "527 passed",
+      "evidence": "Test Files 23 passed (23), Tests 527 passed (527)"
+    },
+    {
+      "command": "npm run build, online, in a copy of the tree",
+      "exitCode": 0,
+      "result": "/ 40.9 kB, First Load JS 125 kB",
+      "evidence": "Route table: / 40.9 kB 125 kB, shared 84.5 kB. The 729f9d6 baseline is also 125 kB."
+    },
+    {
+      "command": "npm run build under sandbox-exec (deny network*), in a second copy",
+      "exitCode": 0,
+      "result": "/ First Load JS 125 kB",
+      "evidence": "curl inside the sandbox returned rc=6 (cannot resolve host), so the network was really denied, and next build still exited 0 with the same route table"
+    },
+    {
+      "command": "bundle.mjs against the production build",
+      "exitCode": 0,
+      "result": "no game chunk or clip request before hover",
+      "evidence": "non-/ chunks before hover: []. After hover: chunks 080de1a6, 416, 530 and the 6 clips idle, walk, run, jump, fall, land. errs none."
+    },
+    {
+      "command": "vitest followCamera.test.ts in a temp copy with the old behaviour (swing search disabled and forced minDistance restored)",
+      "exitCode": 1,
+      "result": "21 failed, 69 passed",
+      "evidence": "Failures include 'tower passage, left wing wall (QA pass-side)', 'outer Lab wall (QA hug-lab-side)' and 'tower wing outer face'. Reverting only the final max() line fails 0 tests, because lift and swing now keep the clear distance above 0.8 m, so that line only matters in a sealed pocket. The copy was restored and cmp matched the worktree."
+    },
+    {
+      "command": "qsweep.mjs and qwalls.mjs wall-hug probes on the production build (8 fresh-page scenarios, about 1300 frames each, 3 pitch phases, 60 yaw steps per phase)",
+      "exitCode": 0,
+      "result": "0 inside a collider, 0 head occluded, 0 torso occluded on every scenario",
+      "evidence": "Walls the avatar was pressed against (clearance 0.31 to 0.46 m to the collider): tower-wing-l, tower-wing-r, tower-plinth-contact, lab-front-l, lab-side-l, lab-front-r, lab-side-r, tower-podium, workshop-front-l, workshop-front-r, tree-1-trunk, tree-10-trunk, plus the edge hedges. minCamY at least 0.2 (above ground), camera to avatar at least 0.797 m, camera to head at least 0.63 m."
+    },
+    {
+      "command": "qpass.mjs passage (hug, no hug), plaza pitch sweep, qdrop.mjs on the production build",
+      "exitCode": 0,
+      "result": "all clean",
+      "evidence": "passage 913 and 835 frames, plaza 837 frames, drop 1240 frames: inside 0, occluded 0, torso 0, badIdx 0, fell and landed true"
+    },
+    {
+      "command": "hedge.mjs head and bone clearance on the production build, 6 jumps plus a running jump per scenario",
+      "exitCode": 0,
+      "result": "FAIL on the Lab left wall",
+      "evidence": "Edge hedges clear (Head min 0.32 to 0.53), tower-wing-r min 0.083, workshop-front-r min 0.115, tree-1-trunk min 0.10. lab-side-l-inner, runs 2, 3 and 4 of 4: Head -0.191, -0.193, -0.188 m with 12, 13 and 24 frames below -0.05 m, head y 0.79 (landing crouch), avatar root 0.45 m from the wall face, head 0.5 m closer. Screenshot pen-lab-side-l-inner.jpg shows only hair above the wall surface. Run 1 had min +0.07."
+    },
+    {
+      "command": "walk.mjs, qpanels.mjs, qtouch.mjs (desktop and touch emulation)",
+      "exitCode": 0,
+      "result": "7 of 7 destinations, 0 failures",
+      "evidence": "Each interactable shows the correct prompt (E on desktop, Interact on touch), the dialog is modal with focus inside, and Escape or close returns focus to the overlay. Links open with target _blank and rel noopener noreferrer, mailto has no target. errs [] on all three."
+    },
+    {
+      "command": "hair, lamp and crop probes (qvis.mjs, lampshot.mjs) plus herocmp.mjs against the baseline build",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "9 zoomed idle, pitch, top-down and walk crops show no halo or specks. 8 lamp route shots at the workshop and the Lab show no lamp in the foreground. Hero vs the 729f9d6 hero: 487 to 1025 differing pixels above level 8, below the same-build animation noise of 4538 to 4936."
+    },
+    {
+      "command": "clipped-white statistics over 38 campus screenshots",
+      "exitCode": 0,
+      "result": "0 pixels at or above 250 on all channels in all 38",
+      "evidence": "Covers 1440x900 and 844x390 shots, the white-shirt avatar included. Largest value 0.0 percent."
+    },
+    {
+      "command": "failures-all.mjs nowebgl, physics, clips, context",
+      "exitCode": 0,
+      "result": "no-WebGL: Play disabled, page usable; others show correct dialogs",
+      "evidence": "nowebgl: Play button disabled, about heading present, scroll 500, as design.md line 582 and R4 state. physics: 'Could not start the game', focus on retry. clips: 'could not be downloaded', Retry then game then exit then hero. context: 'Graphics were interrupted', Back then hero renders. The network scenario does not apply, because its chunk name is hardcoded and rc=1."
+    },
+    {
+      "command": "entry.mjs cold and warm, perf.mjs at 1440x900 and 1920x1080",
+      "exitCode": 0,
+      "result": "entry clean; rAF p95 16.7 ms, max 16.8 ms",
+      "evidence": "Hero gap before swap: cold 30 ms, warm 20 ms (under 50). Opacity ramp 0.068 to 0.50. Luminance step 7 (Boss-accepted ramp). 24-frame montage has no blank, T-pose or flash. Perf: 3124 and 3119 frames, over20 0, over25 0. The exit script reports rAF p95 18.3 and max 18.6 ms, a script measurement taken during the cinematic, as in round 1."
+    },
+    {
+      "command": "exit.mjs, loading.mjs, pause.mjs, reduced.mjs, cycles.mjs",
+      "exitCode": 0,
+      "result": "all pass, errors none",
+      "evidence": "Exit: 283 of 1,034,729 px differ outside avatar and hint (0.027 percent), focus on '[ play / explore ]', Exit to hero 1147 ms. Loading strip and cancel work. Pause and tab-hide work. Reduced motion: no chrome transform on 88 frames. Cycles 10 plus 5: listeners 506 and nodes 896 identical (one transient 897 at cancel cycle 2, as in round 1)."
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build were each run by QA on Node 22 with exit codes explicitly captured (build in a copy of the tree, online and with network blocked), output tails recorded (527 tests or more; / route First Load JS within 2 kB of 125 kB), and the bundle and request proof still holds.",
+      "status": "passed",
+      "evidence": "typecheck rc=0, lint rc=0 (one warning, in an unchanged avatar file), npm test rc=0 with 527 passed, online build rc=0, network-denied build rc=0 (sandbox verified), / First Load JS 125 kB in both. Bundle proof: no game chunk or clip request before hover, and the chunks and 6 clips load after hover. See testsRun."
+    },
+    {
+      "criterion": "The working-tree diff against 729f9d6 was inspected: only files named in reports 21 to 27 changed, data/index.ts, lib/persona.ts, components/avatar and every design section 9 do-not-touch file are unchanged, and new content has no em dash or machine-local path.",
+      "status": "passed",
+      "evidence": "The diff plus untracked source files gives 37 files (changed.txt). That equals the union of filesChanged in reports 21 to 27 (claimed.txt): no unclaimed change and no claimed-but-unchanged file. git diff --stat 729f9d6 over data, lib, app, public, components/avatar, next.config.mjs and next.config.ts, postcss.config.js and postcss.config.mjs is empty, and there are no untracked files there. The only package.json change is the typecheck script. Em dash and path scan of all 37 files: none."
+    },
+    {
+      "criterion": "F-M3-1 is confirmed fixed with QA's own probes on the production build: with the avatar pressed against the tower passage walls, the outer Lab wall and at least three other walls QA chooses, a full 360 degree yaw sweep at both pitch limits gives 0 frames with the camera inside a collider, below the ground, inside the avatar, or with the head or torso hidden, and the earlier drop, passage, stairs and pitch scenarios stay clean; the new pocket tests fail with the old pullIn behaviour in a temp copy.",
+      "status": "passed",
+      "evidence": "8 wall-hug scenarios, 12 or more distinct walls touched (list in testsRun), about 1300 frames each at all pitch phases: inside 0, head occluded 0, torso occluded 0 (probe at the design height of 1.2 m), minCamY at least 0.2, camera to avatar at least 0.797 m. Passage, plaza pitch and drop runs are clean. Mutation: 21 of 90 followCamera tests fail with the swing search removed and the forced minDistance restored. Reverting only the final line fails 0 tests, an equivalent mutant outside sealed pockets. One caveat: a probe at the lower Spine bone (1.08 m) saw the torso line blocked on 12 of 519 frames by a low Lab plinth at the lowest pitch. The head and chest stayed visible, so I do not count it (below the design's 1.2 m guarantee)."
+    },
+    {
+      "criterion": "The smaller fixes hold: no visible head or body penetration into the hedge or walls on jumps (head bone clearance per frame), no lamp filling the foreground on the main routes, the Experience panel reads cleanly with only persona content, and the hair shows no halo in top-down, side and behind views at idle and walk while the hero hair is unchanged.",
+      "status": "failed",
+      "evidence": "Head penetration is NOT fixed for building walls. On the Lab left wall (lab-side-l, inner face), jumping while pressed against it gives a head bone 0.19 m inside the wall for 12 to 24 frames in 3 of 4 runs, during the landing crouch (pen-lab-side-l-inner.jpg, hedge.mjs). The hedges are clean (Head min 0.32 to 0.53 m). The other walls tested stay positive, 0.083 to 0.115 m. Passed: lamps (r2-workshop and r2-lab route shots, lamp-sheet.jpg); Experience panel (panel-workshop-experience.png, every line found in persona data except the heading, close button and 'Education and certifications' label); hair halo (r2vis-sheet.png, no halo or specks at idle, pitch, top-down, side, behind and walk); hero hair unchanged (herocmp pixel comparison)."
+    },
+    {
+      "criterion": "The checks the full disk cut off in round 1 are completed: the no-WebGL failure dialog, the static hero pixel comparison against the Milestone 2 hero, clipped-white pixel statistics over the campus screenshots, and zoomed idle and walk avatar crops with no specks; every defect QA would not ship is a finding with a screenshot.",
+      "status": "passed",
+      "evidence": "No-WebGL: Play disabled, portfolio usable, no dialog, as the design specifies (design.md 582, R4). Hero vs a 729f9d6 build served on a second port: diff is below the animation noise. Clipped white: 0.0 percent in all 38 screenshots. Zoomed crops: 9 idle and walk crops are clean. The one defect I would not ship is F-M3-2, with screenshot pen-lab-side-l-inner.jpg."
+    },
+    {
+      "criterion": "No regression since round 1: campus walk to all destinations and every panel (desktop and touch emulation), entry warm and cold with no blank, T-pose or flash frame and no hero freeze over 50 ms, rAF p95 under 17.5 ms with no frame over 25 ms at 1440x900 and 1920x1080, Exit pixel-exact with focus on Play, loading strip, pause, failures and a 10 plus 5 cycle run with identical listener and DOM counts.",
+      "status": "passed",
+      "evidence": "7 of 7 destinations on foot, panels on desktop and touch with the right prompts and modal dialogs. Entry cold and warm clean (montage entry-montage-cold.jpg), hero gap 30 and 20 ms. Perf p95 16.7 ms and max 16.8 ms at both resolutions with 0 frames over 20 ms. Exit pixel diff 283 of 1,034,729, focus on Play. Loading, pause, reduced motion, physics, clips and context failures all pass. Cycles 10 plus 5: listeners 506 and nodes 896, one transient 897 as in round 1."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed; Boss-accepted items recorded in work-item.json decisions are reported but are not grounds for rejection unless QA finds them visibly wrong.",
+      "status": "failed",
+      "evidence": "Criterion 4 failed, so approval is not allowed. Boss-accepted items (entry luminance ramp 2.0x, cold load about 1.1 s longer, faint interior wall streaks, the stage-19 Avatar.tsx edit) were observed and are not visibly wrong. The interior wall streaks are barely visible in pen-lab-side-l-inner.jpg and are not counted. Finding F-M3-2 is listed under lessonsProposed with all required fields."
+    }
+  ],
+  "assumptions": [
+    "Torso line of sight is judged at the design height of 1.2 m above the soles (CAMERA.losHeights); a lower Spine-bone probe was recorded as information only.",
+    "The no-WebGL failure state is Play disabled with no dialog, per design.md line 582 and R4; no dialog is expected.",
+    "The failures-all network scenario is not applicable to this build because its chunk name is hardcoded, so the clips scenario covers the download failure.",
+    "cam-blocks.json regenerated from the working tree and identical to round 1, since the collision standoff changes the physics collider only and not the camera blocker data."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Route F-M3-2 to the Milestone 3 game-dev for a fix round: make the landing crouch pose or the wall standoff keep the head bone at least 0.12 m outside every wall. Options are a bigger standoff or a lean limit that scales with distance to the wall. Add a test that jumps and lands pressed against lab-side-l, lab-side-r and lab-back and checks head bone clearance on every frame of the landing, not only the jump pose.",
+    "Keep the camera pocket test and add the equivalent-mutant note: the final max() line is only load-bearing in a sealed pocket."
+  ],
+  "lessonsProposed": [
+    "F-M3-2 (medium, round 2). File: components/game/world/campus.ts line 19 (WALL_STANDOFF 0.15) with components/game/world/colliders.ts line 22 (standoff on the collider). Trigger: jump repeatedly pressed against the inner face of the Lab left wall (lab-side-l), diagonal to the wall. Consequence: during the landing crouch the head is 0.5 m ahead of the capsule and 0.19 m inside the wall for 12 to 24 frames, with only hair visible above the wall surface. Evidence: hedge.mjs run output and pen-lab-side-l-inner.jpg. Rule: the avatar's head and body never visibly penetrate level geometry when jumping or walking into it. The dev measured the jump pose on the hedges and two other boundaries but not the landing crouch on building walls.",
+    "Probe harnesses must put the Chrome profile inside the stage output directory and delete it on close, exit and failure. The round-1 h.mjs wrote profiles to the session temp root and never deleted them. The patched h.mjs left 0 profile directories, and free disk stayed between 21 and 25 GB."
+  ],
+  "selfUsage": {
+    "filesRead": 40,
+    "approxLinesRead": 3000,
+    "approxLinesWritten": 400,
+    "retries": 3
+  }
+}

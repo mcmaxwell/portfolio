@@ -1,0 +1,43 @@
+{
+  "workItemId": "TASK-001",
+  "stageId": "02-tech-writer",
+  "assignee": "tech-writer",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Record the verified audit facts into the portfolio target's .company/memory (project-profile.md, modules.md, features.md, changelog.md), copying only evidence-backed facts and touching no product file.",
+  "contextFiles": [
+    "./.company/tasks/active/TASK-001/reports/01-project-auditor.json",
+    "./.company/memory/project-profile.md",
+    "./.company/memory/modules.md",
+    "./.company/memory/features.md",
+    "./.company/memory/changelog.md"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "7233049e9dcb7f13e5c1c11c0edd1f36212a0567",
+  "upstreamInputs": [".company/tasks/active/TASK-001/reports/01-project-auditor.json"],
+  "acceptanceCriteria": [
+    "project-profile.md contains a verified profile section (stack, runtime/Node engine, framework+version, package manager, key npm scripts, rendering model, notable libraries, deployment) sourced ONLY from the auditor report's profileFacts; nothing invented.",
+    "modules.md contains one concise section per module in the auditor report's moduleInventory, using the existing template fields, and marks status verified/hypothesis exactly as the auditor did.",
+    "The realtime-session API route and OPENAI_API_KEY boundary are recorded as a security/data boundary without any secret value; the config-file ambiguity is recorded as a hypothesis note.",
+    "features.md gains concise feature-to-file entries for the real user-facing features (interactive talking-avatar hero, portfolio content sections, SEO/OG assets).",
+    "changelog.md gains one dated entry noting the TASK-001 onboarding audit.",
+    "Only files under .company/memory/ are modified; no product file and no file outside memory is touched."
+  ],
+  "constraints": [
+    "Copy ONLY evidence-backed facts from the auditor report. Do not add facts the report does not support. Preserve each hypothesis label.",
+    "Do not edit any product file, README.md, AGENTS.md, CLAUDE.md, or anything outside .company/memory/.",
+    "Never write secret values, credentials, raw auth output, or machine-absolute paths; refer to files by repo-relative path.",
+    "Keep entries concise per the memory templates; do not duplicate the generated index graph.",
+    "Subscription-only (authType subscription)."
+  ],
+  "deliverables": [
+    ".company/memory/project-profile.md",
+    ".company/memory/modules.md",
+    ".company/memory/features.md",
+    ".company/memory/changelog.md"
+  ],
+  "reportPath": ".company/tasks/active/TASK-001/reports/02-tech-writer.json"
+}
