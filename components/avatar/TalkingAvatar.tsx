@@ -58,7 +58,7 @@ const TalkingAvatar = () => {
   const playRef = useRef<HTMLButtonElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const [avatarReady, setAvatarReady] = useState(false);
-  
+
   const [webgl] = useState(isWebGLAvailable);
   const shellRef = useRef<{ heroReady(): void } | null>(null);
   const onAvatarReady = useCallback(() => {

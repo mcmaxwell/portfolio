@@ -123,14 +123,39 @@ describe("follow camera on a fake world", () => {
     expect(cam.position.y).toBeGreaterThan(anchor.y); // climbed above the avatar to look down over the wall
   });
 
-  it("a fully sealed pocket (every cast reports an immediate hit, nothing clears) still never puts the camera inside the avatar", () => {
+  it("a fully sealed pocket (every cast reports an immediate hit) never places the camera beyond the reported clear distance, and clips the avatar body with the near plane", () => {
     const cam = newCamera();
     const fc = createFollowCamera(cam, () => 0, CAMERA);
     fc.snapTo(target, 0);
     for (let i = 0; i < 30; i++) {
       fc.update(1 / 60, target, true, 0, LOOK, false);
-      expect(dist3(cam.position, anchor), `frame ${i}`).toBeGreaterThanOrEqual(0.45 - 1e-6);
+      expect(dist3(cam.position, anchor), `frame ${i}`).toBeLessThanOrEqual(1e-6); // clear distance is 0
+      expect(cam.near, `frame ${i}`).toBeGreaterThanOrEqual(0.3); // the body around the camera is clipped
+      expect(Number.isFinite(cam.quaternion.x + cam.quaternion.w), `frame ${i}`).toBe(true);
     }
+  });
+
+  it("never places the camera beyond the clear distance the query reports, for every hit distance and look input", () => {
+    for (const clear of [0, 0.05, 0.2, 0.44, 0.45, 0.6, 1.5]) {
+      const cam = newCamera();
+      const fc = createFollowCamera(cam, () => clear, CAMERA);
+      fc.snapTo(target, 0);
+      for (let i = 0; i < 120; i++) {
+        fc.update(1 / 60, target, true, i * 0.03, { dx: i % 7 === 0 ? 30 : 0, dy: i % 11 === 0 ? -20 : 3 }, false);
+        expect(dist3(cam.position, anchor), `clear ${clear} frame ${i}`).toBeLessThanOrEqual(clear + 1e-6);
+      }
+    }
+  });
+
+  it("restores the normal near plane once the pocket opens", () => {
+    let hit: number | null = 0;
+    const cam = newCamera();
+    const fc = createFollowCamera(cam, () => hit, CAMERA);
+    fc.snapTo(target, 0);
+    expect(cam.near).toBeGreaterThan(0.3);
+    hit = null;
+    for (let i = 0; i < 240; i++) fc.update(1 / 60, target, true, 0, LOOK, false);
+    expect(cam.near).toBeCloseTo(0.1, 6);
   });
 
   it("does not let the minimum distance be shrunk by the smoothed restore after a hit", () => {
@@ -138,7 +163,7 @@ describe("follow camera on a fake world", () => {
     const cam = newCamera();
     const fc = createFollowCamera(cam, () => hit, CAMERA);
     fc.snapTo(target, 0);
-    expect(dist3(cam.position, anchor)).toBeGreaterThanOrEqual(0.45 - 1e-6); // sealed: only the avatar's body is kept clear
+    expect(dist3(cam.position, anchor)).toBeLessThanOrEqual(0.1 + 1e-6); // sealed: never beyond the reported clear distance
     hit = null;
     for (let i = 0; i < 120; i++) {
       fc.update(1 / 60, target, true, 0, LOOK, false);

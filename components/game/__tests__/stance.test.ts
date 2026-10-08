@@ -294,4 +294,3 @@ describe("other stance changes through the animator", () => {
     expect(Math.max(...stepsOf(s))).toBeLessThan(0.06);
   });
 });
-

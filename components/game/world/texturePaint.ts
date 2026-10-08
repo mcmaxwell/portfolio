@@ -380,4 +380,3 @@ export const PAINTERS: Record<TexName, (pause: Pause) => Promise<Canvas2D>> = {
     );
   },
 };
-

@@ -105,6 +105,7 @@ export function heroPoseToGame(
 }
 
 const DEG = Math.PI / 180;
+const NEAR = 0.1;
 const smooth = (k: number, dt: number) => 1 - Math.exp(-k * dt);
 
 export function createFollowCamera(
@@ -167,6 +168,11 @@ export function createFollowCamera(
   const mix = new THREE.Vector3();
   const mixLook = new THREE.Vector3();
   const feetOf = (target: Vec3): Vec3 => ({ x: target.x, y: target.y - FEET_TO_CENTER, z: target.z });
+  const setNear = (near: number) => {
+    if (Math.abs(camera.near - near) < 1e-6) return;
+    camera.near = near;
+    camera.updateProjectionMatrix();
+  };
   const setFov = (fov: number) => {
     if (Math.abs(camera.fov - fov) < 1e-6) return;
     camera.fov = fov;
@@ -174,7 +180,7 @@ export function createFollowCamera(
   };
 
   camera.fov = cfg.fov;
-  camera.near = 0.1;
+  camera.near = NEAR;
   camera.far = 200;
   camera.updateProjectionMatrix();
 
@@ -303,6 +309,7 @@ export function createFollowCamera(
 
   /** Closest the camera ever gets to the avatar's upper body: just outside the 0.3 m capsule. */
   const HARD_MIN = 0.45;
+  const BODY_CLIP = 0.35;
   const SWING_STEP = 15 * DEG;
   const SWING_MAX = 180 * DEG;
 
@@ -364,9 +371,14 @@ export function createFollowCamera(
     // solved clear distance (reach <= sol.t): minDistance is a goal that yields to the collider.
     const len = dir.length();
     const floor = len > 1e-6 ? Math.min(sol.t, cfg.minDistance / len) : sol.t;
-    // Only a fully sealed pocket (no direction has room, never the case on the campus) can leave the
-    // clear distance under HARD_MIN; then the camera stays out of the avatar's own body.
-    const t = Math.max(reach, floor, len > 1e-6 ? Math.min(1, HARD_MIN / len) : 1);
+    const t = Math.max(reach, floor);
+    // Sealed pocket (no direction has HARD_MIN of room; never the case on the campus): the camera
+    // stays inside the clear distance, so it can sit within the avatar's own body. That body is
+    // handled by the near plane, not by pushing the camera out into the collider: the plane is set
+    // BODY_CLIP (the capsule radius plus a margin) beyond the camera, which clips the avatar's
+    // meshes around the camera and leaves the view of what is beyond the avatar. In every other
+    // frame the near plane is the normal one.
+    setNear(t * len < HARD_MIN - 1e-6 ? t * len + BODY_CLIP : NEAR);
     resolved.copy(dir).multiplyScalar(t).add(anchor);
     desired.copy(resolved);
   };
@@ -401,6 +413,7 @@ export function createFollowCamera(
       return exitDone;
     },
     beginEntry(target, avatarYaw, finalYaw, seconds) {
+      setNear(NEAR);
       const start = heroPoseToGame(snapshot.position, snapshot.quaternion, feetOf(target), avatarYaw);
       yaw = finalYaw;
       pivot.set(target.x, target.y + cfg.pivotHeight, target.z);
@@ -447,6 +460,7 @@ export function createFollowCamera(
     },
     beginExit(target, avatarYaw, seconds) {
       void target;
+      setNear(NEAR);
       exitDone = false;
       blend = {
         kind: "exit",
