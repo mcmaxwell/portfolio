@@ -1,0 +1,110 @@
+{
+  "workItemId": "TASK-004",
+  "stageId": "04-qa-content",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Smoke QA: own lint/build/diff-check in a scratch copy, lint gate mutation probe, diff and content review against live-site text, live-site intro check in browser, production build screenshots at two viewports.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Lint, build, diff scope and content changes verified and the projects layout is clean at both viewports, but the AI Talking Avatar copy claims a cinematic intro video that the live site does not play today. Rejected on that unsupported claim (a work-item constraint forbids invented claims); the fix is a one-line copy change. Findings: F1 medium content-writer (blocking); F2 low frontend-dev; F3 low content-writer.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "4b886a8",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "data/index.ts",
+      "lib/persona.ts",
+      "public/proj-apexmind.png",
+      "public/proj-xecsuite.png",
+      ".eslintrc.json",
+      "eslint.config.mjs"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint (scratch copy, node_modules symlinked)",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm run lint with temporary components/zz.tsx containing an unescaped apostrophe (scratch copy)",
+      "exitCode": 1,
+      "result": "lint fails on violation",
+      "evidence": "1:45 Error: `'` can be escaped with `&apos;` ... react/no-unescaped-entities"
+    },
+    {
+      "command": "npm run build (scratch copy)",
+      "exitCode": 0,
+      "result": "build succeeded",
+      "evidence": "Generating static pages (7/7); First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "git diff --check origin/master (worktree)",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    },
+    {
+      "command": "next start -p 3300 + CDP screenshots at 1440x900 and 390x844",
+      "exitCode": 0,
+      "result": "screenshots written, no overflow, images complete",
+      "evidence": "docW 1430/1440 and 390/390; four project images naturalWidth 1280 complete true"
+    },
+    {
+      "command": "live-site intro check: Playwright MCP navigate https://www.liutsko.me/ and ?intro=1, curl HTML and JS chunks grep",
+      "exitCode": 0,
+      "result": "no intro video on live site",
+      "evidence": "no 'skip intro' or video element in snapshots; 0 matches for intro-video-seen, .mp4, .webm in chunks"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "QA ran npm run lint (and confirmed it really lints, for example with a temporary violation in a scratch copy, not the worktree), npm run build and git diff --check with exit codes explicitly captured, and the diff against 4b886a8 touches only data/index.ts, lib/persona.ts, the two project images, .eslintrc.json and the eslint.config.mjs deletion.",
+      "status": "passed",
+      "evidence": "npm run lint exit 0 (only pre-existing useRealtimeChat.ts:224 warning); in a scratch copy a file with an unescaped apostrophe made npm run lint exit 1 (react/no-unescaped-entities Error), file removed, so the gate really lints. npm run build exit 0. git diff --check origin/master exit 0. Diff vs 4b886a8 in worktree: data/index.ts, lib/persona.ts, public/proj-apexmind.png, public/proj-xecsuite.png, eslint.config.mjs deleted (staged), plus untracked .eslintrc.json and the .company task dir; nothing else. Note: all changes are uncommitted."
+    },
+    {
+      "criterion": "Content matches the user's request: Node.js back-end in the tech stack card and persona skills; Document & Image Archive Bot, Self-Hosted Family AI Agent and Dewy absent from the rendered site and from lib/persona.ts; E-commerce states 20+ online stores launched; Apex Mind and XecSuite text is supported by the live-site text files (no invented claims); NewsStocks.live and AI HR Assistant unchanged; no em dash in any rewritten text.",
+      "status": "passed",
+      "evidence": "Node.js: data/index.ts:33 and lib/persona.ts:28; rendered in About stack list on the production build. Note gridItems is not imported anywhere (dead data), the visible stack list comes from persona skills. grep for dewy, archive bot, family ai agent, telegram archive, document-processing in data/lib/components/app finds none (only generic 'self-hosted open-source LLMs' model mention remains, which is not the removed project). E-commerce card shows 'Successfully launched 20+ online stores.' and persona has the same. Rendered cards: 6, NewsStocks and AI HR entries unchanged in diff. Added lines containing an em dash: 0 (git diff -U0 | grep '^+' | grep -c em dash = 0). Apex Mind and XecSuite text matches live-site text files (tagline, 5-50 person, London ON, quoting/scheduling/invoicing/follow-ups/paperwork/phone calls/social posts, map/build/train, Olha Liutsko co-founder, Canada and US, Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent, RFP). Retained legacy claims not found in the live-site text: 'tenant-private', private/frontier model routing and Startup Weekend award (XecSuite), 'GSAP + Lenis' (Apex Mind); these are pre-existing user-supplied content, not new, flagged low."
+    },
+    {
+      "criterion": "The AI Talking Avatar claim of a cinematic intro video is checked against what a visitor actually sees: components/avatar/IntroVideo.tsx plays only when NEXT_PUBLIC_INTRO_VIDEO_URL is set, so QA states whether the live site at https://liutsko.me plays the intro video today and flags the claim as a finding if it does not.",
+      "status": "failed",
+      "evidence": "Live site https://www.liutsko.me (liutsko.me 308-redirects to www) loaded in the Playwright MCP browser, also with ?intro=1: accessibility snapshot has no skip-intro control and no video element; fetched HTML and all referenced JS chunks contain no intro-video-seen string and no .mp4/.webm. So the live site does NOT play the intro video today, and the repo has no NEXT_PUBLIC_INTRO_VIDEO_URL set in tracked files. The new AI Talking Avatar copy 'a cinematic intro video that hands off to a real-time 3D avatar' is therefore not what a visitor sees. Flagged as finding F1 (medium). Evidence limit: the live deploy may predate the intro-video merge, but a visitor today sees none."
+    },
+    {
+      "criterion": "In a browser on a production build at 1440x900 and 390x844, the projects section shows the new XecSuite and Apex Mind images sharp and correctly cropped, the order XecSuite, NewsStocks.live, Apex Mind, E-commerce, AI HR Assistant, AI Talking Avatar, no large empty areas in cards, no broken images, no overflow; one screenshot per viewport; the rest of the page shows no visible regression.",
+      "status": "passed",
+      "evidence": "Production build served on port 3300 (PID 8534, stopped by exact PID, port confirmed closed), Chrome with --user-data-dir in the stage dir (deleted), CDP script. 1440x900: card order XecSuite, NewsStocks.live, Apex Mind, E-commerce, AI HR Assistant, AI Talking Avatar; all 4 images naturalWidth 1280 naturalHeight 800 complete (no broken), displayed 439x159 with object-cover object-top (downscaled, sharp, crop shows hero heading for both new images); documentElement.scrollWidth 1430 <= 1440 (no overflow). 390x844: scrollWidth 390, images 298x159 complete, single column. Observation: at 1440 the Apex Mind card has about 110px empty space above its icons because the grid row stretches to the taller E-commerce card, and AI HR has about 50px; judged small (finding F2, low), not a large empty area. Rest of page (hero avatar, about, experience, contact, footer) renders with no visible regression in the full-page screenshot. Screenshots: desktop-1440x900-projects.png, phone-390x844-projects.png (plus *-fullpage.png)."
+    },
+    {
+      "criterion": "QA states approve or reject with every finding given a severity and an owner.",
+      "status": "passed",
+      "evidence": "Verdict rejected; findings F1 (medium, content-writer) blocking, F2 and F3 (low) non-blocking, each with owner below."
+    }
+  ],
+  "assumptions": [
+    "Changes are uncommitted in the worktree; the diff was read from the working tree against origin/master 4b886a8.",
+    "Worktree git status was identical before and after QA (status1/status2 diff empty)."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "F1 fix options for the Boss: (a) reword entry 8 to drop the intro-video clause, e.g. 'This site: a real-time 3D avatar you can talk to...'; or (b) keep it only if NEXT_PUBLIC_INTRO_VIDEO_URL is set in the Vercel deployment shipping this PR, then QA re-verifies on the deployed URL. Findings: F1 medium owner content-writer, blocking: intro-video claim unsupported on live site (data/index.ts entry id 8). F2 low owner frontend-dev, non-blocking: Apex Mind card has about 110px empty gap above icon row at 1440 because grid rows stretch to the E-commerce card; optional. F3 low owner content-writer, non-blocking: retained legacy claims not in live-site text (tenant-private, private/frontier model routing, Startup Weekend award, GSAP + Lenis); user-supplied pre-existing, confirm with user. F4 info owner Boss: gridItems in data/index.ts is dead data, the Node.js edit there has no visible effect; visible stack comes from persona skills."
+  ],
+  "lessonsProposed": [
+    "Copy that describes a feature gated by an env var must be checked against the deployed site, not the repo, since the code can be merged while the feature is off."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 150,
+    "retries": 1
+  }
+}
