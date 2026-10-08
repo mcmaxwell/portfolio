@@ -1,0 +1,139 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "25-game-dev-m3-fix",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Reproduced F-M3-1 with a Rapier unit sweep (hug a wall, full yaw turn at each pitch limit). Replaced the forced minDistance in pullIn() with a lift-then-swing search that never goes past the solved clear distance. Added a collision standoff for the hedge and walls (head clearance), moved the lamps clear of the main routes, cleaned the Experience panel header. Verified lint, tests and a production build in a tree copy, then QA's probes on that build (headless Chrome, real GPU). Every Chrome profile and the one server started were removed or stopped by PID.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "F-M3-1 fixed. pullIn() no longer forces the camera to minDistance when that is inside a collider: it lifts the pitch, then swings the camera sideways round the avatar (smallest swing first), and only a sealed pocket falls back to a 0.45 m body-clear floor. QA's qpass/qsweep probes give 0 inside and 0 occluded frames on the production build. Also fixed: hedge and wall head clipping (collision standoff), lamp at the workshop entrance (lamp placement), Experience panel stray separator. Lint 0, npm test 524 passed, build 0, rAF p95 16.8 ms.",
+  "filesChanged": [
+    "components/game/followCamera.ts",
+    "components/game/__tests__/followCamera.test.ts",
+    "components/game/__tests__/panels.test.tsx",
+    "components/game/__tests__/player.physics.test.ts",
+    "components/game/ui/panels.tsx",
+    "components/game/world/layout.ts",
+    "components/game/world/builders.ts",
+    "components/game/world/colliders.ts",
+    "components/game/world/campus.ts",
+    "components/game/world/decor.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/followCamera.ts",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/game/__tests__/panels.test.tsx",
+      "components/game/__tests__/player.physics.test.ts",
+      "components/game/ui/panels.tsx",
+      "components/game/world/layout.ts",
+      "components/game/world/builders.ts",
+      "components/game/world/colliders.ts",
+      "components/game/world/campus.ts",
+      "components/game/world/decor.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint (Node 22)",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "Only warning: components/avatar/useRealtimeChat.ts 224:6 react-hooks/exhaustive-deps (protected file, unchanged)."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "22 files, 524 tests passed",
+      "evidence": "Test Files 22 passed (22); Tests 524 passed (524)"
+    },
+    {
+      "command": "npm run build in a copy of the tree (node_modules linked)",
+      "exitCode": 0,
+      "result": "build ok, / 40.9 kB, First Load JS 125 kB",
+      "evidence": "/ 40.9 kB 125 kB; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "vitest followCamera.test.ts -t pockets with the swing search disabled and minDistance forced (the old pullIn behaviour), temporary edit then restored",
+      "exitCode": 1,
+      "result": "21 failed, 2 passed of 23",
+      "evidence": "x tower passage left/right wing, outer Lab wall, hedge, tower wing outer, edge-n, 13 tree trunks, lab-back, lab-side-r, lab-front-r, workshop-side-r. The first run on the pre-fix followCamera.ts (7 hand-picked hugs) also failed 5 of 7 with 'inside workshop-front-r', 'inside lab-side-r', 'inside lab-back', 'inside edge-n', 'inside tower-wing-l'."
+    },
+    {
+      "command": "vitest followCamera.test.ts (after the fix)",
+      "exitCode": 0,
+      "result": "79 passed",
+      "evidence": "Includes 23 pocket hugs (7 named plus 16 generated wall faces, 78 faces found, every fifth run) and 11 lamp route tests."
+    },
+    {
+      "command": "node qpass.mjs and qsweep.mjs on the production build copy (real GPU headless Chrome, full yaw and pitch drag sweep while pressing the wall)",
+      "exitCode": 0,
+      "result": "0 inside, 0 occluded on all 8 runs",
+      "evidence": "pass-end frames 847 inside 0 occluded 0 minDist 0.802; pass-side 859/0/0 minDist 0.803; pass-side-l 856/0/0; hug-lab-side 855/0/0; qsweep hug-hedge-north 521/0/0, hug-tower-wing-outer 518/0/0, hug-lab-outer-front 519/0/0, hug-plaza-bench-planter 519/0/0 (minDist 0.797 to 0.804, errs [])"
+    },
+    {
+      "command": "node hedge.mjs (head, neck, shoulders, hands vs every non-ground block, every rendered frame) before and after, dev server and production copy",
+      "exitCode": 0,
+      "result": "head clearance edge-w -0.068 m before, +0.531 m after; edge-n -0.068 to +0.532; edge-s -0.234 to +0.532; edge-e +0.304",
+      "evidence": "headWithin12cm frames 133, 127, 61 before, 0 after. Walls after: lab-front-r head +0.070, workshop-front-l +0.154, lab-kiosk -0.001 (touch). Before at lab wall -0.080."
+    },
+    {
+      "command": "node perf.mjs on the production copy walking the campus at 1440x900 and 1920x1080",
+      "exitCode": 0,
+      "result": "p95 16.8 ms and 16.7 ms, max 16.8, 0 frames over 20 ms",
+      "evidence": "1440x900 frames 3123 p95 16.8 over25 0; 1920x1080 frames 3113 p95 16.7 over25 0; calls 56 tris 53.5k"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "F-M3-1 is fixed: with the avatar pressed against any camera-blocking wall (tower passage side and end walls, outer Lab wall, and at least two more walls QA did not test) during a full 360 degree yaw sweep with pitch pushed to both limits, the camera centre is never inside a collider, never below the ground and the head and torso line of sight is never blocked on any rendered frame, while the camera keeps a usable view (never inside the avatar); a unit test that hugs a wall and sweeps yaw and pitch fails on the current followCamera.ts and passes after, and QA's qpass.mjs and qsweep.mjs probes report 0 inside and 0 occluded frames on the production build.",
+      "status": "passed",
+      "evidence": "followCamera.ts pullIn(): the Math.max(reach, minDistance/len) force is gone; t = max(reach, min(sol.t, minDistance/len), HARD_MIN/len) so the camera never passes the solved clear distance. If lift (up to 80 deg) cannot restore minDistance it swings round the avatar in 15 degree steps, smallest first, with the smallest lift per swing; only a fully sealed pocket (not in the campus) keeps a 0.45 m floor outside the capsule. New describe 'camera pockets' in followCamera.test.ts: real Rapier, real camera, 4 pitch phases with a full yaw turn in each (about 1180 frames), checks inside any solid, clearance, head and torso occlusion, below floor, closer than minDistance, interiors, and that the avatar really ends pressed to a wall. 23 hugs: tower left and right passage walls, passage dead end, outer Lab wall, hedge, tower wing outer face plus generated wall faces (lab-back, lab-side-r, lab-front-r, workshop-side-r, edge-n, tree trunks). Old behaviour in a temp edit: 21 of 23 fail; after: all pass. Production build copy: qpass pass-end, pass-side, pass-side-l, hug-lab-side and the four qsweep scenarios all 0 inside and 0 occluded, minDist at least 0.797 (usable view, never inside the avatar). Screenshots pocket-end-a.png and pocket-end-b.png show the head and torso visible at the passage dead end. Honest limit: an exact QA hug-lab-side start is not in the QA scripts I had, so I used a start near the Lab wall (avatar ended at 13.8, 9.3) plus the unit tests on the lab-side-r face."
+    },
+    {
+      "criterion": "The avatar's head and body never visibly penetrate the boundary hedge or any other level geometry when jumping or walking into it (head bone clearance measured on every frame of the edge-w scenario and two other boundary jumps), and the workshop entrance view no longer has a lamp filling the foreground (camera-facing props near the camera fade or are avoided), with before and after screenshots.",
+      "status": "passed",
+      "evidence": "Cause: the jump pose puts head and hands up to 0.4 m past the 0.3 m capsule. Fix: Block.standoff (layout.ts, builders.ts) widens the collider only (colliders.ts), 0.6 m on the four hedge blocks and 0.15 m on every wall and building block (campus.ts). Head bone clearance over every rendered frame, six jumps and a running jump per scenario: edge-w -0.068 before, +0.531 after; edge-n -0.068 to +0.532; edge-s -0.234 to +0.532; edge-e +0.304; hands min +0.12 to +0.19 on the hedges. Walls after: head +0.070 at lab-front-r (was -0.080), +0.154 at workshop-front-l. Limits: one low prop contact, head bone -0.001 m against lab-kiosk in the tower-wing-outer scenario (a graze, not a visible clip); a hand at -0.199 into a wall on lab-side-r and workshop-front-l (the arm swing, not head or body). Lamp: decor.ts lamp placement only (lamp offset either side of the hall doors 2.7 to 3.9 m, plaza lamps at 7.8 m from z -2.5 and 0.8 to z -4.5 and -1.2); camera-facing props are avoided, not faded. New route test walks spawn to the workshop, lab and tower and the two path routes, walking and running, and requires every lamp head at least 1.8 m from the camera on every frame (failed before: 1.0 m at plaza lamp 7.8, 0.8; 1.5 m at the workshop door lamp; passes after). Screenshots lamp-before-mid.png vs lamp-after-mid.png (huge lamp on the right vs normal lamps), lamp-before-near.png vs lamp-after-near.png, plus far and door shots."
+    },
+    {
+      "criterion": "The Experience panel shows each role, company and period cleanly with no stray separator or empty field, using only lib/persona.ts content, covered by a panels test, and every other panel's text is unchanged.",
+      "status": "passed",
+      "evidence": "ExperiencePanel in ui/panels.tsx: the aria-hidden '|' character and the sr-only ', ' are gone; company and period are two spans separated by a text-free aria-hidden CSS rule (w-px bar) and plain spaces, so assistive text reads 'company period'. New panels test checks for all 8 entries that the text leaves are exactly [role, company, period, detail] from lib/persona.ts, none empty, the divider has no text, no '|' and no 'company, period' pattern. The edit touches only that block of panels.tsx, so project, all-projects, skills, contact and the Education list are untouched; the existing panels tests (28 passed) still match data/index.ts and persona.ts. I did not do a before and after text diff of the other panels in a browser."
+    },
+    {
+      "criterion": "No regression: npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the earlier camera scenarios (drops, tower passage, plaza pitch limits, stairs) stay at 0 inside and 0 occluded, rAF p95 stays under 17.5 ms walking the campus, layout positions and interactables are unchanged, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "Exit codes captured: lint 0, npm test 0 (524 passed, up from 488), build in a tree copy 0 (/ 125 kB unchanged). The earlier unit scenarios (ramp drops end and side, terrace drop, tower passage at 7 yaws with drag, lab and workshop approaches, plaza pitch limits, stairs) pass in the 79 followCamera tests and all assert 0 inside, 0 occluded. rAF p95 16.8 ms at 1440x900 and 16.7 ms at 1920x1080, 0 frames over 20 ms. Layout block positions, sizes and interactables are unchanged (layout and interactions tests pass); the only layout data change is the optional standoff field, which only widens colliders, and the lamp positions in decor.ts. No em dash in the touched source and test files, no machine-local path. No commit, no git stash, reset or checkout. Limits: QA's qdrop.mjs browser probe does not climb the terrace on the shipped layout (avatar stays at x -25.8; it reproduces identically with the standoffs set to 0, so it needs QA's temporary raised-block layout), so the run-sideways drop is covered here by the real-Rapier unit drops only, not re-run in the browser."
+    }
+  ],
+  "assumptions": [
+    "Only decor.ts lamp placement was edited in decor.ts, as the contract allows (LAMP_DOOR_X for the hall door lamps, two plaza lamp z values). No graphics-owned file was touched (materials, textures, sky, warm, resources, WorldView, GameAvatar).",
+    "A fade for camera-facing props would need material opacity in WorldView or resources, which the graphics-engineer owns, so the lamp is avoided by placement and guarded by a route test.",
+    "The collision standoff also moves the camera blocker (same collider), so the camera stops sooner against hedges and walls; analytic test blocks use the visual size, which is conservative.",
+    "The harness copies in the scratchpad used a patched h.mjs that creates each Chrome profile with mkdtemp and deletes it on close, exit, SIGINT, SIGTERM and failed start; 0 m3fix profile directories remain."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Camera in a pocket: lift first, then swing round the avatar by the smallest yaw, never force minDistance through a collider; only a sealed pocket uses the 0.45 m body floor.",
+    "Level colliders may be wider than their visuals (Block.standoff): 0.6 m for the hedge, 0.15 m for walls and buildings, so animation reach (head, hands) stays out of geometry without changing the layout.",
+    "Camera-facing props (lamps) stay at least 1.8 m from the trailing camera on the main routes, enforced by a route test, until a prop fade exists in WorldView."
+  ],
+  "lessonsProposed": [
+    "A pocket test must sweep yaw through 360 degrees at both pitch limits while the avatar is pressed to the wall, over many wall faces generated from the layout, not a few hand-picked spots.",
+    "To prove a camera test is red on the old logic, neutralise exactly the new mechanism in a temp edit; just forcing the old clamp is not enough when the new search already avoids the pocket.",
+    "Hand-placed harness starts drift from the layout: assert in the test that the avatar really ends pressed to the intended wall.",
+    "Harness profiles: use mkdtemp plus rmSync on every exit path; verify with ls that none remain."
+  ],
+  "selfUsage": {
+    "filesRead": 38,
+    "approxLinesRead": 2600,
+    "approxLinesWritten": 620,
+    "retries": 0
+  }
+}

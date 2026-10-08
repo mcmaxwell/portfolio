@@ -1,0 +1,264 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "21-game-dev-m3",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Milestone 3: the navigable campus (Arrival Plaza, Project Lab, Skills Workshop, Contact Tower) replacing the test arena, interaction prompts and accessible portfolio panels built only from existing content, and the camera obstacle rework that carries the owner-deferred camera fixes (F7, F8) and the Codex minDistance finding.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/design.md",
+    ".company/tasks/active/TASK-002/spec-implementation-plan.md",
+    ".company/tasks/active/TASK-002/play-transition.md",
+    "components/game/world/layout.ts",
+    "components/game/world/WorldView.tsx",
+    "components/game/followCamera.ts",
+    "components/game/cameraProbe.ts",
+    "components/game/GameScene.tsx",
+    "components/game/ui/GameInterface.tsx",
+    "data/index.ts",
+    "lib/persona.ts"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/14-qa-m1-r3.json",
+    ".company/tasks/active/TASK-002/reports/16-cross-reviewer-m1.json",
+    ".company/tasks/active/TASK-002/reports/20-qa-m2-r2.json"
+  ],
+  "acceptanceCriteria": [
+    "The test arena is replaced by the CAMPUS layout from design.md and spec-implementation-plan.md: Arrival Plaza at the centre with the spawn and beacon pad, Project Lab to the left, Skills Workshop to the right, Contact Tower beyond the plaza, each reachable on foot from spawn without jumping, each recognizable from the plaza by shape, light and a readable sign (screenshot from spawn), with every main-route ramp at or under 40 degrees and every main-route step at or under 0.25 m, falling off the map respawns at the plaza, and the Milestone 2 entry still lands the avatar on the plaza with the same cinematic.",
+    "Interactions: near an interactable a prompt shows the key (E on desktop, the Interact button on touch) and the action name; nearest and front-facing item wins, unavailable items are skipped; opening a panel pauses movement, traps focus, closes with Escape or a Close button and returns focus to the game, and it is fully keyboard and screen-reader operable.",
+    "Panels use only existing content: Project Lab shows the three featured projects from data/index.ts (XecSuite, NewsStocks, Apex Mind) with titles, descriptions, technologies and links exactly as in the data, plus an All projects panel; Skills Workshop shows skills grouped into a few readable groups plus an experience panel; Contact Tower shows the existing contact options and links; links open only on explicit activation, in one tab, with rel noopener noreferrer; no testimonial text, invented claim or result appears anywhere (tested in content.test.ts).",
+    "Camera rework closes the carried findings: the follow camera keeps the avatar's head and torso visible (head-to-camera line of sight against every camera-blocking collider on every rendered frame), never goes below the ground surface at any pitch, enforces CAMERA.minDistance on pull-in (never inside the avatar), never shows building interiors in the narrowest passage, and restores smoothly; followCamera tests cover each case and fail on the Milestone 2 camera code.",
+    "The automated tests listed for M3 in design section 9 exist and pass (interactions, content, layout, followCamera, player.physics on CAMPUS with a scripted walk reaching every destination radius, panels), and a browser run on the real GPU walks from spawn to all three destinations and opens every panel, with screenshots of each destination and panel.",
+    "Milestones 1 and 2 behaviour does not regress (locomotion, landing, Play and Exit cinematic, loading strip, pause, failures, cycles), rAF p95 stays under 20 ms on the real GPU while walking through the campus at desktop resolution, and the game chunk plus campus assets stay within the 8 MB additional-asset budget (sizes recorded).",
+    "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the / route First Load JS stays within 2 kB of 125 kB, the hero is unchanged, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "Do not edit data/index.ts, lib/persona.ts or any design section 9 do-not-touch file; content is read through adapters.",
+    "Build the world from primitives and the existing palette; a separate graphics-engineer visual pass (dusk lighting, materials, trees and props) follows this stage, so keep geometry, colliders and materials cleanly separated and do not spend effort on final look.",
+    "Always close every Chrome you launch; never pkill by process name, kill only the PIDs you started.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "code",
+    "tests",
+    "screenshots",
+    "measurements"
+  ],
+  "reportPath": "reports/21-game-dev-m3.json"
+}

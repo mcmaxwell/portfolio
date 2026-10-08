@@ -1,0 +1,184 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "20-qa-m2-r2",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "approved",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Reran lint, tests and both builds myself on Node 22 (online and network-denied, each in a copy of the tree). Served the production build from a copy on port 3311 and drove it with headless Chrome 155 over CDP on the real GPU (Apple M1 Pro, ANGLE Metal, read back from the WebGL renderer string). Reused my round-1 probes plus new ones: focus3 (Retry-then-enter and mobile slow-load, rAF strip tracking), arrive (post-peak step analysis of fov, camera and wrap traces), sil (silhouette bbox), load-nowasm, timeout, hero (idle, mouse follow, gestures, talk request) and glb (compression scan of every project GLB). Mutation check of the F-M2-1 fix line in a throwaway copy. All Chromes closed (0 left); my prod server stopped. Incident: my cleanup pkill of next-server also killed the dev server on 3100; I restarted it with next dev -p 3100 from the worktree and confirmed HTTP 200 (new process). Other listeners (5321, 5322, 5331) untouched.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "All four round-1 findings are confirmed fixed first-hand in the production build, the Avatar.tsx edit is behaviour-neutral, and nothing regressed. Lint 0, 353 tests pass, both builds exit 0 with / at 125 kB. The F-M2-1 focus probes all end on Play with no strip remounted on Exit, and the regression test fails 2 of 44 when the fix line is removed. The exit fov arrives with zero step, there is no uncaught rejection anywhere, and all four failure dialogs are plain sentences.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/avatar/Avatar.tsx",
+      "components/game/GameAvatar.tsx",
+      "components/game/followCamera.ts",
+      "components/game/shell/useExperienceShell.ts",
+      "components/game/shell/LoadingOverlay.tsx",
+      "components/game/shell/gameLoader.ts",
+      "components/game/__tests__/shell.test.tsx",
+      "components/game/__tests__/gameLoader.test.ts",
+      "components/game/__tests__/followCamera.entry.test.ts",
+      "play-transition.md"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint (worktree, Node 22.23.2)",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing react-hooks/exhaustive-deps warning at useRealtimeChat.ts line 224 (protected file)",
+      "evidence": "lint.log tail: 'Warning: React Hook useCallback has a missing dependency: gestureRef' then the Next.js info line; lint rc=0"
+    },
+    {
+      "command": "npm test (worktree)",
+      "exitCode": 0,
+      "result": "Test Files 17 passed (17), Tests 353 passed (353)",
+      "evidence": "test.log tail, test rc=0"
+    },
+    {
+      "command": "npm run build, online, fresh copy of the tree (node_modules symlinked)",
+      "exitCode": 0,
+      "result": "route / 40.8 kB, First Load JS 125 kB, shared 84.5 kB",
+      "evidence": "build-online.log: '\u250c \u25cb /  40.8 kB  125 kB', online rc=0"
+    },
+    {
+      "command": "npm run build under a macOS sandbox profile denying network (sandbox-exec), fresh copy; control curl in the same sandbox",
+      "exitCode": 0,
+      "result": "build rc=0, / 125 kB, 0 ENOTFOUND or googleapis lines; control curl exit 6 'Could not resolve host: fonts.googleapis.com'",
+      "evidence": "build-offline.log, offline rc=0, curl rc=6"
+    },
+    {
+      "command": "bundle proof: scan the 6 JS files listed for / in app-build-manifest.json; grep all chunks for rapier and createCharacterController; bundle.mjs request proof on the production copy",
+      "exitCode": 0,
+      "result": "0 hits in the / chunks; rapier only in 328, 533 and c522081e which are not on the / list; 69 requests before hover with no game, rapier or clips chunk; after hover c522081e, 533, 328 and 6 clips load",
+      "evidence": "bundle-prod.txt"
+    },
+    {
+      "command": "stalestrip.mjs 900, mfocus.mjs mobile and desktop, mfocus2/3 mobile, focus3.mjs retry and mobile (production, real GPU)",
+      "exitCode": 0,
+      "result": "strip shown during load in the slow, retry and mobile runs; strip never seen during Exit; focus log after Exit is only [exit] out then [play / explore] in; final active element BUTTON [ play / explore ] in every run; no errors",
+      "evidence": "stalestrip.txt, mfocus-mobile.txt, mfocus-desktop.txt, mfocus2.txt, mfocus3.txt, focus3-retry.txt, focus3-mobile.txt"
+    },
+    {
+      "command": "mutation: delete the stripShownAt reset line (useExperienceShell.ts line 342) in a throwaway copy, vitest run shell.test.tsx",
+      "exitCode": 1,
+      "result": "2 failed | 42 passed (44): slow load enter Exit, and Retry after a failure enter Exit, both AssertionError expected 'out' to be 'off'",
+      "evidence": "mutation.log; the copy was deleted, the worktree was not touched"
+    },
+    {
+      "command": "exit.mjs 0 and 300, fovtrace.mjs, arrive.mjs, bbox.mjs plus sil.mjs, montage.mjs viewed by eye (production, real GPU 1440x900)",
+      "exitCode": 0,
+      "result": "fov at arrival 32.000 with step 0 across the swap row (preceding-10 median 0.047 at scroll 0 and 0.073 at scroll 300); camY and camZ zero post-peak steps above the median; scroll-0 silhouette h and top: 72 frames, 0 violations, last steps 1,0,0,0,0,0,1,0,1,0,0,0; scroll-300 wrap offset eases in and out and arrives 2.7 then 0 px; montages show a smooth settle with no jump",
+      "evidence": "fovtrace-s0.txt, fovtrace-s300.txt, arrive-s0.txt, arrive-s300.txt, sil-s0-analysis.txt, montage-exit-s0.jpg, montage-exit-s300.jpg"
+    },
+    {
+      "command": "failures-prod.mjs physics, network, clips, context, nowebgl; failures-all.mjs (all errors); load-errs.mjs; load-nowasm.mjs (WebAssembly rejected from page load); timeout.mjs (never-resolving instantiate)",
+      "exitCode": 0,
+      "result": "0 uncaught exceptions on load, hover, network, clips, context and timeout paths and with WebAssembly blocked from load; the physics path logs one app console.error for the deliberate fault (handled, no Uncaught); dialog texts: network and clips 'The game could not be downloaded. Check your connection, then retry, or go back to the portfolio.', physics 'The game engine could not start in this browser. Retry, or go back to the portfolio.', timeout (after 21 s) 'The game took too long to start. Retry, or go back to the portfolio.', context 'The browser stopped the 3D graphics. Retry, or go back to the portfolio. If the avatar stays blank, reload the page.'; Retry and Back recover; no-WebGL leaves the portfolio usable",
+      "evidence": "fail-physics.txt, fail-network.txt, fail-clips.txt, fail-context.txt, fail-nowebgl.txt, load-errs.txt, load-nowasm.txt, timeout.txt"
+    },
+    {
+      "command": "glb.mjs over every .glb in the tree (16 files) plus read of drei useGLTF source and the Avatar.tsx diff",
+      "exitCode": 0,
+      "result": "0 of 16 GLBs list meshopt, draco, basis or ktx in extensionsUsed or extensionsRequired (only KHR_materials_specular in 9 animation files); useGLTF(url, true, false) only turns meshopt off (draco flag unchanged), the only change in the Avatar.tsx diff is the third argument plus comments",
+      "evidence": "glb.txt"
+    },
+    {
+      "command": "hero.mjs (production, real GPU): load, idle, mouse follow, gestures, talk",
+      "exitCode": 0,
+      "result": "canvas present, 11 skinned meshes, head quaternion differs between mouse left and right, wave raises a hand 0.581 m above hips, talk click issues a request to /api/realtime-session; only console error is the server message 'OPENAI_API_KEY is not set on the server.' (no key in this environment, expected)",
+      "evidence": "hero.txt"
+    },
+    {
+      "command": "seq.mjs warm0 and cold0 then metrics.mjs (real GPU, production)",
+      "exitCode": 0,
+      "result": "warm: S at C+419, entry done C+1948, rAF p95 18.4 ms, max 21.3; cold: S at C+437, entry done C+1960, rAF p95 17.3 ms, max 27.8; 0 T-pose rows, 0 blank frames, 0 screencast gaps over 40 ms, section, about and scrollWidth rects constant, scrollY constant; swap pair diff ratio 1.71 warm and 1.53 cold, same as round 1 (judged smooth by eye in round 1 and again in the montage)",
+      "evidence": "metrics-warm0.txt, metrics-cold0.txt, seq-warm0.txt, seq-cold0.txt"
+    },
+    {
+      "command": "exit2.mjs 0 and 300 (DOM signature, canvas hidden whole-frame pixel diff)",
+      "exitCode": 0,
+      "result": "399 nodes before and after; scroll 300: 0 of 1,296,000 px differ at threshold 0 and 24; scroll 0: 0 px differ excluding the typewriter hint box (1,102 inside it, 5,166 at threshold 0); scrollY restored; html and body styles clean; focus on Play; results identical to round 1",
+      "evidence": "exit2-s0.txt, exit2-s300.txt"
+    },
+    {
+      "command": "cycles.mjs 10 5 (10 Play and Exit, 5 Play and Cancel)",
+      "exitCode": 0,
+      "result": "jsEventListeners 507 and tracked net 482 identical on every one of 15 cycles; nodes 868 on every cycle except one transient 869 at cancel cycle 2, back to 868 at cycle 3 and at the end; all health checks ok; no errors",
+      "evidence": "cycles.txt"
+    },
+    {
+      "command": "em dash scan of every changed and untracked non-binary file in the worktree; git status count before and after",
+      "exitCode": 0,
+      "result": "0 files contain an em dash; 40 status entries before and after",
+      "evidence": "inline scan output"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint, npm test and npm run build were each run by QA on Node 22 with exit codes explicitly captured (build in a copy of the tree, online and with network blocked), with output tails recorded (353 tests or more; / route First Load JS within 2 kB of 125 kB), and the bundle and request proof from round 1 still holds.",
+      "status": "passed",
+      "evidence": "lint rc=0 (one pre-existing warning), test rc=0 with 353 passed, online build rc=0 and offline build rc=0 (sandbox-exec deny-network, curl control rc=6, 0 ENOTFOUND lines), / is 40.8 kB with First Load JS 125 kB in both. Bundle proof: 0 game, rapier or clips hits in the 6 / chunks; 69 requests before hover with none of the game chunks, 9 on-demand files after hover. Files: lint.log, test.log, build-online.log, build-offline.log, bundle-prod.txt."
+    },
+    {
+      "criterion": "F-M2-1 is confirmed fixed with QA's own focus probe: after a slow-load Play (strip shown), a touch-emulation Play and a Retry-then-enter Play, Exit leaves Play as the only focus target and the final active element; the new shell regression test fails when the fix line is reverted in a temp copy.",
+      "status": "passed",
+      "evidence": "Production build, real GPU. Slow load: stalestrip.txt 'strip was shown during load: true | strip in DOM in game: false', Exit focus log [exit] out then [play / explore] in, stripSeenDuringExit false, active BUTTON play / explore. Touch emulation with the clips and entry held 1200 ms: focus3-mobile.txt strip seen true, stripDuringExit false, same log, final active play. Retry-then-enter: focus3-retry.txt dialog shown, Retry, strip seen true during the retried load, stripDuringExit false, same log, final active play, exp hero. mfocus, mfocus2 and mfocus3 (mobile and desktop) give the same log. Mutation: with useExperienceShell.ts line 342 (stripShownAt reset in swap after stripOut) removed in a temp copy, shell.test.tsx fails 2 of 44 (slow load and Retry cases, expected 'out' to be 'off'); copy deleted. Code read: LoadingOverlay.tsx line 51 focuses Cancel only when visible."
+    },
+    {
+      "criterion": "F-M2-2 is confirmed fixed: per-frame fov and silhouette traces of Exit at scroll 0 and a scrolled offset arrive with no step larger than the median of the preceding 10 frames, judged also by eye from the screencast.",
+      "status": "passed",
+      "evidence": "fovtrace: scroll 0 last values 32.034, 32.01, 32.002, 32, 32, 32 with arrival step 0 (preceding-10 median 0.047); scroll 300 arrival step 0 (median 0.073); no step across the swap row. Silhouette at scroll 0 (bbox of the avatar in 72 screencast frames): 0 steps above the preceding-10 median, last steps 1 px or 0. At scroll 300 the on-screen motion after the swap is the page scroll restore: its wrap offset follows an ease-in-out and arrives with steps 2.7 then 0 px. The screencast dropped frames in the middle of that scroll leg, so its bbox is not trusted there and the per-frame DOM rows were used instead. Honest note: a strict all-frames application of the rule flags near-peak plateau samples (fov steps 1.449 vs median 1.221 at 380 ms and 1.554 vs 1.017 at 365 ms; wrap step 34.61 vs peak 34.66), which are the velocity peak of an ease-in-out, not the arrival; every step after the peak region toward arrival is below its preceding median. By eye in montage-exit-s0.jpg and montage-exit-s300.jpg: smooth settle, no jump, no pop at the swap."
+    },
+    {
+      "criterion": "F-M2-3 and F-M2-4 are confirmed fixed in the production build: no uncaught promise rejection on page load or on any failure path, and every failure dialog shows a plain sentence with no chunk number or URL.",
+      "status": "passed",
+      "evidence": "Production build. 0 exceptions on page load plus hover (load-errs.txt) and on page load with WebAssembly.instantiate rejecting from the first script (load-nowasm.txt: errors 0, hero canvas present). Failure paths network, clips, context, timeout: 0 errors; physics: only one app console.error for the injected fault, no 'Uncaught'. Dialog texts quoted in testsRun contain no chunk id, no URL and no stack; Experience.tsx is the only reader of detail and it is not in the dialog (grep of .detail usage)."
+    },
+    {
+      "criterion": "The accepted Avatar.tsx edit is behaviour-neutral: the hero loads, idles, plays gestures, follows the mouse and talk starts a session request with no new console errors, and no project GLB uses meshopt or draco compression (checked in the files).",
+      "status": "passed",
+      "evidence": "Diff read: only the third argument false added to useGLTF and useGLTF.preload calls plus comments; drei useGLTF source confirms the signature (path, useDraco, useMeshOpt) so only meshopt is switched off and the draco flag is unchanged. hero.txt: canvas and 11 skinned meshes present, head quaternion changes with mouse position, wave lifts hand 0.581 m, talk click requests /api/realtime-session, only console message is the server 'OPENAI_API_KEY is not set on the server.' (no key here). glb.txt: 16 of 16 GLBs have no meshopt, draco, basis or ktx extension."
+    },
+    {
+      "criterion": "No regression since round 1: warm and cold Play at scroll 0 show no blank, T-pose or layout-jump frame and rAF p95 under 20 ms on the real GPU, Exit is pixel-exact, and a 10 Play and Exit plus 5 Play and Cancel cycle run keeps listener and DOM counts identical.",
+      "status": "passed",
+      "evidence": "Real GPU (gl.txt: ANGLE Metal Renderer Apple M1 Pro). Warm p95 18.4 ms, cold p95 17.3 ms; blank frames 0, T-pose rows 0, layout rects constant. Exit pixel diffs identical to round 1 (scroll 300: 0 px; scroll 0: 0 px outside the typewriter box). Cycles: listeners 507 and tracked net 482 on all 15 cycles, nodes 868 throughout apart from one transient 869 at cancel cycle 2 that returned to 868; heap 15.4 to 16.5 MB across 15 cycles against a 12.5 MB baseline (not a pass criterion, noted)."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed; owner-deferred camera findings F7, F8 and the Codex minDistance finding are not grounds for rejection.",
+      "status": "passed",
+      "evidence": "All six criteria above passed; no blocking or major finding raised. Observations are listed under assumptions with file, severity, trigger and consequence. F7, F8 and the minDistance finding were not evaluated as grounds."
+    }
+  ],
+  "assumptions": [
+    "Observation, severity low, not blocking: the first Exit fov and wrap steps near the velocity peak can exceed the preceding-10 median by up to about 20 percent for one or two frames (fov 1.449 vs 1.221 at 380 ms; useExperienceShell.ts and followCamera.ts exit leg). Trigger: any Exit. Consequence: none visible (peak of an ease-in-out, judged smooth by eye). Evidence: arrive-s0.txt, arrive-s300.txt. Rule: criterion 3 was read as applying to the arrival, where every step is at or below the median.",
+    "Observation, severity low, not blocking: one transient +1 DOM node (869) at cancel cycle 2 that returned to 868; listeners constant. Evidence: cycles.txt.",
+    "Observation, severity low, not blocking: heap grows about 0.07 MB per cycle (15.4 to 16.5 MB over 15 cycles); not part of the contract, only a hint if a longer soak is ever wanted.",
+    "The server message 'OPENAI_API_KEY is not set on the server.' in hero.txt is a deployment configuration fact in this sandbox, not a regression.",
+    "Process incident: my cleanup killed the dev server on port 3100 with an over-broad pkill; I restarted it from the worktree with next dev on 3100 (HTTP 200, new process id). The worktree git status stayed at 40 entries; no implementation file was edited.",
+    "Screencast frames are dropped by Chrome in the middle of the scroll-300 exit, so silhouette bbox numbers for that case come from the per-frame DOM and camera rows, not the screencast."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Accept the useGLTF(url, true, false) edit in Avatar.tsx as recorded: verified neutral because no project GLB uses meshopt and the draco flag is unchanged."
+  ],
+  "lessonsProposed": [
+    "Never pkill next-server by name to clean up a prod copy; kill the exact listener pid for the port you started, because the dev server and other agents' servers share that process name.",
+    "Judge an 'arrival with no larger step than the preceding median' rule on the arrival leg only; near the velocity peak of an ease-in-out, strict all-frames application flags the peak itself.",
+    "Bright-pixel silhouette bbox is invalid once page text scrolls into the region and Chrome screencast drops frames during scroll; use the per-frame DOM rect rows for scrolled exits."
+  ],
+  "selfUsage": {
+    "filesRead": 30,
+    "approxLinesRead": 1200,
+    "approxLinesWritten": 260,
+    "retries": 1
+  }
+}

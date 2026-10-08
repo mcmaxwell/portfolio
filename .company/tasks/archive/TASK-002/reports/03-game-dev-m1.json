@@ -1,0 +1,298 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "03-game-dev-m1",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Checkpoints: (1) pinned deps, .eslintrc.json (deleted eslint.config.mjs), vitest config, lint baseline; (2) strip-clips script plus Node foot-contact clip-speed measurement; (3) physics motor on the real Rapier KCC with real-Rapier Vitest tests; (4) animator, clips, follow camera, session cleanup registry, input; (5) world/colliders/WorldView, GameScene/GameAvatar, shell (loader, hook, ReadySignal) and the minimal TalkingAvatar Play/Exit wiring; (6) end-to-end probe of the production build in headless system Chrome (software GL) driven over the DevTools protocol, which found and led to the fix of a clip-strip bug; (7) npm ci, lint, test, build with real exit codes.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "M1 movement prototype is implemented: real lint/test gates, stripped walk and run clips, a Rapier-KCC motor with 15 real-Rapier tests, animator, follow camera, test arena, and Play/Exit in the single hero canvas. npm ci, lint, test (65 tests, 5 files) and build all exit 0 and no chunk outside the shell is in the / route first load. An automated headless-Chrome run (software GL, not a performance or visual-quality verdict) entered the arena, walked, ran, jumped, fell to respawn, and exited back to the hero with scroll and focus restored. Notable corrections: Rapier autostep does not engage at walking-speed per-step movement (worked around and tested), and walk/run speeds were tuned to 1.6 and 3.8 m/s (R1).",
+  "filesChanged": [
+    "package.json",
+    "package-lock.json",
+    ".eslintrc.json",
+    "eslint.config.mjs (deleted)",
+    "vitest.config.mts",
+    "vitest.setup.ts",
+    "ASSETS.md",
+    "scripts/strip-clips.mjs",
+    "assets-src/mixamo/walk.glb",
+    "assets-src/mixamo/run.glb",
+    "public/game/clips/walk.glb",
+    "public/game/clips/run.glb",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/game/config.ts",
+    "components/game/entry.ts",
+    "components/game/session.ts",
+    "components/game/input.ts",
+    "components/game/player.ts",
+    "components/game/fixedStep.ts",
+    "components/game/animator.ts",
+    "components/game/clips.ts",
+    "components/game/followCamera.ts",
+    "components/game/GameScene.tsx",
+    "components/game/GameAvatar.tsx",
+    "components/game/world/layout.ts",
+    "components/game/world/colliders.ts",
+    "components/game/world/WorldView.tsx",
+    "components/game/shell/useExperienceShell.ts",
+    "components/game/shell/gameLoader.ts",
+    "components/game/shell/ReadySignal.tsx",
+    "components/game/__tests__/fixedStep.test.ts",
+    "components/game/__tests__/input.test.ts",
+    "components/game/__tests__/player.physics.test.ts",
+    "components/game/__tests__/animator.test.ts",
+    "components/game/__tests__/clips.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "package.json",
+      "package-lock.json",
+      "eslint.config.mjs (deleted, staged)",
+      "components/avatar/TalkingAvatar.tsx",
+      "(new, untracked) .eslintrc.json, vitest.config.mts, vitest.setup.ts, ASSETS.md, scripts/strip-clips.mjs, assets-src/mixamo/*, public/game/clips/*, components/game/** (including __tests__)",
+      "(not touched by me) root .gitignore, which the Boss force-adds"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node --version && npm ci",
+      "exitCode": 0,
+      "result": "v22.23.2; npm ci completed on the updated lockfile",
+      "evidence": "npm ci exit 0; tail shows only the npm audit advisory text (47 vulnerabilities reported by npm audit, transitive, pre-existing class, not addressed)"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning, no interactive prompt",
+      "evidence": "./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'. react-hooks/exhaustive-deps (file is on the design section 9 do-not-touch list, left unchanged)"
+    },
+    {
+      "command": "npx eslint <three deliberate violation files, removed afterwards>",
+      "exitCode": 1,
+      "result": "6 errors, all three no-restricted-imports rules fire",
+      "evidence": "components/site: '@/components/game/GameScene' import is restricted ... Game code loads only through components/game/shell/gameLoader.ts (dynamic import). components/game: 'testimonials' import from '@/data' is restricted. components/game/shell: '@react-three/rapier' / '../config' / '@/components/game/session' restricted ... The shell must stay tiny; load game code with import() in gameLoader.ts. (the three temporary files were deleted)"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "Test Files 5 passed (5); Tests 65 passed (65)",
+      "evidence": "fixedStep.test.ts 8, animator.test.ts 26, clips.test.ts 11, player.physics.test.ts 15, input.test.ts 9 (verbose run lists each). Vitest prints an informational notice that vite-tsconfig-paths is now redundant with native resolve.tsconfigPaths; the pinned plugin from design 7.1 is kept."
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "Compiled successfully; / is 40.8 kB, First Load JS 125 kB (unchanged from the M0 baseline); shared 84.5 kB",
+      "evidence": "Linting and checking validity of types ... only the same useRealtimeChat.ts warning; Route (app) / 40.8 kB 125 kB; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "node scripts/strip-clips.mjs (npm run strip-clips)",
+      "exitCode": 0,
+      "result": "walk.glb 52708 B and run.glb 36592 B before the final fix; final files 53508 B and 37376 B, 51 rotation channels each",
+      "evidence": "walk: 53508 B, kept 51 rotation channels, dropped {path:130,hips:1,missing:13}; run: 37376 B, kept 51 rotation channels, dropped {path:130,hips:1,missing:13}; idle/jump/fall/land skipped: no source"
+    },
+    {
+      "command": "bash: grep -lE \"rapier|KinematicCharacterController\" <the .js chunks listed for /page in .next/app-build-manifest.json>",
+      "exitCode": 1,
+      "result": "no match (grep exit 1) in all six / route chunks; same for /game/clips/",
+      "evidence": "chunks: webpack-*.js, fd9d1056-*.js, 69-*.js, main-app-*.js, 665-*.js, app/page-*.js"
+    },
+    {
+      "command": "npm start (production build) plus headless system Chrome with software GL, scripted over the DevTools protocol (scratch scripts, not committed)",
+      "exitCode": 0,
+      "result": "Observed: Play enabled after the avatar loaded; clicking it entered game mode; WASD walk, shift run, space jump, strafe and backward moves worked; falling off the arena edge respawned at spawn; Exit returned to the hero; no page exceptions and no console errors (only a GL driver performance notice)",
+      "evidence": "documentElement.style.overflow was hidden in game and empty string after exit; document.activeElement after exit was the '[ play / explore ]' button; rendered at about 12 fps under software GL, which is NOT a performance measurement. Screenshots were inspected by me for gross correctness only (arena, avatar upright, legs animated in side and rear views); no visual-quality verdict is claimed."
+    },
+    {
+      "command": "Node foot-contact measurement of walk and run source clips (scratch script using @gltf-transform/core plus three math, not committed)",
+      "exitCode": 0,
+      "result": "see m1Findings.measuredClipSpeeds",
+      "evidence": "forward kinematics of source clips at 30 fps; stance foot world speed during contact median 0.017 and 0.020 m/s (walk) confirms the root-motion speed equals the planted-foot ground speed"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "package.json pins the design section 7.1 dependencies exactly (including @react-three/rapier 1.5.0 and the Vitest toolchain), package-lock.json is updated, and npm ci exits 0 on Node 22.",
+      "status": "passed",
+      "evidence": "Exact pins in package.json: @react-three/rapier 1.5.0 (dependency); devDependencies @dimforge/rapier3d-compat 0.14.0, vitest 5.0.3, vite 8.3.3, @vitejs/plugin-react 6.1.2, vite-tsconfig-paths 6.1.1, jsdom 30.1.2, @testing-library/react 16.3.3, @testing-library/dom 10.4.2, @testing-library/jest-dom 7.0.1, @gltf-transform/core 4.5.1 and @gltf-transform/functions 4.5.1 (npm view latest, same version). npm ls shows one @dimforge/rapier3d-compat 0.14.0 (deduped). npm ci exit 0 on v22.23.2. One addition beyond the table: @types/node bumped from ^20 to ^22 (resolved 22.20.5) because vitest 5.0.3 has peerOptional @types/node ^22 || >=24 and npm install failed with ERESOLVE otherwise. Scripts added: test, test:watch, strip-clips."
+    },
+    {
+      "criterion": "npm run lint exits 0 and actually lints: .eslintrc.json extends next/core-web-vitals with the design section 7.3 no-restricted-imports boundary rule, eslint.config.mjs is deleted, no interactive prompt appears, and every pre-existing lint error fixed is listed in the report as a mechanical change with file and rule.",
+      "status": "passed",
+      "evidence": "npm run lint exit 0, no prompt. .eslintrc.json is the design 7.3 JSON (three overrides). eslint.config.mjs deleted with git rm. Lint baseline on the base code: 0 errors and 1 warning (useRealtimeChat.ts:224 react-hooks/exhaustive-deps, protected file, unchanged), so lintFixes is empty: no pre-existing lint error existed to fix. The boundary rules were proven to fire with three deliberate violations (6 errors), then removed."
+    },
+    {
+      "criterion": "npm run build exits 0, and the build output proves that no chunk outside components/game/shell is part of the / route first load (design section 7.5 proof recorded verbatim in the report).",
+      "status": "passed",
+      "evidence": "npm run build exit 0; First Load JS for / stays 125 kB (M0 baseline 125 kB). Proof recorded verbatim in m1Findings.bundleBoundaryProof. Not done in this stage (belongs to the M2 gate): browser network-panel check of no game request while scrolling without Play."
+    },
+    {
+      "criterion": "npm test exits 0 and the design section 8 M1 test files exist and pass: fixedStep.test.ts, input.test.ts, player.physics.test.ts against real Rapier in Node, animator.test.ts, and clips.test.ts, with the per-file assertions named in that row.",
+      "status": "passed",
+      "evidence": "npm test exit 0, 65 tests in 5 files. Row assertions: fixedStep (cap, drop, alpha, reset); input (diagonal normalization, opposite keys, blur releases all, detach removes listeners, plus edge latch, preventDefault scope, disabled input); player.physics on real Rapier 0.14.0 in Node (grounded on flat, no jump in air, coyote and buffer windows, no infinite jump, wall block and slide, 0.2 m step climbs and 0.35 m blocks, 30 degree ramp climbs and 45 degree blocks, snap keeps grounded descending, kill plane respawns, diagonal speed equals forward, plus airTime on the landing step, interpolation, A4 lifecycle); animator (nextLocoState, every guard row of 5.3, fallbacks, clamped timeScale); clips (JSON chunk: only rotation channels, no Hips, every target in the avatar joint list, under 100 KB, no mesh data; additionally parses each file with the real GLTFLoader, one quaternion per key and increasing times; toGameClip does not mutate its input). The GLTFLoader parse test was added after the browser probe exposed a malformed-clip bug that the JSON-only checks missed."
+    },
+    {
+      "criterion": "scripts/strip-clips.mjs produces public/game/clips/walk.glb and public/game/clips/run.glb from assets-src/mixamo sources as rotation-only clips without Hips tracks, each file under 100 KB, and ASSETS.md records the source, download context and license note for every asset under assets-src and public/game.",
+      "status": "passed",
+      "evidence": "walk.glb 53508 B and run.glb 37376 B, 51 rotation channels each, no Hips channel, nodes renamed without the mixamorig prefix, no mesh, skin, material or texture (test-verified). Sources are byte-identical copies (same md5) of public/animations/walk.glb and run.glb placed in assets-src/mixamo (the only in-repo sources). Trim of the duplicated last key happens only when every kept track ends on its first value; durations become the true loop periods 41/30 s (walk) and 22/30 s (run). ASSETS.md has rows for public/avatar.glb, all 9 public/animations/*.glb, both assets-src files and both public/game clips, with the strip procedure. Limits: the downloader name, download date, exact Mixamo titles (except 'Run Forward Arc Left' from the Boss) and the checked-on dates for Mixamo and Avaturn terms are written as 'unknown - to confirm by owner' or 'not checked'; no terms page was read."
+    },
+    {
+      "criterion": "Every M1 module in the design section 8 M1 row exists under components/game with the public exports from design section 2, TalkingAvatar.tsx changes are limited to the minimal M1 scope of design section 3.1 (Play calls stopVoice synchronously and is disabled while connecting, mode switch, Exit), and the hero subtree and game subtree are mutually exclusive inside the single canvas.",
+      "status": "passed",
+      "evidence": "All listed M1 modules exist (config, entry, session, input, player, fixedStep, animator, clips, followCamera, GameScene, GameAvatar, world/layout, world/colliders, world/WorldView, shell/useExperienceShell, shell/gameLoader, shell/ReadySignal). Exports follow section 2 with these M1 reductions: session.ts exports only createGame and the cleanup registry (GameHandle has input, reducedMotion, disposed, registerCleanup, dispose); followCamera has no beginEntry/entryDone (M2); gameLoader has the state machine, generation counter, physics timeout, cancel and retry but no LoadingOverlay or progress UI; entry.ts has no GameInterface (M2). TalkingAvatar.tsx diff is 71 insertions and 10 deletions: useExperienceShell, Canvas className and touchAction switch, hero children wrapped in {!inGame}, ReadySignal after Avatar, GameScene render, an Exit button, hero overlays hidden in game, a Play button beside Talk (disabled while !avatarReady, connecting, mode !== hero or no WebGL), talk button disabled while loading, and a one-line failure message. play() calls stopVoice() synchronously before any state change. No loader UI. Hero subtree renders only when mode !== 'game'; the game subtree is a sibling in the same Canvas. During 'loading' a warm-up GameScene (Physics only, no visuals) coexists with the hero so WASM can initialize; only in 'game' does it render the world and avatar, while the hero subtree is unmounted. Observed in the headless run: one canvas, hero restored after exit."
+    },
+    {
+      "criterion": "The report records the measured walk and run clip ground speeds, the R1 decision (tuned walk and run speeds or timeScale clamp) with the resulting config values, and confirms or corrects assumptions A2, A3, A4 and A5 with file and line evidence from the installed packages and the passing physics test.",
+      "status": "passed",
+      "evidence": "See m1Findings.measuredClipSpeeds (Node forward-kinematics foot-contact measurement of the source clips, not a browser measurement), r1Decision and assumptionsA2toA5. A2 is corrected, A3 confirmed with one behavioral correction (autostep), A4 confirmed, A5 confirmed."
+    },
+    {
+      "criterion": "A developer can reach the test arena in a browser: the report states the exact URL and steps (for example npm run dev then Play), and a dev-only query parameter or equivalent selects TEST_ARENA so the QA stage can reproduce it.",
+      "status": "passed",
+      "evidence": "See m1Findings.arenaAccess. In M1 Play always loads TEST_ARENA (CAMPUS does not exist yet); the explicit selector /?arena=test is also implemented (readLayoutParam). The same steps were executed by an automated headless Chrome run against npm start."
+    },
+    {
+      "criterion": "git status in the worktree shows changes only to files named in the design section 8 M1 row plus mechanical lint fixes, none of the design section 9 do-not-touch files are modified, new content contains no em dash and no machine-local absolute path, and no commit was made.",
+      "status": "passed",
+      "evidence": "git status: modified package.json, package-lock.json, components/avatar/TalkingAvatar.tsx; staged deletion eslint.config.mjs; untracked new files all within the M1 row (plus the npm script entries and the @types/node bump in package.json). No design section 9 file is touched (checked by name filter on git diff --name-only). Added lines contain 0 em dashes and no home-directory paths (grep on new text files and the TalkingAvatar diff); the .glb files were excluded from the text grep. No commit made. The root .gitignore is not modified by me (ignored by the global rule; Boss force-adds). Note: the Boss's own untracked ADR and task files under .company also appear in git status."
+    }
+  ],
+  "assumptions": [
+    "Clip ground speeds were measured offline (Node FK) from the source clips, not by a browser foot-contact check; the Hips-dropped number was used for config. QA should still judge foot sliding visually.",
+    "Avatar-scale factor 1.03 (audit height ratio 1.865/1.809) applied to measured speeds for config clipSpeed.",
+    "Walk speed 1.6 m/s is slower than the spec default 2.2 m/s; it is the price of keeping the 1.0 m/s Mixamo walk within the 0.75 to 1.8 playback clamp. A faster walk clip would allow a higher walk speed (owner decision).",
+    "Shadows are off in M1 (QUALITY.low is used) because renderer shadow setup belongs to M5; resolveQuality exists but is not wired.",
+    "The Mixamo and Avaturn license statements in ASSETS.md are background knowledge, not a reading of current terms.",
+    "In dev with React Strict Mode the Physics provider frees and recreates its world between effect passes; colliders and motor dispose are try/catch tolerant of an already released world. This path was not exercised in a browser (production build only).",
+    "A404-free clip loading: only clips in FIRST_PLAY_CLIPS (walk, run) are requested. When idle, jump, fall and land are supplied, add their names to that list in config.ts and run npm run strip-clips; nothing else changes."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "R1: tune locomotion speeds to the clips instead of re-sourcing: MOVEMENT.walkSpeed 1.6 and runSpeed 3.8 (spec 2.2 and 4.8), ANIMATION.clipSpeed walk 0.98 and run 2.93, timeScale clamp kept at 0.75 to 1.8 (resulting rates 1.63 and 1.30). Record as an addendum to ADR-003.",
+    "Rapier autostep workaround: the motor probes with a 0.06 m horizontal movement when a grounded step is blocked and keeps the result only if it stepped up (STEP_PROBE in player.ts). Without it walking at 1.6 m/s stalls against a 0.2 m step for about 2.5 s (measured).",
+    "Do not zero horizontal velocity on a blocked step; the controller needs the full desired movement each step for sliding and autostep.",
+    "MotorState.airTime is preserved through the landing step (reset on the next grounded step) so the animator can choose land versus soft landing.",
+    "strip-clips trims the duplicated last key only when every track ends on its first value; the first key sits at 1/30 s, so trimming yields the true loop period (41 and 22 frames).",
+    "Add @types/node ^22 (vitest peer) and an npm script strip-clips; keep vite-tsconfig-paths as designed even though Vite now supports tsconfig paths natively.",
+    "Selector /?arena=test is implemented in the shell (readLayoutParam); DEFAULT_LAYOUT is test-arena until CAMPUS exists in M3.",
+    "A minimal class error boundary in GameScene reports Physics/WASM failures to the loader so the hero is not broken (the design assigned this to M2; pulled forward because a WASM init failure would otherwise white-screen the canvas)."
+  ],
+  "lessonsProposed": [
+    "Validate generated glTF assets by parsing them with the runtime loader (GLTFLoader) in a test, not only by inspecting JSON structure: a strip-script bug (shared time accessors trimmed more than once) produced files that passed every JSON check but made AnimationMixer.update loop forever in the browser.",
+    "Rapier KinematicCharacterController autostep does not engage when the per-step desired horizontal movement is small (about 0.027 m at 60 Hz walking); test step climbing at walking speed, not only at run speed.",
+    "A headless system Chrome driven over the DevTools protocol, using the production build and software GL, gives real end-to-end evidence without a browser tool (it found a hang a unit test missed); use Debugger.pause or a process sample when the page hangs, and never treat software-GL frame rate as a performance measurement.",
+    "@react-three/rapier 1.5.0 hands out useRapier().world as a lazy singleton Proxy and frees it in the provider's unmount effect; any game cleanup that touches the world must run before provider unmount or tolerate a released world.",
+    "Adding a peer-constrained devDependency can force a bump of an unrelated pinned package (here @types/node ^20 to ^22); run the install early and record such bumps."
+  ],
+  "selfUsage": {
+    "filesRead": 45,
+    "approxLinesRead": 3500,
+    "approxLinesWritten": 3300,
+    "retries": 2
+  },
+  "m1Findings": {
+    "measuredClipSpeeds": {
+      "method": "Node forward kinematics of the unmodified source clips (30 fps) with @gltf-transform/core and three math; stance frames chosen from world-space foot height and speed. Not a browser foot-contact check.",
+      "walk": {
+        "loopPeriodSeconds": 1.3667,
+        "framesPerLoop": 41,
+        "hipsRootMotionSpeedMps": 1.017,
+        "hipsNetDisplacementPerLoopMeters": 1.39,
+        "plantedFootWorldSpeedMedianMps": "0.017 left, 0.020 right (confirms root-motion speed equals ground speed)",
+        "hipsDroppedStanceFootBackwardSpeedMps": "0.949 mean (left 0.801, right 1.090); this is the shipped condition",
+        "scaledToAvatarMps": 0.98
+      },
+      "run": {
+        "loopPeriodSeconds": 0.7333,
+        "framesPerLoop": 22,
+        "hipsPathSpeedMps": 2.77,
+        "pathHeadingDegFromStartAxis": 30.7,
+        "forwardComponentMps": 2.383,
+        "plantedFootWorldSpeedMedianMps": "0.120 left, 0.011 right",
+        "pelvisHeadingDeg": "min 15.7, mean 30.0, max 51.9 (mean equals the path heading, so legs swing along the pelvis forward axis, which is why dropping Hips rotation is expected to read as forward running)",
+        "hipsDroppedStanceFootBackwardSpeedMps": "2.840 mean (left 2.811, right 2.869); this is the shipped condition",
+        "scaledToAvatarMps": 2.93
+      },
+      "visualNote": "In one automated side-view capture the run read as a forward run with a lean (not sideways); this is a single frame under software GL and R2 stays a QA visual check."
+    },
+    "r1Decision": {
+      "decision": "tuned walk and run speeds toward the clips, kept the timeScale clamp",
+      "config": {
+        "MOVEMENT.walkSpeed": 1.6,
+        "MOVEMENT.runSpeed": 3.8,
+        "ANIMATION.clipSpeed": {
+          "walk": 0.98,
+          "run": 2.93
+        },
+        "ANIMATION.timeScaleMin": 0.75,
+        "ANIMATION.timeScaleMax": 1.8,
+        "ANIMATION.runEnter": 2.6,
+        "ANIMATION.runExit": 2.3
+      },
+      "resultingPlaybackRates": {
+        "walk": 1.63,
+        "run": 1.3
+      },
+      "alternativeNotTaken": "spec defaults 2.2 and 4.8 would need rates 2.2 and 1.6 for walk/run vs clamp 1.8; a faster Mixamo walk clip would allow a higher walk speed (owner action)"
+    },
+    "assumptionsA2toA5": {
+      "A2": {
+        "verdict": "corrected",
+        "evidence": "useRapier().world is not the raw RAPIER.World but a lazy singleton Proxy over it: node_modules/@react-three/rapier/dist/react-three-rapier.esm.js:604-626 (createSingletonProxy) and :711 (useConst(() => createSingletonProxy(() => new rapier.World(...)))); typed as World at declarations/src/components/Physics.d.ts:79. Method calls through the proxy work (the production browser run steps and queries the world through it). Hazard: the provider frees the world in its unmount effect, then resets the proxy (esm.js:712-717), so a later access silently creates a brand new World. paused only skips the library's own step callback: esm.js:972-975 (if (!paused) step(delta)); prop declared at Physics.d.ts:239. The game never relies on library stepping.",
+        "consequence": "motor.dispose and collider removal are try/catch tolerant of a released world; the shell disposes the game handle before the scene unmounts."
+      },
+      "A3": {
+        "verdict": "confirmed for names, corrected for autostep behavior",
+        "evidence": "node_modules/@dimforge/rapier3d-compat/control/character_controller.d.ts: setUp:49, setApplyImpulsesToDynamicBodies:51, setSlideEnabled:90, enableAutostep:114 (maxHeight, minWidth, includeDynamicBodies), disableAutostep:118, setMaxSlopeClimbAngle:128, setMinSlopeSlideAngle:138, enableSnapToGround:148, disableSnapToGround:152, computeColliderMovement:168, computedMovement:172, computedGrounded:176; pipeline/world.d.ts createCharacterController:177, removeCharacterController:183. Behavior: enableAutostep does not trigger when the per-step desired horizontal movement is small (raw Rapier experiment: 0.0267 m per step fails, 0.03 works; at walking speed the capsule stalled about 2.5 s creeping up the 0.2 m step). Fixed with STEP_PROBE in player.ts; covered by the step test at walking speed in player.physics.test.ts. Slope limits, snap-to-ground, 0.35 m step blocking and the 30 vs 45 degree ramp all behave as designed in the tests."
+      },
+      "A4": {
+        "verdict": "confirmed",
+        "evidence": "player.physics.test.ts 'world.free() releases a character controller': after world.free(), calling computedGrounded() on the controller throws (its wasm pointer was released). The 20-cycle test creates and frees the world, motor and colliders 20 times and checks characterControllers.size 1 then 0 after motor.dispose, and bodies.len and colliders.len 0 after the collider disposer. Wasm memory growth itself was not measured."
+      },
+      "A5": {
+        "verdict": "confirmed",
+        "evidence": "RAPIER.init() from @dimforge/rapier3d-compat 0.14.0 initializes in Node under Vitest 5.0.3 (first test in player.physics.test.ts passes; all 15 physics tests run on the real engine). Also confirmed in the browser through the production build, whose game chunk bundles the compat build."
+      }
+    },
+    "lintFixes": [],
+    "bundleBoundaryProof": {
+      "buildExit": 0,
+      "routeLine": "/ 40.8 kB 125 kB (First Load JS), shared by all 84.5 kB, same as the M0 baseline",
+      "routeChunksFromAppBuildManifest": [
+        "static/chunks/webpack-c795bf6b10571d09.js",
+        "static/chunks/fd9d1056-9a055b3e58bd3a83.js",
+        "static/chunks/69-656757645c0e7f1d.js",
+        "static/chunks/main-app-848290b1d4abd24e.js",
+        "static/chunks/665-a1ba42c21d797fa4.js",
+        "static/chunks/app/page-194f05f686173229.js"
+      ],
+      "command": "grep -lE \"rapier|KinematicCharacterController\" <those six files>",
+      "output": "(no output), grep exit status 1; the same search for /game/clips/ also exits 1",
+      "chunksThatDoContainRapier": [
+        "static/chunks/080de1a6.*.js (rapier compat, about 2 MB)",
+        "static/chunks/577.*.js (@react-three/rapier)",
+        "static/chunks/282.*.js (game entry: world, motor, animator, clip URLs)"
+      ],
+      "howTheyAreReached": "The lazy TalkingAvatar chunk 432.*.js (it contains the shell and the string 'play / explore') loads them only inside the dynamic import: Promise.all([r.e(537),r.e(577),r.e(282)]); it matches none of rapier, KinematicCharacterController or /game/clips/.",
+      "notDoneHere": "Browser network check that scrolling the page without Play requests no game chunk (M2 gate)."
+    },
+    "arenaAccess": {
+      "steps": [
+        "In the worktree on Node 22: npm run dev (http://localhost:3000) or npm run build then npm start.",
+        "Open http://localhost:3000/ (explicit selector: http://localhost:3000/?arena=test, same arena in M1) in a WebGL-capable Chrome.",
+        "Wait for the avatar to load (the hero shows the model); the '[ play / explore ]' button then becomes enabled (it stays disabled while the voice status is connecting, while loading, or without WebGL).",
+        "Click '[ play / explore ]': the hero is replaced in the same canvas by TEST_ARENA with a follow camera behind the avatar. Controls: W/A/S/D or arrows move (camera-relative), Shift run, Space jump, drag on the canvas to look, R recenter.",
+        "Features to exercise: wall at z=0 (x -10 to -2), ramps 30 and 45 degrees at x -12 and -7 (z from 2), steps 0.2 m (x 0) and 0.35 m (x 5) at z 2 to 4, 1 m ledge at (0, 10), a 4 x 4 m pit at x 8 to 12, z 8 to 12 and the open arena edges (falling below y -10 respawns at the spawn at (0, -12)).",
+        "Click '[ exit ]' (top left) to return to the hero."
+      ],
+      "headlessProbe": "The same sequence was executed against the production build by an automated headless Chrome with software GL (frame rate about 12 fps there; not a performance figure). Real GPU, mobile and visual-quality checks are untested here (no browser tool for interactive review)."
+    }
+  }
+}

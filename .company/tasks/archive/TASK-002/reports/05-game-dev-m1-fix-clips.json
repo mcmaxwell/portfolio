@@ -1,0 +1,182 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "05-game-dev-m1-fix-clips",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Inspected the interrupted uncommitted player.ts and player.physics.test.ts edits and kept them after verifying them. Proved F2 red against the pre-fix player.ts in a temp copy (no stash, reset or checkout) and green on the fixed code. Isolated the F1 root cause by disabling autostep and the STEP_PROBE branch on the old code. Converted the six FBX sources with three FBXLoader in Node (no new dependency), measured the clips, then wired the clips, config, animator, motor impactSpeed, tests and ASSETS.md. Ran headless Chrome against the existing dev server on port 3100 for a visual smoke check. Ran lint and test in the worktree, and the build in a scratch copy so the running dev server's .next was not clobbered.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "F1 fixed: components/game/player.ts now enforces the 40 degree slope limit itself (limitSlopeClimb); the capsule never rises above 0.3 m on the 45 degree ramp from 0.5, 1 and 2 m at walk and run. F2 fixed: the new peak-height test fails 6 of 6 on f8da3ab player.ts and passes on the fix. The six FBX clips are converted (all under 100 KB) and wired: idle, walk, run, jump, fall, land with a new impact-speed hard-landing rule; walk and run speeds are back to 2.2 and 4.8 m/s. lint exit 0 and test exit 0 (93 tests). The build exits 1 in the live tree because of a TypeScript error in the graphics-owned components/game/avatarLook.ts (line 43, iterating saved.values()); with that one line patched in a scratch copy the build exits 0.",
+  "filesChanged": [
+    "components/game/player.ts",
+    "components/game/GameScene.tsx",
+    "components/game/animator.ts",
+    "components/game/clips.ts",
+    "components/game/config.ts",
+    "components/game/__tests__/player.physics.test.ts",
+    "components/game/__tests__/animator.test.ts",
+    "components/game/__tests__/clips.test.ts",
+    "scripts/strip-clips.mjs",
+    "scripts/measure-clips.mjs",
+    "ASSETS.md",
+    "public/game/clips/idle.glb",
+    "public/game/clips/walk.glb",
+    "public/game/clips/run.glb",
+    "public/game/clips/jump.glb",
+    "public/game/clips/fall.glb",
+    "public/game/clips/land.glb",
+    "assets-src/mixamo/walk.glb (deleted, superseded)",
+    "assets-src/mixamo/run.glb (deleted, superseded)"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/player.ts",
+      "components/game/GameScene.tsx",
+      "components/game/animator.ts",
+      "components/game/clips.ts",
+      "components/game/config.ts",
+      "components/game/__tests__/player.physics.test.ts",
+      "components/game/__tests__/animator.test.ts",
+      "components/game/__tests__/clips.test.ts",
+      "scripts/strip-clips.mjs",
+      "scripts/measure-clips.mjs",
+      "ASSETS.md",
+      "public/game/clips/*.glb (6 files)",
+      "assets-src/mixamo/walk.glb (deleted)",
+      "assets-src/mixamo/run.glb (deleted)"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npx vitest run components/game/__tests__/player.physics.test.ts (fixed player.ts)",
+      "exitCode": 0,
+      "result": "21 passed (6 new peak-height ramp tests green)",
+      "evidence": "Test Files 1 passed (1); Tests 21 passed (21)"
+    },
+    {
+      "command": "RED: git show f8da3ab:components/game/player.ts > components/game/player.oldtmp.ts; the new physics test copied with the import pointed at ../player.oldtmp; npx vitest run (both temp files deleted afterwards, git status shows no stray files)",
+      "exitCode": 1,
+      "result": "6 failed | 15 passed",
+      "evidence": "x never climbs the 45 degree ramp from 0.5 m away (walk) / 1 m (walk) / 2 m (walk) / 0.5 m (run) / 1 m (run) / 2 m (run); Test Files 1 failed (1); Tests 6 failed | 15 passed (21)"
+    },
+    {
+      "command": "ROOT CAUSE: same temp-copy method on the old player.ts with (a) the STEP_PROBE branch disabled, (b) autostep disabled, (c) both disabled",
+      "exitCode": 1,
+      "result": "6 of 6 ramp tests still fail in all three variants",
+      "evidence": "(a) 6 failed | 15 skipped; (b) 6 failed | 15 skipped; (c) 6 failed | 15 skipped. Neither autostep nor STEP_PROBE is the cause."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef' (components/avatar/useRealtimeChat.ts, pre-existing, not touched); LINT_EXIT=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "6 files, 93 tests passed",
+      "evidence": "Test Files 6 passed (6); Tests 93 passed (93); TEST_EXIT=0. Includes components/game/__tests__/avatarLook.test.ts from the parallel graphics stage."
+    },
+    {
+      "command": "npm run build in the live worktree (copy of the tree in the scratchpad, to keep the running dev server's .next intact)",
+      "exitCode": 1,
+      "result": "Compiled successfully, then type error in graphics-owned file",
+      "evidence": "./components/game/avatarLook.ts:43:21 Type error: Type 'IterableIterator<Saved>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher. (for (const s of saved.values()))"
+    },
+    {
+      "command": "npm run build in the scratch copy with only that one line changed to Array.from(saved.values()) (the worktree file was not touched)",
+      "exitCode": 0,
+      "result": "Compiled successfully; / route unchanged at 40.8 kB, 125 kB First Load JS",
+      "evidence": "BUILD_EXIT=0; Compiled successfully; / 40.8 kB 125 kB; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "node scripts/strip-clips.mjs",
+      "exitCode": 0,
+      "result": "6 clips written, all under 100 KB",
+      "evidence": "idle: 15528 B, 51 rotation channels, duration 8.3333 s; walk: 30956 B, 1.0333 s; run: 26756 B, 0.6333 s; jump: 26740 B, 0.6000 s; fall: 25300 B, 0.7000 s; land: 51696 B, 2.0000 s; each dropped {path:1, hips:1, missing:0}"
+    },
+    {
+      "command": "node scripts/measure-clips.mjs",
+      "exitCode": 0,
+      "result": "walk 1.535 m/s foot contact, run 4.858 m/s foot contact",
+      "evidence": "walk: loop period 1.0333 s (31 frames), foot-contact ground speed 1.535 m/s (median of 11/31 contact frames), Hips root-motion speed 1.675 m/s, root heading 0.0 deg off +Z; run: loop period 0.6333 s (19 frames), foot-contact ground speed 4.858 m/s (median of 8/19 contact frames), Hips root-motion speed 5.551 m/s, root heading -0.0 deg off +Z"
+    },
+    {
+      "command": "Headless Chrome via DevTools protocol against http://localhost:3100 (software GL): Play, idle, hold W, Shift+W, Space; screenshots reviewed",
+      "exitCode": 0,
+      "result": "all new clips load and play with natural poses; no pose twisting seen",
+      "evidence": "contact sheet of idle, walk, run and 6 jump frames reviewed by eye (visual smoke check only, not a performance or pixel-perfect verdict); the hard landing was not exercised in the browser"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "QA finding F1 is fixed: starting 1 m or less from the 45 degree ramp at both walk and run speed, the capsule feet never rise above 0.3 m, while the 30 degree ramp, the 0.2 m step at walking speed and the 0.35 m step block all still behave as before; the root cause (autostep, STEP_PROBE, or both) is identified with evidence.",
+      "status": "passed",
+      "evidence": "The tests 'never climbs the 45 degree ramp from 0.5 m / 1 m away (walk and run)' assert peak feet height < 0.3 m over a 6 s run and pass; the same suite's 30 degree ramp climb, 'climbs a 0.2 m step and is blocked by a 0.35 m step', snap-to-ground and wall tests still pass (21/21). Root cause: neither autostep nor STEP_PROBE. With STEP_PROBE disabled, with autostep disabled, and with both disabled, the old code still climbs the 45 degree ramp (6/6 tests fail in each variant). Rapier's setMaxSlopeClimbAngle is not enforced for the mostly horizontal movement with a slight downward stick; I did not isolate it further inside Rapier. The fix is in player.ts: limitSlopeClimb drops any rise over a contact steeper than the 40 degree limit (and under 80 degrees, so walls and step risers do not count) once it exceeds stepHeight above the last walkable ground, and slides the horizontal movement along the surface; the stepHeight allowance lets the capsule roll over step edges. One honest limit: the 2 m start in the full test arena is blocked by the arena wall, so the 2 m case also runs on a ramp-only layout (the same ramp-45 block and ground) to prove the ramp itself."
+    },
+    {
+      "criterion": "QA finding F2 is fixed: the ramp test asserts the peak feet height over the whole run from start positions at 0.5 m, 1 m and 2 m for walk and run, and the report shows the new test failing on the pre-fix code (red) and passing after the fix (green).",
+      "status": "passed",
+      "evidence": "Six tests (0.5, 1, 2 m x walk, run) track max feet height every tick for 6 s and also assert z < 2.4 (stayed at the foot). RED: against git show f8da3ab:components/game/player.ts in a temp copy, 'Tests 6 failed | 15 passed (21)', all six ramp tests failing. GREEN: on the fixed player.ts, 'Tests 21 passed (21)'. The old end-state assertion was removed; the test can now fail."
+    },
+    {
+      "criterion": "scripts/strip-clips.mjs reads the six FBX sources in assets-src/mixamo (Idle, Walking, Running, Jump, Falling Idle, Hard Landing) and writes rotation-only, Hips-free game clips idle, walk, run, jump, fall and land under public/game/clips, each under 100 KB, and clips.test.ts covers every produced file including a real GLTFLoader parse.",
+      "status": "passed",
+      "evidence": "The script (FBXLoader, no new dependency) wrote idle 15.5 KB, walk 31.0 KB, run 26.8 KB, jump 26.7 KB, fall 25.3 KB, land 51.7 KB, each with 51 rotation channels and Hips and translation tracks dropped. clips.test.ts asserts the exact file set, runs the structure checks and a real GLTFLoader parse via it.each over every produced file, plus per-file duration and key timing and a loop-wrap check; all pass in npm test."
+    },
+    {
+      "criterion": "The new Walking and Running clips are measured for ground speed and loop period; the report states which walk and run sources ship (new or previous) and why, the curved Run Forward Arc Left is no longer the shipped run if the new Running is straight, and MOVEMENT walk and run speeds are retuned toward 2.2 and 4.8 m per second as far as the 0.75 to 1.8 playback clamp allows, with the resulting values recorded.",
+      "status": "passed",
+      "evidence": "node scripts/measure-clips.mjs: Walking loop 1.0333 s (31 frames), foot-contact 1.535 m/s, root motion 1.675 m/s, heading 0.0 degrees; Running loop 0.6333 s (19 frames), foot-contact 4.858 m/s, root motion 5.551 m/s, heading 0.0 degrees (straight). The new Walking and Running ship, replacing the previous walk (about 0.95 m/s, needed rates above the clamp for 2.2 m/s) and the curved Run Forward Arc Left (about 2.84 m/s, 31 degrees off forward). Shipped clipSpeed: walk 1.54, run 4.86 (foot-contact values, since the shipped clips are Hips-free and foot slide is what shows). MOVEMENT walkSpeed 2.2 and runSpeed 4.8 are reached in full: playback rates 2.2/1.54 = 1.43 and 4.8/4.86 = 0.99, both inside 0.75 to 1.8. Recorded in components/game/config.ts and ASSETS.md. Caveat: the run foot-contact figure rests on 8 contact frames and the Hips root motion is 5.55 m/s, so the run clipSpeed has some uncertainty; QA should judge foot sliding visually."
+    },
+    {
+      "criterion": "Jumping, walking off a ledge, and dropping from a height play take-off, a looping fall after the configured air-time threshold, and a hard landing on touchdown when the fall exceeded the hard-landing threshold (soft landing otherwise), with animator.test.ts covering every new transition and threshold; the idle clip is used when standing still.",
+      "status": "passed",
+      "evidence": "FIRST_PLAY_CLIPS now loads all six clips. animator.test.ts covers: jump on jumpedThisStep, jump to fall at vy <= 0, fall from walk, run and idle only at airTime >= fallDelay (0.15 s, boundary at -0.01 and exact), a hard landing at impactSpeed >= hardLandSpeed from both jump and fall, a soft landing by speed below it, no landing decision while airborne, a normal jump (impact 6.0 m/s) soft versus a 1.3 m drop (7.2 m/s) hard, a ledge-walk-to-hard-landing sequence, and a full animator run with all six clips (standing still stays idle, jump, fall, soft land to idle, walk off a ledge, fall, hard land). Design change to flag: the hard-landing guard moved from airTime >= 0.35 s to impactSpeed >= 6.5 m/s (about a 1.06 m drop). With airTime, every normal 0.6 s jump would have played the 2 s hard landing. The motor now exposes MotorState.impactSpeed, held until the next airborne step so a multi-step frame cannot lose it; GameScene copies it into the animator frame. Not exercised in a browser: the hard landing visual (no drop above 1.06 m was driven); jump frames were smoke-checked."
+    },
+    {
+      "criterion": "ASSETS.md records each new source and shipped clip with source (Mixamo), the clip title, the provided-by-owner download date 2026-10-06, and the license note, and the superseded clips are either removed or marked unused.",
+      "status": "passed",
+      "evidence": "ASSETS.md has a row per FBX (Idle, Walking, Running, Jump, Falling Idle, Hard Landing) with origin mixamo.com, title, provided by owner 2026-10-06, license note 1, and frame counts; and a row per shipped clip with the same fields plus modifications and size. The superseded assets-src/mixamo/walk.glb and run.glb were deleted (byte copies of the hero files in public/animations, which stay untouched); the old stripped clips were overwritten; the hero rows and a 'Superseded and unused' note explain this."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes and output tails recorded, no file owned by the parallel graphics stage (components/game/GameAvatar.tsx and any new components/game/avatarLook file) or on the design section 9 do-not-touch list is modified, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "failed",
+      "evidence": "lint exit 0 and test exit 0 (93 passed). The build exits 1 in the live worktree through no change of mine: the graphics-owned components/game/avatarLook.ts:43 fails type-checking (for...of over a Map iterator needs downlevelIteration or a newer tsconfig target). With only that line patched in a scratch copy the build exits 0 (/ route 40.8 kB, 125 kB, unchanged), so my changes compile; the graphics stage must fix that line (for example Array.from(saved.values())). I did not modify GameAvatar.tsx or avatarLook.ts or any do-not-touch file (git status: only the files listed in filesChanged are mine; GameAvatar.tsx, avatarLook.ts and avatarLook.test.ts belong to the graphics stage). A grep for the em dash character and for machine-local home paths in the changed files found no match. No commit made."
+    }
+  ],
+  "assumptions": [
+    "The FBX Mixamo rest poses differ from the avatar's by up to about 26 degrees on some joints (Neck, Arm, Head), the same class of mismatch the design accepted for rotation retargeting; the smoke screenshots showed natural poses, so no rest-delta correction was added.",
+    "Avatar scale for the speed measurement is the avatar pelvis-to-foot height (0.896 m) over the FBX pelvis-to-foot height; the walk root-motion speed (1.675 m/s) is higher than the foot-contact figure (1.535 m/s), and the foot-contact number was used.",
+    "The Jump clip is trimmed to source frames 21 to 39 (push-off to touchdown, 0.6 s, matching the 0.6 s physics jump) because the motor leaves the ground instantly and the source has 0.5 s of crouch.",
+    "Hard Landing leaves the land state at 0.6 of its 2 s duration (1.2 s) per the existing design guard; the player can move during that time, and only running (>= 2.6 m/s) exits early.",
+    "The 2 m ramp start needs a ramp-only layout in the test because the arena wall overlaps that approach."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Slope limit is enforced in the motor (limitSlopeClimb), not by Rapier's setMaxSlopeClimbAngle, which does not block a 45 degree ramp under the downward stick movement; add as an addendum to ADR-001.",
+    "Hard landing is triggered by touchdown impact speed (MotorState.impactSpeed >= ANIMATION.hardLandSpeed 6.5 m/s, about a 1.06 m drop), replacing hardLandAirTime 0.35 s; update design section 5.3 accordingly.",
+    "Walk and run clips ship from the new Walking and Running FBX; MOVEMENT is back at 2.2 and 4.8 m/s, superseding the M1 R1 retune (1.6 and 3.8); addendum to ADR-003.",
+    "strip-clips.mjs reads FBX with FBXLoader and shifts trimmed loop clips by one frame so clip duration equals the loop period; one-shot clips can be range-trimmed (jump)."
+  ],
+  "lessonsProposed": [
+    "A test for a blocking behaviour must assert the peak over the whole run from several start offsets; an end-state assertion passes if the character climbs and steps off.",
+    "Prove a red test by running it against git show of the old file in a temp copy; prove a root cause by disabling each suspected mechanism on the old code, which here showed that neither suspect was the cause.",
+    "gltf-transform resample breaks when time accessors are shared by several samplers (run dedup after it) and when a one-key track is trimmed to zero keys.",
+    "Raising the run speed from 3.8 to 4.8 m/s made a 2 s diagonal wall-slide test run off the 8 m wall; time-based motion tests must be revisited when speeds change.",
+    "Run the production build in a scratch copy of the tree when a dev server shares the worktree's .next directory; the parallel stage's type error showed up only in the build, not in lint or vitest."
+  ],
+  "selfUsage": {
+    "filesRead": 22,
+    "approxLinesRead": 1800,
+    "approxLinesWritten": 650,
+    "retries": 1
+  }
+}

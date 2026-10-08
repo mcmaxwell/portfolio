@@ -1,0 +1,127 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "38-game-dev-xreview-fix",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Replaced the HARD_MIN push-out in the follow camera resolver with a clamp to the solved clear distance plus a near-plane body clip in sealed pockets; reworked the sealed-pocket tests and proved red on 3c888d6 by temporarily restoring only followCamera.ts from that commit via git show; fixed the three whitespace errors; drove F4 scenarios in headless Chrome on the dev server; ran the production regression on a build copy.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "The camera is now never beyond the solved clear distance for any input; in sealed pockets the avatar body is clipped via the near plane instead of pushing the camera into geometry. Whitespace errors fixed, F4 refuted in the browser at both viewports, and all gates plus the production regression pass.",
+  "filesChanged": [
+    "components/game/followCamera.ts",
+    "components/game/__tests__/followCamera.test.ts",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/game/__tests__/stance.test.ts",
+    "components/game/world/texturePaint.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/followCamera.ts",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/__tests__/stance.test.ts",
+      "components/game/world/texturePaint.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npx vitest run components/game/__tests__/followCamera.test.ts (followCamera.ts restored from 3c888d6)",
+      "exitCode": 1,
+      "result": "3 failed, 88 passed (expected red)",
+      "evidence": "x sealed pocket never beyond clear distance; x never beyond reported clear distance for every hit distance; x does not let the minimum distance be shrunk (updated to clear-distance rule); see test-on-3c888d6.log"
+    },
+    {
+      "command": "npx vitest run components/game/__tests__/followCamera",
+      "exitCode": 0,
+      "result": "2 files, 105 passed",
+      "evidence": "Test Files 2 passed (2) Tests 105 passed (105)"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "typecheck.exit 0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning (useRealtimeChat.ts)",
+      "evidence": "lint.exit 0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "30 files, 637 passed",
+      "evidence": "Test Files 30 passed (30) Tests 637 passed (637) Duration 253.87s under host load ~22"
+    },
+    {
+      "command": "npm run build (in tree copy)",
+      "exitCode": 0,
+      "result": "built",
+      "evidence": "build.exit 0, build.log tail lists route table"
+    },
+    {
+      "command": "git diff --check 710f034",
+      "exitCode": 0,
+      "result": "no whitespace errors",
+      "evidence": "empty output"
+    },
+    {
+      "command": "reg/run.sh (qpass x3, exit, perf on production build :3199)",
+      "exitCode": 0,
+      "result": "inside 0 occluded 0 all three; p95 16.7 ms; exit focus on Play",
+      "evidence": "<scratchpad>/xfix/reg/run.log"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The follow camera never places the camera beyond the solved clear distance for any input (the resolved parameter is always at most the clear distance reported by the collision query); when the clear distance is under the hard minimum in a sealed pocket, the avatar's own body is handled without entering geometry (for example by fading or hiding avatar meshes near the camera, or lifting toward the pivot), with the chosen approach documented in a code comment; a test with an always-immediate-hit query asserts the camera is not beyond the reported clear distance and fails on commit 3c888d6.",
+      "status": "passed",
+      "evidence": "followCamera.ts pullIn: t = max(reach, floor) with the HARD_MIN push-out removed, so the resolved parameter never exceeds sol.t (reach <= sol.t and floor <= sol.t). Sealed-pocket body handling: the near plane is raised to (camera distance + 0.35 m) whenever the clear distance is under HARD_MIN (0.45), clipping the avatar's own meshes around the camera without moving the camera into the collider; restored to 0.1 otherwise and at beginEntry/beginExit; documented in a code comment. New tests: always-immediate-hit query asserts distance to anchor <= 0 with near >= 0.3 and a finite orientation; a sweep over clear distances 0..1.5 with varying look input asserts distance <= clear + 1e-6; near plane restore test. Run on 3c888d6 version of followCamera.ts: 3 tests failed (log: <scratchpad>/xfix/test-on-3c888d6.log); with the fix 105 passed in followCamera*.test.ts and the full suite 637 passed."
+    },
+    {
+      "criterion": "git diff --check 710f034 reports no whitespace errors across the whole task diff including the working tree (TalkingAvatar.tsx trailing whitespace, stance.test.ts and texturePaint.ts blank lines at EOF fixed), and the TalkingAvatar.tsx change stays limited to whitespace.",
+      "status": "passed",
+      "evidence": "git diff --check 710f034 exit 0 (no output). TalkingAvatar.tsx: only line 61 trailing whitespace stripped (git diff 3c888d6 -w --stat shows no content change); stance.test.ts and texturePaint.ts: one EOF blank line removed each."
+    },
+    {
+      "criterion": "M4 QA F4 is reproduced or refuted in the browser at 390x844 and 1440x900 (orbit the camera to the tower passage back wall, then jump): if reproduced and fixable within followCamera.ts or bodyClearance.ts without changing layout or the camera's normal framing, it is fixed with a screenshot before and after; otherwise it is recorded as a known limitation with a one-line reason.",
+      "status": "passed",
+      "evidence": "Refuted (not reproduced) at 1440x900 and 390x844 (390x844 is a desktop-input viewport override, not touch emulation) on the dev server with the fix: six scenarios each (camera orbited to the back wall side via mouse drag, shoulder and opposite shoulder, W held, jump). Min distance from Head, Hips, Spine2, arms, forearms and hands to any tower or edge block stayed >= 0.29 m (never negative, so no arm crossing), camera min clearance 0.2-0.35 m, camera 0.84-1.8 m from the avatar (not 2.3 m). Logs and screenshots: <scratchpad>/xfix/h/*.log, <scratchpad>/xfix/h/out/f4-*.png. No fix needed, nothing before/after to show. Limitation: only the scenarios above were driven; real touch jump (jport) not rerun."
+    },
+    {
+      "criterion": "Short regression on the production build: tower passage camera sweep (centre, left, right) with 0 frames inside geometry, below ground or with head or torso hidden; the M1 drop and minimum-distance camera tests still pass; rAF p95 under 17.5 ms walking the campus at 1440x900; Exit with focus on Play.",
+      "status": "passed",
+      "evidence": "Production build copy served on :3199 (stopped by PID, copy deleted), 1440x900: tower passage camera sweeps centre/left/right: frames 853/860/856, inside 0, occluded (head to camera line blocked) 0, badIdx 0, minY 1.083/0.201/1.041 (ground clearance >= probe radius 0.2), min clearance 0.2/0.2/0.22 m. Torso/head hiding: near stays 0.1 outside sealed pockets (asserted in tests and in the F4 probe, nearMax 0.1). M1 drop and minimum-distance camera tests pass inside npm test (637 passed). rAF walking campus: p50 16.7, p95 16.7, p99 16.8, max 16.8 ms, over20 0 (3146 frames, 52 s), host load average about 26 at start and 20 at end (60 Hz rAF cap). Exit with focus on Play: exit-focus BUTTON:[ play / explore ], errs []. Evidence: <scratchpad>/xfix/reg/run.log."
+    },
+    {
+      "criterion": "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree); new content has no em dash or machine-local path; no commit is made.",
+      "status": "passed",
+      "evidence": "typecheck exit 0, lint exit 0 (1 pre-existing warning in useRealtimeChat.ts), npm test exit 0 (30 files, 637 tests), npm run build exit 0 in a copy of the tree (deleted afterwards). New content has no em dash or machine-local path (grep of added lines empty); no commit made, no git stash/reset/checkout used."
+    }
+  ],
+  "assumptions": [
+    "The sealed pocket never occurs on the campus, so the near-plane body clip is verified by unit tests only, not in the browser.",
+    "F4 driven with keyboard and mouse input in a 390x844 viewport override, not CDP touch.",
+    "rAF is capped at 60 Hz so p95 16.7 ms is a ceiling-limited value under host load ~20-26."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "A repeated clamp such as Math.max(reach, floor, HARD_MIN/len) can silently override the collision-solved distance; assert the camera distance against the distance the collision query reported, not against a fixed minimum.",
+    "In zsh, env \"$cfg\" with a variable holding several VAR=val words does not word-split; use a bash script with explicit args, otherwise harness options are silently ignored."
+  ],
+  "selfUsage": {
+    "filesRead": 18,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 260,
+    "retries": 1
+  }
+}

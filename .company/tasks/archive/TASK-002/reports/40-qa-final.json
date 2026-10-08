@@ -1,0 +1,143 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "40-qa-final",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "approved",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Standard-profile full QA of 3b285ff: own gates, production build in a copy on a private port, reused CDP harnesses plus new probes (lifecycle with mic counters, drop camera sweep, wall sweeps, destination panels on foot, touch speed), three mutation spot checks, host load recorded; server stopped by exact PID, copy and Chrome profiles removed.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "All six criteria pass with first-hand evidence on the production build at 3b285ff: gates green (637 tests, / 125 kB), no hard cut at 1440 and 1920, hero restored exactly after pause, tab-hide, cancel and 50 cycles with no mic access, 0 occluded or inside-geometry camera frames over about 12000 sampled frames, touch reaches all destinations in both orientations, failure rows recover, p95 16.7 ms, axe 0. Approve for delivery; four non-blocking findings (low or info), the stale comment at followCamera.ts:310 is still pending.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": "3b285ff",
+    "targetDiffFiles": [],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "qa-final/typecheck.exit 0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning (useRealtimeChat.ts 224:6)",
+      "evidence": "qa-final/lint.log"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "Test Files 30 passed (30); Tests 637 passed (637); Duration 228.50s",
+      "evidence": "qa-final/test.log (host load 8)"
+    },
+    {
+      "command": "npm run build (rsync copy, node_modules symlinked, copy deleted)",
+      "exitCode": 0,
+      "result": "/ 40.9 kB 125 kB; shared 84.6 kB",
+      "evidence": "qa-final/build.log"
+    },
+    {
+      "command": "git diff --check 710f034",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "run twice"
+    },
+    {
+      "command": "node bytes.mjs / entry.mjs (1440, 1920) / layout / cancel / rm (reduced and normal) / lifecycle on production build :3396",
+      "exitCode": 0,
+      "result": "0 game requests browsing; 224/226 frames, max gap 47/44 ms; hero restored exactly; gum 0 rtc 0",
+      "evidence": "qa-final/bytes.log entry1440.log entry1920.log layout.log cancel.log h/out/lifecycle.json"
+    },
+    {
+      "command": "node perf.mjs 1440x900 and 1920x1080; cycles.mjs N=50",
+      "exitCode": 0,
+      "result": "p95 16.7 ms, 0 frames over 20 ms; listeners 480, nodes 453, geoms 19, tex 66, progs 47 constant over 50 cycles; heap 17.19 to 19.04 MB decelerating",
+      "evidence": "qa-final/perf1440.log perf1920.log cycles50.log loadsB.txt (load 11.9-15.6)"
+    },
+    {
+      "command": "node failures.mjs (9 rows); a11y.mjs (axe-core 11 scans)",
+      "exitCode": 0,
+      "result": "all rows recover; 0 violations",
+      "evidence": "qa-final/failures.log a11y.log"
+    },
+    {
+      "command": "node loop.mjs; blocked.mjs; hint.mjs; panels.mjs; qpass.mjs x5; drop.mjs; f4.mjs x4 (keyboard/mouse)",
+      "exitCode": 0,
+      "result": "loop complete, storage-blocked loop complete; 0 inside, 0 occluded over about 12000 camera frames",
+      "evidence": "qa-final/loop.log blocked.log qp-*.log f4-*.log, h/out"
+    },
+    {
+      "command": "node nav2.mjs 390x844 and 844x390; speed.mjs (CDP touch emulation)",
+      "exitCode": 0,
+      "result": "3/3 destinations each orientation, panels open/close, run 5.29 vs walk 1.28 m/s",
+      "evidence": "qa-final/touch/out/portrait.out landscape.out"
+    },
+    {
+      "command": "mutation spot checks (3) via vitest in a throwaway copy",
+      "exitCode": 1,
+      "result": "each mutant made its target tests fail (4, 1, 4 failures); originals restored",
+      "evidence": "transcript; exit 1 is the expected failing mutant run"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "QA ran npm run typecheck, npm run lint, npm test and npm run build at 3b285ff with exit codes explicitly captured (build in a copy of the tree), output tails recorded (637 tests or more; / route First Load JS within 2 kB of 125 kB), git diff --check 710f034 is clean, the working tree has no uncommitted source changes, and ordinary portfolio browsing (full scroll, talking avatar idle) fetches no game-world, physics or locomotion-only assets and the game modules are not in the initial bundle (work-item criteria 6 and 9).",
+      "status": "passed",
+      "evidence": "Own runs at HEAD 3b285ff (git rev-parse): npm run typecheck exit 0 (typecheck.exit); npm run lint exit 0, 0 errors, only the pre-existing useRealtimeChat.ts 224:6 warning (lint.exit/lint.log); npm test exit 0 'Test Files 30 passed (30) Tests 637 passed (637)' Duration 228s at load 8 (test.exit/test.log); npm run build exit 0 in an rsync copy with node_modules symlinked: '/ 40.9 kB 125 kB', 'First Load JS shared by all 84.6 kB' (build.exit/build.log); copy and server removed. git diff --check 710f034 exit 0 (checked twice); git status --short shows no modified or staged tracked file, only untracked .company records. Network: bytes.mjs on the production build scrolled the full page (0-8000 px) with the avatar idle: 70 requests, browsingGameLike [] (bytes.log); App Router / initial manifest has 6 chunks, none contains game, Rapier, texture worker or progress-key code, the game chunk 78.*.js is not among them (python check on app-build-manifest.json); first-play fetch only after Play: 13 requests, 945 kB, public game assets 114 kB."
+    },
+    {
+      "criterion": "Entry and exit on the production build at 1440x900 and 1920x1080: Play is one continuous cinematic transition with no hard cut, staggered chrome fade, smooth canvas growth, camera move behind the avatar and unobtrusive loading, verified with a recorded frame sequence at the frame-rate budget; Exit reverses to the exact hero layout with focus on Play; reduced motion gives a short crossfade; Pause, repeated entry and exit (10 cycles), tab-hide auto-pause and load Cancel restore hero camera, idle avatar, page scroll and focus, and voice chat stays disconnected with the microphone released (work-item criteria 0, 5 and 13).",
+      "status": "passed",
+      "evidence": "Production build copy on :3396, own Chrome profiles in the stage dir (deleted by harness exit handlers, 0 leftover Chrome PIDs). entry.mjs screencast 1440x900: 224 frames over 3.75 s (about 60 fps), max frame gap 47 ms, world swap at frame 61 (gap 35 ms), chrome fades out over frames 0-58 (montage 01-entry-sequence-1440x900.jpg) while the avatar idles with an unobtrusive 'loading world... 90%' strip and [ cancel ], then the world fades in over about 10 frames (03-entry-world-swap-frames-61-64.png): no hard cut; 1920x1080: 226 frames, max gap 44 ms, same profile (entry1920.log, 02-entry-sequence-1920x1080.jpg). Luminance step at the swap is 10.5 (3.75x neighbour median) vs the accepted 6.8-7.0 (2.27x); judged by eye it is a monotone fade (11.5, 22, 26, 32, 37, 41, 44...), recorded as low finding F1. lifecycle.mjs (own probe, getUserMedia/RTCPeerConnection/realtime-session fetch counters): pause via button and Resume, Esc pause/resume, pause then exit, tab-hide (visibilitychange with hidden=true) auto-pause with the text 'It never resumes by itself' and no auto-resume on visible; after each exit the hero camera [0,-0.3,4.9,fov 32], hips, canvas rect [0,0,1430,900], scrollY 0, focus on '[ play / explo', status 'idle - press to connect', inert 0 and body static are identical to the pre-play snapshot; gum 0, rtc 0, realtime-session fetches 0 throughout (lifecycle.json): voice stays disconnected and the mic is never acquired. cancel.mjs: Cancel focused on the strip, Tab trap, afterCancel exp hero, focusOnPlay true, inert 0, body static (cancel.log). layout.mjs: 55 elements same keys, only 5 diffs, all the rotating AskHints text width and caret blink (AskHints.tsx:47), scrollY 0/0, ariaHidden 19/19, inert 0/0, focus on Play (layout.log). 50 consecutive Play/Exit cycles (cycles50.json, N=50 covers the 10-cycle requirement): all 50 exits ended with focus BUTTON:[ play / exp, errs []. Reduced motion: rm-reduced shows leaving 4 ms to 176 ms then game at 709 ms vs normal leaving 2-386 ms, game 703 ms (rm-reduced.log, rm-normal.log); matchMedia true."
+    },
+    {
+      "criterion": "Gameplay at 1440x900 with keyboard and mouse: walking, running, jumping, gravity, wall collision, slope and step handling and the collision-aware camera work; all three destinations are reachable on foot and show only data/index.ts and lib/persona.ts content with no invented claims and no testimonials; panels are keyboard accessible with focus handling; the full challenge loop (three cells, beacon hint before three, celebration, completion actions, Restart, reload persistence, storage blocked) completes; during drops, landings and camera drags at the tower passage, outer Lab wall and three other walls, 0 frames have the head or torso hidden or the camera below ground or inside geometry (work-item criteria 1, 2, 3, 14 and 15; criterion 15 is judged against the Boss-recorded refinement that in a sealed pocket under 0.45 m the camera stays within clear space and the near plane clips the avatar).",
+      "status": "passed",
+      "evidence": "Keyboard and mouse on the production build at 1440x900, real GPU. Walk, run (Shift), jump and wall/step/slope handling exercised by loop.mjs, panels.mjs and drop.mjs on foot through the lab door, workshop ramp (0.5 m platform) and tower steps/podium; grounding and jump eligibility also covered by the 637 tests. Camera: qpass sampler (head-to-camera line of sight against all 89 camera-blocking colliders, camera clearance, ground) over camera drags and pitch sweeps: tower passage 837 frames, Lab right outer wall 854, Lab back outer wall 853, Workshop left outer wall 855, east boundary wall 847, plus 10 run-and-jump drops off the 0.6 m tower podium and 0.5 m workshop platform with orbiting drags 7985 frames: inside 0, occluded 0, badIdx 0, min camera clearance 0.2 m, min camera-avatar distance 0.797 m (qp-*.log, drop run in stage output). f4 tower-passage scenarios (hold W, orbit left and right with jump, 390x844 viewport): 0 camera inside geometry (camMin 0.2-0.35 m), every bone (Head, Spine2, Hips, arms, hands) outside blocks (min Head 0.329 m), near plane 0.1 (f4-*.log, jump screenshots in h/out). Destinations reached on foot with the interact prompt and E: Project Lab prompt 'View project: NewsStocks.live', Skills Workshop 'View skills', Contact Tower 'View contact options'; panel text matches data/index.ts (NewsStocks title found at 1 line) and lib/persona.ts (email, site, LinkedIn, Adobe Certified Expert line); no testimonial strings (content.test.ts imports the placeholder testimonials and asserts none reaches the game). Panels: focus lands on [ close ], Escape closes, focus returns to the overlay (panels.mjs output). Challenge loop (loop.mjs): 0/3 to 3/3 by walking, guidance, 'Press E to Light the beacon', celebration, 'Challenge complete' dialog with explore more / view projects / contact, saved completed:true, reload persists 3/3 completed, Restart from pause resets to 0/3 and storage, recollect persists across reload, exit focus on play. hint.mjs CELLS=2: beacon hint 'Collect 1 more energy cell to power the beacon', E opens nothing. Storage blocked (blocked.mjs, localStorage throws SecurityError): full loop completes, no visible error text, errs []. Invalid saves (not JSON, wrong shape, newer version) fall back to 0/3 and overwrite on next save (failures.log). One 'waypoint-missed [0,6]' note in loop.mjs is a harness straight-line target through the 1x1 beacon base at (0,1.5) (beacon.mjs reproduces; avatar slides to x -0.39 and stops against the base face, a different route reaches it), not a game defect. Criterion 15 judged against the Boss refinement: 0 camera-inside frames, min distance never below 0.797 m in the campus, no sealed pocket on the campus."
+    },
+    {
+      "criterion": "Touch in labelled CDP emulation at 390x844 and 844x390: joystick walk and run, simultaneous camera drag, Jump and context Interact work, all three destinations including the Skills Workshop in landscape are reached in continuous runs, the touch jump in the tower passage shows no camera clipping of the avatar, controls are at least 44 px and clear of safe areas (work-item criterion 4 and carried M4 F5).",
+      "status": "passed",
+      "evidence": "CDP touch emulation (labelled: no physical phone) on the production build, real GPU, safe-area override set. 390x844 and 844x390 (nav2.mjs, closed-loop steering from renderer camera heading with simultaneous joystick plus look-drag): all three destinations reached in one continuous run per orientation including the Skills Workshop in landscape (carried F5): lab, workshop, tower each 'reached prompt: true', interact button tapped, panel opened and closed with its [ close ] button (portrait.out, landscape.out); speed probe: half deflection peak 1.28 m/s, full deflection 5.29 m/s (walk vs run), simultaneous camera drag changed heading 0.09 to -0.51 rad while the stick was held, touch Jump apex +0.95 m (speed.mjs). Control sizes: pause 99x44, exit 92x44, joystick 144x144, Jump 64x64, Interact 92x64, panel Close 98.8x44; all >= 44 px. Safe areas: portrait insets top 47 bottom 34: pause y 47, Jump bottom 770 <= 810; landscape insets left/right 47 bottom 21: pause x 47, Jump right edge 797 <= 797, Interact right edge 797, Jump bottom 329 <= 369. Tower passage touch jump (portrait and landscape, rounds 0 and 1): round 0 in the passage shows the full avatar with no geometry between camera and avatar or near-plane clipping (13-touch-portrait-tower-jump.png). Round 1, after walking out to the passage mouth (avatar z 17.0-17.3, camera 2.2 m away at y 3.1), the camera is close and the avatar's head is cropped off the top of the frame for the first two sampled frames of the jump (14-touch-portrait-passage-mouth-jump-close-framing.png); no geometry hides the head and nothing clips, so the criterion as worded (no camera clipping of the avatar) holds, recorded as low finding F2."
+    },
+    {
+      "criterion": "Failures and resources on the production build: asset download failure, physics init failure, WebGL unavailable, context loss and invalid save each leave the portfolio usable (work-item criterion 7); a 50-cycle Play and Exit run shows listeners, DOM nodes, geometries, textures and programs constant and the post-GC JS heap plateauing (carried M5 F2), with the numbers recorded; rAF p95 under 17.5 ms walking the campus at 1440x900 with host load recorded; axe-core reports 0 serious or critical violations on the HUD, pause menu, every panel and the completion panel.",
+      "status": "passed",
+      "evidence": "Production build copy, real Apple M1 Pro GPU (ANGLE Metal), 1440x900 DPR 1 headless Chrome. Failure rows (failures.mjs, 9 rows): asset download failure, game chunk blocked, physics init reject, physics init hang 20 s, WebGL unavailable, context loss each leave a usable portfolio (dialog or hero restored, focus on Play, nav link scrolls to 1883, inert/aria-hidden back to the 19 baseline, Play works again after unblock/Back); three invalid-save rows start at 0/3 with no visible error text. Dialog wording [ retry ] / [ back to portfolio ] (known). 50-cycle Play and Exit (cycles50.json, load 11.9 to 12.8): baseline listeners 480 and DOM nodes 453, geometries 19, textures 66, programs 47, canvases 1 identical on all 50 cycles (jsListeners 505, CDP nodes 884 constant); post-GC JS heap 17.19 MB at cycle 1, 17.93 / 18.57 / 18.74 / 18.86 / 18.99 MB mean per successive 10-cycle block, 19.04 MB at cycle 50, last eight cycles 18.96-19.04: decelerating to a plateau (finding F3, info). rAF walking the whole campus (perf.mjs, 52 s each): 1440x900 3119 frames p50 16.7 p95 16.7 p99 16.8 max 16.8 ms, 0 over 20 ms, host load 15.6 at start 13.8 at end; 1920x1080 3123 frames p95 16.7 max 16.8, load 13.8 to 11.9; render CPU p95 0.8 ms (perf1440.log, perf1920.log; vsync-capped 60 fps, headless). axe-core (a11y.mjs): 11 scans (HUD playing, whole document, pause menu, project 1-3, all-projects, skills, experience, contact, completion panel) 0 total violations and 0 serious or critical, errs [] (a11y.log)."
+    },
+    {
+      "criterion": "The automated tests cover game-state transitions, load cancellation, input normalization and blur release, grounding and jump eligibility, collectible uniqueness, completion and restart, storage fallback, entry and exit cleanup and project-panel focus handling, and QA spot-checks at least three of them for assertions that could fail (work-item criterion 8). QA states approve or reject with every finding given a severity and an owner, lists the known limitations it confirms, and notes the round-2 cross-review minor finding (stale HARD_MIN comment at components/game/followCamera.ts:310) as pending.",
+      "status": "passed",
+      "evidence": "Spot-checked by mutation on a throwaway copy (mutations reverted, worktree untouched, diff -q confirms restored): (1) player.ts jump eligibility 'sinceGrounded <= cfg.coyoteTime &&' replaced by 'true &&': player.physics.test.ts fails 4 tests ('does not jump in the air' expected true to be false; 'jumps ... never more than once' expected 2 to be 1; coyote window test); (2) input.ts blur release 'const onBlur = () => releaseAll();' replaced by a no-op: input.test.ts 'releases everything on window blur' fails (expected {x:0,y:1} to equal {x:0,y:0}); (3) progress.ts collectCell uniqueness guard and sort removed: progress.test.ts fails 4 tests ('collecting the same cell twice counts once', 'cells are kept sorted', reload persistence). Coverage map by grep of test files: state transitions session.test.ts, load cancellation gameLoader.test.ts and shell.test.tsx (Escape cancels while loading, 5 Play and Cancel cycles), input normalization/blur input.test.ts and TouchControls.test.tsx, grounding/jump player.physics.test.ts and stance.test.ts, uniqueness/completion/restart progress.test.ts, challenge.test.ts, challengeUi.test.tsx, storage fallback progress.test.ts and noWebgl.test.tsx, entry/exit cleanup shell.test.tsx (unmount mid-game disposes), project-panel focus panels.test.tsx and Dialog.test.tsx. All 637 pass. Verdict: approve. Round-2 cross-review minor finding is still pending: components/game/followCamera.ts:310 still reads 'Closest the camera ever gets to the avatar's upper body: just outside the 0.3 m capsule.' above HARD_MIN = 0.45 (sealed-pocket logic at lines 375-381); fix before the PR (comment-only, game-dev)."
+    }
+  ],
+  "assumptions": [
+    "Headless Chrome on an M1 Pro caps rAF at 60 Hz so p95 16.7 ms is vsync-bound; render CPU p95 0.8 ms is the headroom signal.",
+    "Cold-load gain and toe-into-prop corners were not re-measured; nothing visibly worse was seen.",
+    "Skills Workshop and tower reached by closed-loop scripted steering, not a human."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "FINDING F1 (low, owner game-dev): entry world fade first step is 10.5 luminance (3.75x neighbour median) vs the previously accepted 6.8-7.0 (2.27x); by eye still a monotone fade from dark over about 10 frames, not a pop. Not blocking.",
+    "FINDING F2 (low, owner game-dev): leaving the tower passage and jumping at its mouth, the camera sits 2.2 m away and the avatar head is cropped off the top for about two frames (portrait and landscape; the f4 desktop scenarios show no geometry occlusion). No clipping or occlusion, follow-up framing polish only.",
+    "FINDING F3 (info, owner game-dev): post-GC heap creeps 17.19 to 19.04 MB over 50 cycles, increments shrinking to about 0.013 MB per cycle; listeners, nodes, geometries, textures, programs exactly constant; accepted as a plateau, carried M5 F2 closed.",
+    "FINDING F4 (info, owner game-dev, pending): stale HARD_MIN comment at components/game/followCamera.ts:310 (round-2 cross-review minor) is still present; comment-only fix before the PR.",
+    "Confirmed known limitations: failure dialog wording '[ retry ]' and '[ back to portfolio ]'; no sound or quality-preset UI; no physical phone (CDP touch emulation only); terminal-style dialog wording. Not re-measured and not seen worse: cold-load gain (about 600 ms), toe up to 6 cm into props, faint interior wall streaks.",
+    "PR screenshots (qa-final/pr-shots): 01-entry-sequence-1440x900.jpg, 02-entry-sequence-1920x1080.jpg, 03-entry-world-swap-frames-61-64.png, 04-panel-project-lab-desktop.png, 05-panel-skills-workshop-desktop.png, 06-panel-contact-tower-desktop.png, 07-challenge-celebration-desktop.png, 08-challenge-complete-panel-desktop.png, 09-touch-portrait-390x844.png, 10-touch-portrait-project-panel.png, 11-touch-landscape-844x390.png, 12-touch-landscape-project-panel.png, 13-touch-portrait-tower-jump.png, 14-touch-portrait-passage-mouth-jump-close-framing.png, 15-failure-dialog.png",
+    "Harness tip: run next start from the copy with node_modules symlinked, and kill leftover harness Chrome helper PIDs by exact PID from ps filtered on the stage dir; entry.mjs needed W/H env to cover 1920x1080."
+  ],
+  "selfUsage": {
+    "filesRead": 40,
+    "approxLinesRead": 2500,
+    "approxLinesWritten": 400,
+    "retries": 1
+  }
+}

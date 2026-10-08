@@ -1,0 +1,251 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "14-qa-m1-r3",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read constitution, QA insights, stage contract, reports 11, 12, 13. Ran lint, test, build myself on Node 22 with explicit exit codes (build in a rsync copy with node_modules symlinked). Scripted diff-scope, em dash and machine-path scan. Red check: copied tree, swapped in the pre-fix land.glb and fall.glb kept by the game-dev stage, ran the stance tests. Re-ran the bake twice from the original taken from git (a891bc4) and compared bytes, then did my own glTF-Transform inventory comparison and a collar-height check of moved neck vertices. Browser: headless Chrome over the DevTools protocol (software GL) against the running dev server, held keys through Input.dispatchKeyEvent, state sampled on the page side on every rendered frame (foot and toe joint heights, camera position, camera-inside-block test against the test arena blocks, plus my own added head-to-camera line-of-sight test against every block, with a canvas capture of the offending frame). Drops: 4 m end drops and about 2 m side drops, walk and run, camera yaws 0, 90, 135, 270. Camera drag probes at 4 spots near the wall and ramps (8 yaws of 45 degrees each, fresh page per spot) plus a pitch sweep. Regression and hero via the earlier round scripts. Playwright MCP was not used (it only taps keys). Several harness runs failed to enter the game under heavy machine load (load average about 300); those were detected (avatar at origin, hero camera) and discarded or retried, and are not counted anywhere below.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "REJECTED, one criterion fails (criterion 4, F6). Gates are green (lint 0, 145 tests, build 0 with / at 125 kB), diff scope is clean, F1 hard landing is fixed (feet at 0.022 to 0.027 m for the whole land state, natural superhero crouch from side, behind and three-quarter views, new stance tests fail 6 of 16 on the pre-fix clips), the bake is byte-identical and equal to public/avatar.glb with no visible shirt dots, hero and Play/Exit cycles are clean. F6 is only half fixed: the camera is never inside a ramp or wall block on any frame of any valid drop or 8-yaw drag, but (a) on 4 to 13 rendered frames of a run-sideways drop off ramp-30 the avatar's head and torso are hidden behind the ramp-45 slab edge with the camera on the far side, 1 frame at the end drop, and (b) dragging the camera pitch to its lower limit puts the camera 3 cm below the ground surface for 17 of 45 frames even in the open field, so the floor disappears. Also noted: foot height peaks at 0.051 to 0.056 m on the one or two stand-up blend-out frames (1 to 6 mm over the 0.05 m figure), accepted as a nit.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "ASSETS.md",
+      "assets-src/mixamo/run.glb (deleted)",
+      "assets-src/mixamo/walk.glb (deleted)",
+      "assets-src/mixamo/*.fbx (owner sources, untracked)",
+      "components/game/GameAvatar.tsx",
+      "components/game/GameScene.tsx",
+      "components/game/animator.ts",
+      "components/game/clips.ts",
+      "components/game/config.ts",
+      "components/game/followCamera.ts",
+      "components/game/cameraProbe.ts (new)",
+      "components/game/player.ts",
+      "components/game/__tests__/{animator,clips,player.physics}.test.ts",
+      "components/game/__tests__/{stance,followCamera}.test.ts (new)",
+      "package.json",
+      "package-lock.json",
+      "public/avatar.glb",
+      "public/game/clips/*.glb",
+      "scripts/strip-clips.mjs",
+      "scripts/measure-clips.mjs",
+      "scripts/bake-avatar-look.mjs",
+      "scripts/lib/*",
+      "scripts/__tests__/*",
+      "vitest.config.mts",
+      ".company/ records"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node --version (nvm use 22)",
+      "exitCode": 0,
+      "result": "v22.23.2",
+      "evidence": "v22.23.2"
+    },
+    {
+      "command": "npm run lint (worktree)",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "LINT_EXIT=0; useRealtimeChat.ts 224:6 react-hooks/exhaustive-deps (file untouched by this task)"
+    },
+    {
+      "command": "npm test (worktree)",
+      "exitCode": 0,
+      "result": "8 files, 145 tests passed",
+      "evidence": "TEST_EXIT=0; Test Files 8 passed (8); Tests 145 passed (145)"
+    },
+    {
+      "command": "npm run build (rsync copy of the tree, node_modules symlinked)",
+      "exitCode": 0,
+      "result": "built; / First Load JS 125 kB unchanged",
+      "evidence": "BUILD_EXIT=0; / 40.8 kB 125 kB; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "git diff f8da3ab --stat for components/avatar, lib, data, app, next.config",
+      "exitCode": 0,
+      "result": "empty, Avatar.tsx and every design section 9 file other than public/avatar.glb unchanged",
+      "evidence": "no paths printed; full diff stat lists 20 tracked files, all named in reports 05, 10, 12, 13"
+    },
+    {
+      "command": "python scan of 25 modified or untracked text files outside .company for em dash and machine-local paths; grep of .company/tasks/active and new ADRs",
+      "exitCode": 0,
+      "result": "0 hits",
+      "evidence": "25 [] ; the only em dashes under .company are in older archived task and memory files not touched by this work"
+    },
+    {
+      "command": "red check: copy of tree with the pre-fix land.glb and fall.glb (hashes differ from the shipped ones), npx vitest run stance.test.ts",
+      "exitCode": 1,
+      "result": "6 failed | 10 passed (16)",
+      "evidence": "x fall: feet hang on the capsule bottom; x land: feet stay on the ground on every frame; x each foot within tolerance; x hips crouch; x lowest foot within tolerance for whole land state; x blend out sinks feet under 0.05. Same file on the shipped tree: 16 passed, exit 0"
+    },
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original <git show a891bc4:public/avatar.glb> --out a and b; cmp a b; cmp a public/avatar.glb",
+      "exitCode": 0,
+      "result": "A=0 B=0 CMP_AB=0 CMP_PUB=0",
+      "evidence": "baked 13941696 bytes {removedTriangles Head_Mesh 60, avaturn_look_0 170; tuckedVertices Body_Mesh 422, Head_Mesh 55}; original blob equals HEAD public/avatar.glb (same sha1)"
+    },
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original public/avatar.glb --out /dev/null",
+      "exitCode": 1,
+      "result": "baked input refused",
+      "evidence": "REBAKE_EXIT=1; refusing to re-bake: the input already carries the avatarLookBake marker"
+    },
+    {
+      "command": "my own glTF-Transform inventory original vs baked (counts, skin joints and IBM, animation channels, every primitive attribute, indices, morph targets, vertex moves with world y)",
+      "exitCode": 0,
+      "result": "counts identical (66 nodes, 11 meshes, 11 materials, 31 textures, 1 skin 54 joints, 1 animation 59 channels, 560 accessors); joints, IBM, animation identical; all 7 face/eye/teeth/tongue morph meshes identical; only Body_Mesh, Head_Mesh, avaturn_look_0, avaturn_look_1 POSITION or indices change",
+      "evidence": "Body_Mesh 422 verts moved max 10.9 mm (world y 0.984 to 1.567); Head_Mesh 55 verts moved max 3.0 mm (world y 1.498 to 1.588, no moved vertex above the 1.586 collar rim by more than 2 mm, none in the face); look_0 and look_1 sub-mm"
+    },
+    {
+      "command": "page-side sampler, 4 m end drops and about 2 m side drops, walk and run, foot and toe joints vs ground per rendered frame (valid runs only)",
+      "exitCode": 0,
+      "result": "both feet 0.022 to 0.027 m for the whole land state in every run; on the 1 to 3 idle+land blend-out frames the left foot reads 0.049 to 0.056 m",
+      "evidence": "end 4 m walk and run: land rows per-foot max 0.051/0.027 and 0.056/0.027, min 0.022; side run from 1.55 m: 0.051/0.027; hips world y 0.47 to 1.01 during land; clip chain fall, fall+land, land, idle+land, idle with no foot step"
+    },
+    {
+      "command": "page-side camera probe: camera inside any block (point test) and head-to-camera line against every block, valid drop runs",
+      "exitCode": 0,
+      "result": "camera inside a block on 0 frames in every valid run (min clearance 0.20 m, the probe radius); head hidden behind a slab on some frames",
+      "evidence": "run side drop yaw 0: occluded 13 frames and 4 frames in two runs (ramp-45, camera 1.77 to 1.86 m clear of it, head x -7.7 y 0.7 z 6.5, camera x -9.04 y 2.7 z 2.15); walk end drop yaw 0: occluded 1 frame (ramp-30, head z 10.4 y 3.36, camera z 5.6 y 5.4); yaws 90, 135, 270 and run end drop: 0"
+    },
+    {
+      "command": "page-side camera drag probe: 8 yaws of 45 degrees at wall-south, wall-north, ramp30-foot, ramp-gap (fresh page each), then pitch sweep in open field",
+      "exitCode": 0,
+      "result": "yaw drags: 0 frames inside, 0 occluded, min clearance 0.20 m; pitch to lower limit: camera y down to -0.03 (inside ground-a, which is blocksCamera false) on 17 of 45 frames in open field, 16 of 48 at the wall",
+      "evidence": "wall-s: 165 frames inside 0 occluded 0 minClear 0.20 (wall); ramp30-foot: 146 frames 0/0; gap: 133 frames 0/0; open field pitch phase camera y range -0.03 to 4.96, inside 17"
+    },
+    {
+      "command": "page-side ramp probe (phys.mjs) in the browser",
+      "exitCode": 0,
+      "result": "45 degree ramp not climbed, 30 degree ramp climbed",
+      "evidence": "ramp45 walk maxY 0.25 end z 2.11, run maxY 0.26 end z 2.13; ramp30 walk maxY 3.63, run maxY 4.00; wall maxY 0.011; step-020 maxY 0.20; step-035 maxY 0.003 (same as round 2)"
+    },
+    {
+      "command": "hero script: head follow, dance and wave gestures, talk, 3 Play/Exit cycles, console error capture",
+      "exitCode": 0,
+      "result": "all work, only the missing API key error",
+      "evidence": "head quat left [-0.036,0.021,-0.004,0.999] right [-0.063,0.164,-0.013,0.984]; fetch /api/realtime-session; rounds 1 to 3: exit button present in game, back on hero with 1 canvas and Play button, scroll 0; errs end ['E:Error: OPENAI_API_KEY is not set on the server.']"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint, npm test and npm run build were each run by QA on Node 22 with exit code 0 explicitly captured (the build in a copy of the tree), with output tails recorded (145 tests or more; / route First Load JS 125 kB unchanged).",
+      "status": "passed",
+      "evidence": "LINT_EXIT=0 (one pre-existing warning in untouched useRealtimeChat.ts), TEST_EXIT=0 with 8 files and 145 tests passed, BUILD_EXIT=0 in a copy with / at 40.8 kB and 125 kB First Load JS, shared 84.5 kB, all on Node v22.23.2."
+    },
+    {
+      "criterion": "The working-tree diff against f8da3ab was inspected: only files named in reports 05, 10, 12 and 13 changed, components/avatar/Avatar.tsx is unchanged, no design section 9 do-not-touch file changed other than the approved clothing bake of public/avatar.glb, and new content has no em dash or machine-local path.",
+      "status": "passed",
+      "evidence": "git diff f8da3ab --stat shows 20 tracked files (game files, scripts, tests, clips, ASSETS.md, package files, vitest config, public/avatar.glb) plus untracked new game, script and test files and owner FBX sources, all in the filesChanged lists of reports 05, 10, 12, 13. Empty diff for components/avatar, lib, data, app, next.config. Scan of 25 modified or untracked text files: 0 em dash, 0 machine-local paths; no em dash in new .company/tasks/active or ADR files."
+    },
+    {
+      "criterion": "F1 is confirmed fixed in the browser: after drops of about 1.6 m and 4 m at walk and run, both feet stay within 0.05 m of the ground during the land state, the crouch looks natural from side, behind and three-quarter front, the fall pose looks natural while airborne, and the blends into and out of land show no pop; the new stance tests fail on the pre-fix land.glb and fall.glb in a temp copy.",
+      "status": "passed",
+      "evidence": "Per-render-frame samples: feet 0.022 to 0.027 m for the whole land state after 3.7 m walk and run, 3.0 m walk, 1.55 m run drops (hips 0.47 to 1.01 m, smooth chain fall, fall+land, land, idle+land, idle). Caveat: on the final 1 to 3 stand-up blend-out frames (idle+land) the left foot reads 0.049 to 0.056 m, 1 to 6 mm over the 0.05 figure; this is the documented stand-up heel lift, no float or pop, so recorded as a nit (finding F9). The walk case of exactly 1.6 m was not hit (walk side drop left the ramp at about 1.0 m and landed hard from there); 1.0 m walk, 1.55 m run, 3.0 and 3.7 m walk, 3.7 m run were measured. Screenshots sheet-hardland-side, sheet-hardland-behind, sheet-hardland-front34 show a grounded one-knee crouch with a hand on the floor, and sheet-fall shows a natural fall tuck. Red check: pre-fix clips fail 6 of 16 stance tests (exit 1), shipped clips pass 16 of 16."
+    },
+    {
+      "criterion": "F6 is confirmed fixed: during the end and side drops off the 30 degree ramp, and while dragging the camera to at least four yaws near walls and ramps, the camera is never inside or behind a level block on any rendered frame and returns to full distance after walking clear.",
+      "status": "failed",
+      "evidence": "Inside: 0 frames in every valid drop run and in 8-yaw drags at 4 spots (min clearance 0.20 m), so the round 2 camera-in-slab defect is fixed. Behind: my head-to-camera line test finds the avatar's head and torso hidden behind a slab with the camera on the far side on 13 and 4 rendered frames in two run-sideways drops off ramp-30 at default yaw (ramp-45 slab edge, screenshots occ-s20r-y0-0 and occ-s20r-y0-2) and on 1 frame at the 4 m walk end drop (head peeking over the ramp-30 slab, screenshot occ-e4w-y0-0). A fresh fall-behind capture over the ramp end also shows only the slab in frame (fall-behind-0). Separately, dragging pitch to the lower limit puts the camera at y -0.03, 3 cm below the ground surface, on 17 of 45 frames in open field (ground blocks have blocksCamera false); the floor top face is culled and the avatar stands on a void (screenshot occ-drag-open). Full-distance return: after the walk-clear the camera-to-pivot distance matches the free-field baseline (4.29 m both) so that part passes."
+    },
+    {
+      "criterion": "No regression: idle, walk, run (straight), jump and soft landing look as approved in round 2 with fresh screenshots; F1 and F2 of round 1 (45 degree ramp) remain fixed; the hero talk, gestures, head follow and three Play/Exit cycles still work with no console errors other than the missing local API key.",
+      "status": "passed",
+      "evidence": "Fresh screenshots sheet-loco-a (idle, walk and run behind, walk side), sheet-loco-b (run side, walk and run three-quarter front), sheet-jump (stand jump peak then idle) look as in round 2; stand jump chain idle, jump, fall, idle with y peak 0.95 and soft landing without a land state. 45 degree ramp: walk maxY 0.25 and run maxY 0.26, end z 2.11 and 2.13 (round 2: 0.24, 0.25, z 2.11 and 2.12); 30 degree ramp climbs (maxY 3.63 and 4.00). Hero: head quat differs left vs right, dance and wave play, talk requests /api/realtime-session, 3 of 3 Play/Exit cycles return to hero with 1 canvas and scroll 0, console errors only OPENAI_API_KEY is not set."
+    },
+    {
+      "criterion": "The clothing bake is confirmed: hero at rest and during a gesture and the game at idle, walk and run show no visible shirt dots at normal size and none beyond imperceptible single pixels at 6x zoom of collar and sleeve hems (scanline overlay hidden for zoom shots); two bake runs are byte-identical and equal to public/avatar.glb; a fresh inventory comparison of the final baked avatar against the original shows morph targets, skin joints, inverse bind matrices, animation and face geometry unchanged, with any neck-vertex moves confined below the collar.",
+      "status": "passed",
+      "evidence": "Zoom shots with scanline overlay hidden (hero-collar-6x, hero-sleeve-6x, hero-no-scanlines-zoom) show a clean collar and sleeve hems, with at most one imperceptible dark pixel at the left end of the collar rim; gesture shot hero-gesture-dance-zoom (scanlines on) shows no shirt dots, the specks on the cheek are the face texture; game sheets show clean shirt at idle, walk, run. Bake: two runs from the git original cmp identical and cmp equal to public/avatar.glb (13941696 bytes); re-bake of the baked file refused with exit 1. Own inventory: counts, skin joints, IBM, animation, all morph target sets and all face, eye, teeth, tongue meshes identical. Neck moves: 55 Head_Mesh vertices, max 3.0 mm, world y 1.498 to 1.588 against collar rim 1.586; the highest 8 sit at rim height and move inward under the shirt, none in the face. Judged confined to the collar rim and below within 2 mm."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed.",
+      "status": "passed",
+      "evidence": "Findings F7, F8, F9 below carry all seven fields. The verdict is rejected because criterion 4 failed."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F7",
+      "file": "components/game/followCamera.ts and components/game/cameraProbe.ts",
+      "line": "followCamera.ts pullIn 76-90 (cast from the lagging pivot, not the avatar); cameraProbe.ts 26-46 (castShape with stopAtPenetration false)",
+      "severity": "important",
+      "trigger": "Run (or walk) sideways off ramp-30 at default camera yaw, from 2 m or higher, and land beside or under ramp-45; or walk off the ramp-30 end from 4 m at default yaw.",
+      "consequence": "The camera is not inside geometry but sits across a slab from the avatar, so the avatar's head and torso are hidden behind the slab edge for 4 to 13 rendered frames of the hard-landing crouch (1 frame at the end drop). The sphere cast starts at the pivot, which lags the avatar during a drop, and a cast that starts overlapping a slab is deliberately ignored, so the camera keeps full distance on the wrong side. This is the very frame range the user judges for the hard landing.",
+      "evidence": "occRows from the page sampler: ramp-45, head (-7.7,0.7,6.5), camera (-9.04,2.7,2.15), camera clearance 1.77 to 1.86 m; e4 walk: ramp-30 1 frame head (-11.94,3.36,10.41) camera (-12.47,5.39,5.63). Screenshots occ-s20r-y0-0, occ-s20r-y0-2, occ-e4w-y0-0 (canvas captured on the offending rendered frame). Other yaws (90, 135, 270) and the run end drop: 0 frames. Fix direction (not made by QA): also test the line from the avatar head or chest (not only the lagged pivot) to the wanted camera position and pull in on a hit, or start the cast at the avatar position when the pivot lags by more than the probe radius, then add a followCamera test with an occluding slab between avatar and camera.",
+      "rule": "Stage criterion 4 (camera never inside or behind a level block on any rendered frame); code-review checklist: behaviour must match the criterion"
+    },
+    {
+      "id": "F8",
+      "file": "components/game/followCamera.ts, components/game/config.ts, components/game/world/layout.ts",
+      "line": "followCamera.ts 98-105 (pitch clamp pitchMinDeg -20 in config.ts line 60); layout.ts 69-72 (ground blocks blocksCamera false)",
+      "severity": "minor",
+      "trigger": "Drag the camera up so the pitch reaches its lower limit while standing anywhere, including open ground far from any wall.",
+      "consequence": "The camera ends 3 cm below the ground surface (y -0.03, inside ground-a) for as long as the pitch is held, so the floor top face is back-face culled and the avatar appears to stand on a void with the level seen from underground. Not reached by yaw-only drags (0 frames).",
+      "evidence": "Open-field pitch sweep: camera y range -0.03 to 4.96, inside the ground block on 17 of 45 sampled frames; wall-north 16 of 48. Screenshot occ-drag-open. Fix direction: clamp camera y to at least ground height plus the probe radius, or include the ground in the camera blocker group.",
+      "rule": "Stage criterion 4 (camera never inside a level block on any rendered frame)"
+    },
+    {
+      "id": "F9",
+      "file": "public/game/clips/land.glb (stand-up tail) and components/game/animator.ts land to idle blend",
+      "line": "stance.test.ts 118-119 (documents the 0.052 peak, allows 0.06 for the tail)",
+      "severity": "nit",
+      "trigger": "Any hard landing, final 0.2 s while the land state blends to idle.",
+      "consequence": "The left foot reads 0.049 to 0.056 m above ground on 1 to 3 rendered frames, 1 to 6 mm over the 0.05 m figure in the criterion; it is the stand-up heel lift, imperceptible, no pop.",
+      "evidence": "Samples: idle+land left foot 0.056 (twice), 0.052, 0.051 in 6 of 7 runs, all other land frames 0.022 to 0.027. Accepted as passed; optional polish.",
+      "rule": "Stage criterion 3 (feet within 0.05 m); optional polish, not blocking"
+    }
+  ],
+  "screenshots": [
+    "sheet-hardland-side.png",
+    "sheet-hardland-behind.png",
+    "sheet-hardland-front34.png",
+    "sheet-fall.png",
+    "sheet-loco-a.png",
+    "sheet-loco-b.png",
+    "sheet-jump.png",
+    "sheet-jump-walk.png",
+    "occ-s20r-y0-0.jpg",
+    "occ-s20r-y0-2.jpg",
+    "occ-e4w-y0-0.jpg",
+    "occ-drag-open.jpg",
+    "occ-drag-wall-n.jpg",
+    "hero-collar-6x.png",
+    "hero-sleeve-6x.png",
+    "hero-no-scanlines-zoom.png",
+    "hero-gesture-dance-zoom.png",
+    "hero-first-frame.png",
+    "hero-gesture-wave.png"
+  ],
+  "screenshotLocation": "Session scratchpad, in the qa folder under a subfolder named m1-r3, inside its out subfolder. Harness scripts, logs and the red-check copy are in the same m1-r3 folder.",
+  "assumptions": [
+    "Behind a level block was read as a block lying between the camera and the avatar (view obstructed), which is what the line-of-sight probe measures; if the user intends only the camera position itself, F7 drops to minor and criterion 4 would then rest on F8 alone.",
+    "Level blocks for the probes are the test arena blocks from layout.ts, regenerated by me and identical to the game-dev stage's list.",
+    "The exact 1.6 m walk drop was not reproduced by the harness (it left the ramp at about 1.0 m); the 1.55 m run drop and 1.0 m, 3.0 m, 3.7 m walk and run drops were used instead, all with identical foot behaviour.",
+    "Harness runs that failed to enter the game under machine load were excluded; none of the reported numbers come from them."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Camera pull-in should be validated against avatar visibility, not only camera position: cast from the avatar (or add a head-to-camera line test) and clamp camera y above the ground, and add stance-style tests for both."
+  ],
+  "lessonsProposed": [
+    "A camera-inside-block probe alone passes while the avatar is hidden behind a slab; add a head-to-camera line-of-sight probe with a canvas capture on the offending frame so the evidence is the frame itself.",
+    "Harness scripts that spawn Chrome must close it on boot failure; failed boots left stale headless Chrome processes that raised load and caused further boot flakes.",
+    "Pitch persists across camera drag probes in one page, so per-spot yaw checks must use a fresh page or reset pitch, otherwise later spots inherit the pitch extreme."
+  ],
+  "selfUsage": {
+    "filesRead": 30,
+    "approxLinesRead": 1800,
+    "approxLinesWritten": 450,
+    "retries": 6
+  }
+}

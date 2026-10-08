@@ -1,0 +1,120 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "19-game-dev-m2-fix",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Wrote the shell regression test first and proved it red, then fixed the stale strip flag, eased the exit fov to a zero-velocity arrival, traced the uncaught rejection to the drei meshopt decoder and disabled it, and split failure messages into plain text plus developer detail; verified on the production build with the real-GPU headless Chrome.",
+  "actualModel": "claude-sonnet-5-5 (unverified; field normalized by the Boss)",
+  "summary": "All four QA findings are fixed. The regression test was red on the old code and is green now. In a production build, the focus probes, failure paths, exit traces and cycles all check out. Lint, tests and build exit 0. Nothing is committed.",
+  "filesChanged": [
+    "components/game/shell/useExperienceShell.ts",
+    "components/game/shell/LoadingOverlay.tsx",
+    "components/game/shell/gameLoader.ts",
+    "components/game/followCamera.ts",
+    "components/avatar/Avatar.tsx",
+    "components/game/GameAvatar.tsx",
+    "components/game/__tests__/shell.test.tsx",
+    "components/game/__tests__/gameLoader.test.ts",
+    "components/game/__tests__/followCamera.entry.test.ts",
+    ".company/tasks/active/TASK-002/play-transition.md"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/shell/useExperienceShell.ts",
+      "components/game/shell/LoadingOverlay.tsx",
+      "components/game/shell/gameLoader.ts",
+      "components/game/followCamera.ts",
+      "components/avatar/Avatar.tsx",
+      "components/game/GameAvatar.tsx",
+      "components/game/__tests__/shell.test.tsx",
+      "components/game/__tests__/gameLoader.test.ts",
+      "components/game/__tests__/followCamera.entry.test.ts",
+      ".company/tasks/active/TASK-002/play-transition.md"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed, 1 pre-existing warning",
+      "evidence": "lint.txt"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "17 files, 353 tests passed",
+      "evidence": "test.txt"
+    },
+    {
+      "command": "npm run build (copy of the tree)",
+      "exitCode": 0,
+      "result": "passed",
+      "evidence": "build.txt"
+    },
+    {
+      "command": "shell.test.tsx on the pre-fix code",
+      "exitCode": 1,
+      "result": "3 failed of 44",
+      "evidence": "red-before-fix.txt"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "F-M2-1 is fixed: after any Play in which the inline strip was shown (slow load past 400 ms, touch device code-only prefetch, or Retry after a failure), Exit never mounts the strip and focus ends on Play; a shell test that shows the strip, enters, exits and asserts the active element is Play fails on the current code and passes after the fix, and QA's focus probe (focusin and focusout log around Exit) shows Play as the only focus target in the browser for the slow-load and mobile-emulation cases.",
+      "status": "passed",
+      "evidence": "Root cause as QA found it: swap() called stripOut() but left stripShownAt set. The fix resets stripShownAt in swap() after stripOut(). I also made LoadingStrip focus Cancel on mount only when visible, as defense in depth. Regression tests in shell.test.tsx: the harness now renders the real LoadingStrip, and the two Exit tests (slow load, Retry then Exit) assert the strip stays off and Play has focus. A third test covers a strip that mounts faded out. Before the fix: 3 failed of 44 (red-before-fix.txt). After the fix: 44 of 44 pass. Browser (production build), probes stalestrip.mjs 900 ms, mfocus.mjs mobile and desktop, mfocus2 and mfocus3: strip shown during load = true, strip seen during Exit = false. The log after Exit shows only the Exit button losing focus, then Play gaining it. Final active element is BUTTON play / explore in every run. Output files: stalestrip.txt, mfocus-mobile.txt, mfocus-desktop.txt, mfocus2.txt, mfocus3.txt."
+    },
+    {
+      "criterion": "F-M2-2 is fixed: the exit fov and camera move arrive at the hero framing with zero velocity (ease-in-out or equivalent), play-transition.md section 4.1 is amended to match, and a per-frame fov trace and silhouette-height trace show no step at the arrival larger than the median step of the preceding 10 frames.",
+      "status": "passed",
+      "evidence": "followCamera.ts: the exit fov now uses easeInOutCubic, like the camera move. play-transition.md section 4.1 row 'camera fov 55 to 32' is amended to ease-inout with the reason. New unit test in followCamera.entry.test.ts: the final fov and position steps are smaller than the preceding ones. Browser fov trace, exit at scroll 0 (fovtrace.mjs, exit-s0-fovtrace.json): 33.665, 33.251, 32.907, 32.642, 32.431, 32.27, 32.158, 32.081, 32.034, 32.01, 32.001, 32, 32, 32. The step at arrival is 0, against a median of 0.047 over the preceding 10 steps. Scroll 300 gives the same: 0 against 0.051. Silhouette height per screencast frame, scroll 0 (silhouette-s0.txt): 574, 579, 583, 585, 587, 589, 590, 590, 590 and so on. The step at arrival is 0, against 1 to 2 px in the frames before it. The previous build ended at 526, 548, 589, 590."
+    },
+    {
+      "criterion": "F-M2-3 and F-M2-4 are fixed: no uncaught promise rejection is logged for any failure path (WebAssembly rejected, chunk blocked, clips blocked, context lost), and the failure dialog shows a plain-language sentence with no chunk number or URL while the technical detail stays available to developers (console or a details element).",
+      "status": "passed",
+      "evidence": "F-M2-3 cause: the 'Uncaught (in promise)' was not in the physics chunk. It came from drei useGLTF creating the three-stdlib MeshoptDecoder, which starts an un-awaited WebAssembly.instantiate. The hero Avatar triggered it on page load whenever WebAssembly was blocked. None of our GLBs use meshopt or draco (checked the files). Avatar.tsx (useGLTF and preload calls) and GameAvatar.tsx now pass useMeshOpt=false. Hero-only probe: errors before the fix 'Uncaught (in promise)', after 'none' (heroerr.mjs). Production build, failures-prod.mjs: physics (WebAssembly blocked) has 0 promise rejections. Its only error is React's own console.error 'Error: WebAssembly blocked by the test', the caught-error log from the error boundary, which is not an uncaught rejection. Network (chunks blocked), clips and context-lost show errors 'none' and 0 promise rejections. In dev, React still re-throws the caught Physics error as 'Uncaught Error' (not a promise). That is dev-only and was not present in the production build. F-M2-4: gameLoader.ts failed state now has a plain message per reason (network, physics, timeout) plus a separate detail field. The raw text goes to console.warn only. Production dialog text, network case: 'The game could not be downloaded. Check your connection, then retry, or go back to the portfolio.' Physics: 'The game engine could not start in this browser. Retry, or go back to the portfolio.' New gameLoader test asserts a raw 'Loading chunk 186 failed. (error: http://...)' never reaches message and is kept in detail and the console. Existing loader and shell tests were updated to the plain messages. Output files: prod-physics.txt, prod-network.txt, prod-clips.txt, prod-context.txt, physics-before.txt, physics-after.txt."
+    },
+    {
+      "criterion": "Every other Milestone 2 behaviour QA approved is unchanged: warm and cold Play recordings at scroll 0 still show no blank, T-pose or layout-jump frame and rAF p95 under 20 ms on the real GPU, Exit stays pixel-exact, and the cycles run shows identical listener and DOM counts.",
+      "status": "passed",
+      "evidence": "Measured on the production build with the real-GPU headless Chrome. Warm Play at scroll 0 (metrics-warm0.txt): rAF p50 16.7, p95 17.9, max 27.8 ms; blank frames 0; T-pose rows 0; section, about and canvas rects each 1 distinct value, scrollWidth constant. Cold Play at scroll 0: p95 17.3 ms, blank frames 0, T-pose rows 0, layout stable. Exit scroll 0: pixel diff outside hints and avatar 0.027 percent (283 of 1,034,729 px), the same as the QA baseline (283). Layout rects 1, scrollY 0, focus on Play, rAF p95 16.9, errors none. Exit scroll 300: scroll restored to 300, focus on Play, errors none, p95 18.4. Its 0.204 percent diff is canvas FLIP motion at the sampled moment, not a settled-state difference. The swap-pair silhouette extent change (633-798 to 632-803) is identical to the QA baseline recording. cycles.mjs (10 Exit and 5 Cancel cycles): listeners 506, DOM nodes 867 and net tracked listeners 481 identical at every cycle (nodes 868 once, on cancel cycle 2, back to 867 at the next); errors none. Gap: the Exit pixel diff and the cycles baseline were compared with QA's recorded numbers, not by re-running QA's old tree side by side."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "Exit codes captured: npm run lint = 0, npm test = 0 (17 files, 353 tests passed), npm run build = 0 (run in a copy of the tree, output in build.txt). Lint prints one pre-existing react-hooks/exhaustive-deps warning in useRealtimeChat.ts. I did not touch that file, to stay in scope. Grep over added lines and new test and spec content found 0 em dashes and 0 machine-local paths. Nothing was committed, staged, stashed, reset or checked out."
+    }
+  ],
+  "assumptions": [
+    "No physical touch device was used. The mobile case was Chrome emulation with coarse pointer and touch events.",
+    "The Exit pixel-exact result and the cycles baseline were compared with QA's recorded numbers. QA's old tree was not re-run side by side.",
+    "The meshopt decoder is now off for every useGLTF call. If a future asset is meshopt-compressed, it must opt back in explicitly.",
+    "In production the physics failure still logs one console.error from React (the error boundary's caught-error log). This is not an uncaught rejection. Monitoring that counts console.error would still see it.",
+    "The one pre-existing lint warning in useRealtimeChat.ts is unfixed because that file is outside this stage.",
+    "The failure-path probes block WebAssembly entirely, a synthetic condition. Real-device and real-network behaviour was not tested."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Disable the meshopt decoder (useGLTF useMeshOpt false) for every GLB load including the hero, because no asset uses meshopt and its default un-awaited WebAssembly instantiate logs an uncaught rejection."
+  ],
+  "lessonsProposed": [
+    "A shell test harness must render the real child components that have mount side effects (focus, timers). A hook-only harness hid the F-M2-1 focus theft.",
+    "Fix 'uncaught rejection' reports by finding the real origin first. Here a drei default (the meshopt decoder) in the hero caused it, not the physics chunk the stack seemed to point to.",
+    "When an exit tween ends with zero velocity, a pixel-diff metric around the swap is dominated by the chrome fade-in. Judge landing smoothness from fov and silhouette-height traces instead."
+  ],
+  "selfUsage": {
+    "filesRead": 0,
+    "approxLinesRead": 0,
+    "approxLinesWritten": 0,
+    "retries": 0
+  },
+  "bossNormalization": "The specialist returned a non-canonical report (summary, criteria, changedFiles, risks, unverified, evidence, proposedLessons). The Boss mapped it to AGENT_REPORT.md fields without changing any criterion evidence; selfUsage was not reported and is zeroed."
+}

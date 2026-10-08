@@ -1,0 +1,148 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "09-graphics-engineer-hero-look",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Moved avatarLook from components/game to components/avatar as a once-per-root, permanent, idempotent module. Made the covered-triangle mask pose independent (bindMatrix space). Hero schedules it at idle. Game calls the same function (no-op). Verified with headless Chrome CDP under SwiftShader, before/after builds in a copy, vitest, lint.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "The clothing fix now lives in components/avatar/avatarLook.ts (apply is once per root and never reverted). The hero schedules it at idle and the game's call is a no-op. A 3-cycle Play/Exit probe shows one shirt material, one padded map and stable uuids. Hero before/after at rest and in a dance gesture shows the collar, sleeve and hem specks gone with nothing else changed. The apply costs about 265 ms (cold run 973 ms) under software GL in dev, so it is deferred to idle. It is a single long task, not chunked.",
+  "filesChanged": [
+    "components/avatar/avatarLook.ts",
+    "components/avatar/__tests__/avatarLook.test.ts",
+    "components/avatar/Avatar.tsx",
+    "components/game/GameAvatar.tsx",
+    "components/game/avatarLook.ts (deleted)",
+    "components/game/__tests__/avatarLook.test.ts (moved)",
+    "vitest.config.mts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/avatar/avatarLook.ts",
+      "components/avatar/__tests__/avatarLook.test.ts",
+      "components/avatar/Avatar.tsx",
+      "components/game/GameAvatar.tsx",
+      "vitest.config.mts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "6 files, 99 tests passed",
+      "evidence": "Test Files 6 passed (6); Tests 99 passed (99)"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing warning in useRealtimeChat.ts:224 (exhaustive-deps)",
+      "evidence": "Warning: React Hook useCallback has a missing dependency: 'gestureRef'"
+    },
+    {
+      "command": "npm run build (in a scratch copy of the tree, with the fix)",
+      "exitCode": 0,
+      "result": "/ route 40.8 kB, First Load JS 125 kB",
+      "evidence": "\u250c \u25cb /  40.8 kB  125 kB"
+    },
+    {
+      "command": "npm run build (same copy, Avatar hook and import removed = before)",
+      "exitCode": 0,
+      "result": "/ route 40.8 kB, First Load JS 125 kB",
+      "evidence": "EXIT 0; \u250c \u25cb /  40.8 kB  125 kB"
+    },
+    {
+      "command": "npx tsc --noEmit -p .",
+      "exitCode": 0,
+      "result": "no output",
+      "evidence": "no type errors"
+    },
+    {
+      "command": "node heroidx.mjs (CDP probe, hero load then 3x Play/Exit)",
+      "exitCode": 0,
+      "result": "all 7 samples identical for the shirt",
+      "evidence": "avaturn_look_1 idx=6138 geo=ac9bb6 mat=b99036 side=0 po=true/-1/-500 map=f58c3d (x7); 1 shirt meshes, 1 material uuids, 1 map uuids; Body_Mesh idx=6162, avaturn_look_0 idx=3660 unchanged across cycles"
+    },
+    {
+      "command": "node herotime.mjs (instrumented, since removed)",
+      "exitCode": 0,
+      "result": "apply 973 ms (cold) and 264 ms in the idle callback, software GL, dev build",
+      "evidence": "lookMs 973.4 / 263.9; earlier synchronous split: mask about 135 ms, texture dilation about 135 to 157 ms (1024px)"
+    },
+    {
+      "command": "node herolook.mjs before|after (CDP: rest, mouse-left/right head quaternion, dance gesture, talk to me)",
+      "exitCode": 0,
+      "result": "head follows the mouse in both; voice start reaches the server",
+      "evidence": "head quat mouse left/right before -0.060,-0.106,0.002,0.993 | -0.066,0.167,-0.016,0.984; after -0.061,-0.110,0.003,0.992 | -0.066,0.171,-0.016,0.983; voice: status connection error, '! OPENAI_API_KEY is not set on the server.'"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The mechanism lives in a shared non-game module (for example components/avatar/avatarLook.ts) that the hero imports without importing anything from components/game, the ADR-006 import-boundary lint rule still passes, and the game no longer keeps a second copy of the logic.",
+      "status": "passed",
+      "evidence": "components/avatar/avatarLook.ts imports only three. Avatar.tsx imports ./avatarLook. GameAvatar.tsx imports @/components/avatar/avatarLook. components/game/avatarLook.ts is deleted. npm run lint exit 0 with the boundary rule active."
+    },
+    {
+      "criterion": "The hero applies the fix once to the shared avatar when it loads, and the game relies on that shared state or applies it idempotently, so entering and exiting the game neither duplicates nor reverts the fix; a probe over 3 Play/Exit cycles shows one shirt material copy, one padded texture and stable uuids.",
+      "status": "passed",
+      "evidence": "Avatar.tsx calls useEffect(() => scheduleAvatarLook(scene), [scene]). apply is a WeakSet-guarded no-op after the first run and has no restore. GameAvatar calls it with no restore on exit. Probe: hero load plus cycles 1 to 3 in game and after exit all show the same shirt geo, mat, map uuids, side=0 (front only) and po -1/-500, with exactly 1 shirt mesh, 1 material uuid and 1 map uuid. Unit tests cover idempotence and stable uuids."
+    },
+    {
+      "criterion": "Hero before and after screenshots at rest and during a gesture show the collar, sleeve and hem specks gone with no other visible change to the avatar, and voice-session start, gestures, lip-sync and head mouse-follow still work (checked in the browser, with the voice check limited to session start if no API key is available locally).",
+      "status": "passed",
+      "evidence": "before-rest, after-rest, before-gesture (dance), after-gesture, zoom variants and sheet-hero-rest.png / sheet-hero-gesture.png: collar, right sleeve and hem specks are present before and absent after, and pose, colours and framing are otherwise identical. Gestures play (dance). Head mouse-follow works (quaternion changes left vs right, matching before). Voice start: clicking talk to me reaches /api/realtime-session and shows a connection error because OPENAI_API_KEY is not set, so only session start was checked. Lip-sync was not exercised: the model has no mouth morphs, it is driven by volume, and no voice audio was available. Nothing in the lip-sync path was touched."
+    },
+    {
+      "criterion": "The added main-thread work at hero load (texture dilation and mask computation) is measured and reported in ms under software GL, and is deferred off the first paint (for example idle callback) if it exceeds 16 ms; the / route First Load JS size before and after is recorded.",
+      "status": "passed",
+      "evidence": "Total about 264 ms warm and 973 ms cold under SwiftShader in the dev build. Split measured on the synchronous version: mask about 135 ms, dilation about 135 to 157 ms. It exceeds 16 ms, so the hero now uses scheduleAvatarLook (requestIdleCallback, 1500 ms timeout) and it ran at 5 to 8.5 s after load, after first paint. To make deferral safe, the mask now measures coverage in bindMatrix space instead of the posed skeleton, with identical index counts (6162, 3660, 6138). The apply is still one long task. First Load JS for / is 125 kB before and after (route 40.8 kB both), because the module is tiny and was already in the game chunk."
+    },
+    {
+      "criterion": "Unit tests cover the shared module and the idempotent apply; npm run lint, npm test and npm run build exit 0; components/avatar/Avatar.tsx changes are limited to applying the fix; public/avatar.glb is untouched; new content has no em dash or machine-local path; and no commit is made.",
+      "status": "passed",
+      "evidence": "components/avatar/__tests__/avatarLook.test.ts: 99 tests total pass, including layering, idempotence, uuid stability, mask, front-face shirt copy, dilation and scheduling (defer, cancel, direct-apply wins). lint exit 0, test exit 0, build exit 0 (in a copy). Avatar.tsx diff is +5 lines (import, comment, one useEffect). git diff -- public/avatar.glb is empty. grep for the em dash and machine-local home paths in components/avatar returned nothing. No commit made. vitest.config.mts include extended to components/avatar tests."
+    }
+  ],
+  "assumptions": [
+    "Pre-fix hero 'before' frames were produced by temporarily disabling the Avatar effect, restored afterwards; temporary timing instrumentation was also removed (grep TEMP clean).",
+    "vitest.config.mts needed a one-line include for components/avatar tests, which is outside the listed files but required for the unit tests to run.",
+    "Dev-build software-GL timings overstate real-GPU-machine CPU cost; the apply is CPU only so a real device should be faster, but that was not measured."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Record in ADR-002: the shared avatar's look fix lives in components/avatar/avatarLook.ts, is applied once and permanently per cached scene, and the game must not revert it. Mask is computed in bindMatrix space, so it is pose independent and can be deferred."
+  ],
+  "lessonsProposed": [
+    "Measure coverage rays in a skinned mesh's bindMatrix space instead of the posed skeleton, so heavy mask work can be deferred without a bind-pose precondition.",
+    "When two modes share one cached three.js scene, apply fixes permanently and idempotently (WeakSet) instead of apply/restore pairs.",
+    "Gesture before/after shots: use a button click plus a 2.5 s wait; 1.3 s after click still shows the idle pose."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 330,
+    "retries": 1
+  },
+  "screenshots": [
+    "before-rest.png",
+    "after-rest.png",
+    "before-rest-zoom.png",
+    "after-rest-zoom.png",
+    "before-gesture.png",
+    "after-gesture.png",
+    "before-gesture-zoom.png",
+    "after-gesture-zoom.png",
+    "before-gesture2.png",
+    "after-gesture2.png",
+    "after-voice.png",
+    "sheet-hero-rest.png",
+    "sheet-hero-gesture.png"
+  ],
+  "screenshotsDir": "hero/ under the stage graphics scratch directory"
+}

@@ -1,0 +1,116 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "26-graphics-engineer-hair-halo",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Reproduced the halo on the real GPU (headless Chrome over CDP, own --user-data-dir deleted on exit) by pinning a render-time camera near the head. Isolated the cause with one-variable material toggles, picked the smallest game-owned material-state fix, applied it with restore for the shared hero material, then verified before/after crops, same-session A/B pixel diffs, hero pixels, program growth, rAF p95, and lint, test and build.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Cause: the avatar's hair is a stack of overlapping alpha-blended cards that the glTF loader leaves with depthWrite off, so a card behind repaints the front one in index order and the outer layer shows as a pale grey translucent shell (seen in top-down and high views over lit floor). Fix: while the game shows the avatar, set the hair material to depthWrite true with alphaTest 0.04 and restore the loader state on unmount (new hairMaterial.ts, called from GameAvatar.tsx). The hero does not show the halo and is unchanged, so no hero fix is proposed.",
+  "filesChanged": [
+    "components/game/GameAvatar.tsx",
+    "components/game/hairMaterial.ts",
+    "components/game/__tests__/hairMaterial.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/GameAvatar.tsx",
+      "components/game/hairMaterial.ts",
+      "components/game/__tests__/hairMaterial.test.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing react-hooks/exhaustive-deps warning in components/avatar/useRealtimeChat.ts (not touched)",
+      "evidence": "lint=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "23 files, 527 tests passed (includes 3 new hairMaterial tests)",
+      "evidence": "Test Files 23 passed (23); Tests 527 passed (527)"
+    },
+    {
+      "command": "npm run build (in an rsync copy of the worktree with a symlinked node_modules, copy deleted afterwards)",
+      "exitCode": 0,
+      "result": "Next.js production build compiled and prerendered",
+      "evidence": "build_exit=0; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "node progs.mjs (real GPU: program count at Game started, then after 30 rAF frames)",
+      "exitCode": 0,
+      "result": "growth 0",
+      "evidence": "{\"heroPrograms\":12,\"atGameStarted\":47,\"after30\":47,\"frames\":30,\"growth\":0} (run twice, identical)"
+    },
+    {
+      "command": "node perf.mjs 1440x900 (campus walk, real GPU)",
+      "exitCode": 0,
+      "result": "p95 16.8 ms",
+      "evidence": "frames 3126, p50 16.7, p95 16.8, p99 16.8, max 33.3, over20 1, progs 47, errs []"
+    },
+    {
+      "command": "W=1920 H=1080 node perf.mjs (campus walk, real GPU)",
+      "exitCode": 0,
+      "result": "p95 16.7 ms",
+      "evidence": "frames 3116, p50 16.7, p95 16.7, p99 16.8, max 16.8, over20 0, progs 47, errs []"
+    },
+    {
+      "command": "node hair-state.mjs (hair material state in hero, in game, after exit)",
+      "exitCode": 0,
+      "result": "restored for hero",
+      "evidence": "hero before play dw:false at:0; in game dw:true at:0.04; after exit click dw:false at:0"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The cause of the hair halo is identified with evidence (for example hair alpha blending or alpha test against fog, sky or shadow passes, sorting, premultiplied alpha, or depth-write settings), including whether it appears in the hero view, with before screenshots of both at 3x zoom.",
+      "status": "passed",
+      "evidence": "Hair is avaturn_hair_0 (BLEND, single-sided, 729 vertices, MeshStandardMaterial); the glTF loader leaves it transparent with depthWrite false. The hair texture itself is not pale (RGB of partial-alpha texels is near black, mean 10..57 by alpha band), so the halo is not texture bleed. Reproduced on the real GPU at the passage end (pitch 75 degrees, 1.2 m, same spot as QA): halo present. One-variable toggles in the same scene: hair hidden gives a normal-size bald head (the shell is hair geometry); premultipliedAlpha, fog off, castShadow off, alphaToCoverage, envMapIntensity 0 and metalness 0 / roughness 1 all leave the halo; depthWrite true removes it, alphaTest 0.5 (which also writes depth) removes it. Pixel row through the halo: floor (69,116,139) becomes (59,94,103) with depthWrite off, while with depthWrite on the same pixels are dark hair (5,2,2) or half-floor (36,57,69). Mechanism: without depth writes the stacked cards are drawn in index order, so a back card repaints the front card and the outer layer reads as a pale translucent shell under the game lights. Hero: no halo in the hero front view (3x/5x crop hero-hair-before-after-5x.png, hbefore-hero-0.png) and none from a top-down camera over the hero (left half of chk-pass-top.png, where the game had not started). The halo is game-lighting specific. Before crops at 3x: p2-pass-idle-top.png, p2-pass-walk-top.png, p2-pass-walk-high.png (game, left panels) and hero-hair-before-after-5x.png (hero, left panel); QA originals pass-end-occ-0.jpg and hug-lab-side-occ-0.jpg show the same shell."
+    },
+    {
+      "criterion": "The fix is applied in game-owned code or the hair material state set by the game, the halo is gone in top-down, side and behind views at idle and walk on the real GPU (3x zoom before and after crops), hair edges look natural against the sky, ground and walls, and if the hero shows the same halo the smallest hero fix is proposed as a decision rather than made.",
+      "status": "passed",
+      "evidence": "Fix: components/game/hairMaterial.ts setGameHair() (called from the existing layout effect in components/game/GameAvatar.tsx, restore in its cleanup) sets depthWrite true and alphaTest 0.04 on the transparent hair material only; eyelash and eye-AO blends are untouched. No edits to followCamera, campus, content, panels, player, components/avatar or the bake. Before/after 3x crops (300x225 source, left before, right after) on the real GPU: p2-open-{idle,walk}-{top,high,side,side2,behind,front}.png (open ground, sky and hedge behind) and p2-pass-{idle,walk}-{top,high,side,side2,behind,front}.png (passage, walls and lit floor behind); overview sheets sheet2-0.png to sheet2-5.png. The shell is visible in the before panels of pass idle top, pass walk top and pass walk high and gone in all after panels; side, side2, behind and front show clean edges against hedge, grass, blue wall, floor and light shaft, and the soft nape wisps are kept (alphaTest 0.3 and 0.1 were rejected as they stair-stepped the nape). The hero does not show the halo, so no hero fix is needed; see Decision proposed. Caveat: halo is only faint or absent in the default 4.5 m follow view over grey floor; the near views were produced with a render-time camera override, not the shipped camera."
+    },
+    {
+      "criterion": "Shadows on and under the avatar, the clothing bake result and the avatar's colours are unchanged (zoomed crops), static hero pixels are unchanged, rAF p95 stays under 17.5 ms, and the entry warm-up still compiles every program before the swap (0 program growth on the first 30 game frames).",
+      "status": "passed",
+      "evidence": "Same-session A/B (fix on, fix on, fix off, fix on at identical frame state, ab.mjs and abdiff.cjs): outside the head box fix-vs-off mean abs diff is within the fix-vs-fix idle noise in all valid views (open top 0.024 vs noise 0.020, open side 0.075 vs 0.056, open behind 0.031 vs 0.057, open wide 0.024 vs 0.015, pass side 0.099 vs 0.036, pass behind 0.020 vs 0.045, pass wide 0.021 vs 0.021), i.e. shirt, skin, shoes, ground shadow and world are unchanged; only the hair region differs. The pass-top view of that script was a bad camera (ceiling lintel in front, frozen frame) and is not used. Hero: 240x640 avatar region before vs after mean abs diff 0.19, 0.11, 0.19 versus hero self-noise 0.47 to 0.63 (hero-hair-before-after-5x.png shows identical hair); the hair material reads dw:false at:0 in the hero before play and again after exit, so hero pixels are unchanged. rAF p95 16.8 ms at 1440x900 and 16.7 ms at 1920x1080 over the full campus walk (p99 16.8, 1 frame over 20 ms at 1440). Program count 47 at Game started and 47 after 30 frames, growth 0 (twice). The clothing bake is not touched (public/avatar.glb unchanged; no bake script run). Untested: low-tier quality preset, mobile GPU, Safari or Firefox; Chrome on the macOS GPU only."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "lint=0, test=0 (527 passed), build_exit=0 in an rsync copy (copy removed after). grep for the em dash and machine-local or temp paths over hairMaterial.ts, hairMaterial.test.ts and GameAvatar.tsx returned nothing. No commit, stash, reset or checkout was run; changes are uncommitted in the worktree. Dev server on port 3100 left running (PID 88403, not started by me). All Chrome profiles were created under a path the harness deletes on exit; none of mine remain (one m3fix-profile directory from another stage was left alone). A tsc --noEmit run flags two TS2802 iteration errors in components/game/__tests__/panels.test.tsx, which is game-dev owned and not touched; next lint and build pass."
+    }
+  ],
+  "assumptions": [
+    "alphaTest 0.04 is the right cutoff: 0.1 and 0.3 removed the soft nape wisps, 0 would let empty texels write depth and risk holes where later-sorted world transparents sit behind the head.",
+    "Near-head views for QA-equivalent reproduction used a render-time camera override (gl.render wrapper) at 1.1 to 1.8 m, because the shipped follow camera no longer pulls in that close at the passage end.",
+    "Hair is identified by material name containing hair (avaturn_hair_0_material); a future avatar with a differently named hair material would need the matcher updated."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Hero: no change proposed. Hero shows no halo from its camera or from above, and the fix is game-scoped with restore. Offer only if QA sees it in the hero: set depthWrite true and alphaTest 0.04 on the hair material in components/avatar/Avatar.tsx, which would change hero pixels and needs the hero owner."
+  ],
+  "lessonsProposed": [
+    "glTF BLEND materials load with depthWrite false; layered hair cards then repaint each other in index order and show as a pale shell under coloured game lights. Use depthWrite true plus a tiny alphaTest (0.04) rather than a hard cutout, and restore on unmount when the material is shared with another scene.",
+    "Toggle exactly one material property per shot in one session and start from the captured original state; resetting to assumed defaults silently changed depthWrite and confounded the first experiment.",
+    "Do not start overlapping harness runs on the same CDP port: a timed-out foreground command keeps running in the background and later runs fail to launch; wait for it or use a distinct port and verify the game announced start before shooting.",
+    "Separate run-to-run animation noise from a change: take fix-on, fix-on, fix-off in one session and compare against the fix-on pair."
+  ],
+  "selfUsage": {
+    "filesRead": 22,
+    "approxLinesRead": 1500,
+    "approxLinesWritten": 450,
+    "retries": 2
+  }
+}

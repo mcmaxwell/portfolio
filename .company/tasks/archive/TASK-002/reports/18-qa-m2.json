@@ -1,0 +1,242 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "18-qa-m2",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Reran lint, tests and builds myself on Node 22 (online build and a network-denied build, each in its own copy of the tree). Ran a production server from a copy and drove it with headless Chrome 154 over CDP on the real GPU (Apple M1 Pro, ANGLE Metal; the WebGL renderer string was read back and a SwiftShader control was run separately). Reused the dev harness only as a starting point and wrote my own probes: exit exactness (DOM signature plus whole-frame pixel diff), title and silhouette frame analysis, stale-strip and focus probes, mobile focus probe, font pixel diff against a Google-font build, and a mutation check of the defect fix in a throwaway copy. M1 regression used the round-3 harness re-pointed at the real GPU. Every Chrome launched was closed; one stale browser left by a regression script was killed. All servers I started were stopped; the dev server on 3100 was left running.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Rejected on one reproducible defect: whenever the inline loading strip was shown during Play (any load slower than 400 ms: cold visit, touch device, Retry), the later Exit mounts an invisible strip whose Cancel button steals focus, so focus ends on the page body instead of Play. Everything else I tested passes: lint 0, 348 tests, both builds 0 with / at 125 kB, bundle boundary clean, transition smooth and judged by eye and frame diff, exit exact, failure paths, pause, mic release, cycles, M1 regression and font. The Boss weak spots: the 14 percent title is invisible in practice, and the exit swap itself is invisible (swap pair diff 0.68 vs neighbour median 2.6); the 1.9x pair the dev saw is the last accelerating fov step before the swap, not the swap.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "app/globals.css",
+      "app/layout.tsx",
+      "ASSETS.md",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/GameAvatar.tsx",
+      "components/game/GameScene.tsx",
+      "components/game/animator.ts",
+      "components/game/entry.ts",
+      "components/game/followCamera.ts",
+      "components/game/session.ts",
+      "components/game/shell/gameLoader.ts",
+      "components/game/shell/useExperienceShell.ts",
+      "components/game/world/WorldView.tsx",
+      "components/game/world/layout.ts",
+      "plus the untracked new files named in reports 15 and 17 and the three font files"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint (worktree, Node 22.23.2)",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing react-hooks/exhaustive-deps warning in the protected useRealtimeChat.ts line 224",
+      "evidence": "lint.log tail: 'lint rc=0' then the single warning"
+    },
+    {
+      "command": "npm test (worktree)",
+      "exitCode": 0,
+      "result": "Test Files 17 passed (17), Tests 348 passed (348)",
+      "evidence": "test.log tail"
+    },
+    {
+      "command": "npm run build, online, in a fresh copy of the tree (node_modules symlinked)",
+      "exitCode": 0,
+      "result": "route / 40.8 kB, First Load JS 125 kB, shared 84.5 kB",
+      "evidence": "build-online.log"
+    },
+    {
+      "command": "npm run build under a macOS sandbox profile denying all network, fresh copy; control: curl to fonts.googleapis.com in the same sandbox",
+      "exitCode": 0,
+      "result": "build rc=0, / 125 kB, zero ENOTFOUND or googleapis lines; control curl exit 6 (could not resolve host)",
+      "evidence": "build-offline.log, deny.sb result noted in the same run"
+    },
+    {
+      "command": "bundle proof: scan the 6 JS files listed for / in app-build-manifest.json, and grep all chunks for rapier, createCharacterController and the clips path",
+      "exitCode": 0,
+      "result": "0 hits in the / chunks (webpack, 53a2bd92, 870, main-app, 539, page); rapier appears only in 533, 328 and c522081e which are on-demand",
+      "evidence": "bundle-prod.txt"
+    },
+    {
+      "command": "request proof on the production copy: load /, scroll the whole page, no hover (bundle.mjs)",
+      "exitCode": 0,
+      "result": "69 requests, 10 js files, none of the game, rapier or clips chunks; after hover c522081e, 533, 328 and 6 clips load",
+      "evidence": "bundle-prod.txt"
+    },
+    {
+      "command": "seq.mjs warm and cold at scroll 0 and 300, then metrics.mjs, real GPU 1440x900, production build",
+      "exitCode": 0,
+      "result": "warm: S at C+426 and C+423, entry done C+1947 and C+1945; cold: S C+722, entry done C+2244 and C+2246; rAF p95 17.5 to 17.8 ms, one 28 ms frame at the swap per run; 0 T-pose rows, 0 blank frames, scrollWidth constant, section and about rects constant",
+      "evidence": "metrics-warm0.json, metrics-cold0.json, metrics-warm300.json, metrics-cold300.json and the seq text files"
+    },
+    {
+      "command": "exit2.mjs 0 and 300 (DOM signature of every body element, whole-frame pixel diff with canvas hidden and animations frozen)",
+      "exitCode": 0,
+      "result": "399 nodes before and after; scroll 300: 0 of 1,296,000 px differ at threshold 0 and 24; scroll 0: 0 px differ excluding the typewriter hint box (1,102 px inside it); scrollY restored; html and body styles clean",
+      "evidence": "exit2-s0.json, exit2-s300.json"
+    },
+    {
+      "command": "loading.mjs cancel, escape, resume (game chunk and clips held with Fetch interception)",
+      "exitCode": 0,
+      "result": "strip absent at C+380, present at C+450 and opaque by C+900; Cancel focused; cancel to hero 413 ms and Escape 420 ms; resume: 0 chrome rows replayed",
+      "evidence": "loading.txt, loading-escape.txt, loading-resume.txt, strip-1500.png"
+    },
+    {
+      "command": "reduced.mjs and seqreduced.mjs (prefers-reduced-motion emulation); mobile.mjs (390x844 touch emulation)",
+      "exitCode": 0,
+      "result": "reduced: 0 frames with any transform or translate, S at C+194..219, camera snaps to fov 55, no auto-walk, exit to hero 361 ms; mobile: chip row, touch controls fade in, tap skip reaches fov 55, joystick moves avatar 3.7 m, jump button 64x64, rotate gives aspect 2.164",
+      "evidence": "reduced.txt, mobile.txt, mont-red0.jpg"
+    },
+    {
+      "command": "pause.mjs, voice.mjs, failures.mjs for clips, chunk blocked (production chunk and dev chunk), WebAssembly rejected, context lost, no WebGL",
+      "exitCode": 0,
+      "result": "Escape and P pause, 30 frames per 500 ms playing and 0 paused, tab hide pauses with Resume dialog, mic track ended 9 ms after click and peer connection closed; every failure shows a dialog with Retry or Back and the hero is usable afterwards; WebAssembly case logs one uncaught promise rejection",
+      "evidence": "pause.txt, voice.txt, fail-clips.txt, fail-network-prod.txt, fail-network-dev.txt, fail-physics.txt, fail-context.txt, fail-nowebgl.txt"
+    },
+    {
+      "command": "stalestrip.mjs 900 against the unmodified worktree dev server, then against a throwaway copy with one added line (stripShownAt.current = null in swap)",
+      "exitCode": 0,
+      "result": "unmodified: stale strip mounted during Exit, focus log shows Play then Cancel then body, active element BODY; patched copy: no strip, active element Play. The defect is real and the one-line fix is load-bearing",
+      "evidence": "fail text printed by stalestrip.mjs; mfocus.mjs, mfocus3.mjs for the mobile reproduction"
+    },
+    {
+      "command": "cycles.mjs 10 5 and cycles.mjs 30 0 on the production copy, GC before each reading",
+      "exitCode": 0,
+      "result": "listeners 506 and DOM nodes 867 or 868 identical across all cycles; heap 12.54 MB baseline, 15.42 after cycle 1, 16.51 after cycle 10 (plus 7.1 percent vs cycle 1), cancel cycles 16.49 to 16.56; 30 cycles: 15.41, 16.12 (5), 16.46 (10), 16.68 (20), 16.81 (30), plus 2.1 percent from cycle 10 to 30; hero camera, head follow, idle, wave and talk enabled at cycles 1, 5, 10 and after cancel",
+      "evidence": "cycles-prod.json, cycles-30-prod.json, cycles-prod.txt, cycles30-prod.txt"
+    },
+    {
+      "command": "M1 regression: phys.mjs and anim.mjs and fallshot.mjs from the round-3 harness, real GPU, dev server",
+      "exitCode": 0,
+      "result": "wall blocked at x -5.95; step 0.20 climbed (maxY 0.2015), step 0.35 blocked (0.0095); ramp45 maxY 0.25 walk and 0.24 run; ramp30 climbs (3.87, 4.0); stand jump peak 0.95 then soft idle; sideOff0.8m chain walk+fall, fall+land, land, idle+land, idle as round 3; all state chains match round 3",
+      "evidence": "phys.log, anim.log, m1-sheet.png"
+    },
+    {
+      "command": "fontdiff.mjs: Google-font build copy (layout.tsx from HEAD) versus the working tree, 1440x900 hero and #about, canvas hidden and animations frozen",
+      "exitCode": 0,
+      "result": "about: 4,923 px differ, max channel delta 17, 0 over 32; hero excluding the typewriter box: 171 px over 8, 0 over 32, max 29; two woff2 preloaded and loaded before first contentful paint (font end 33 ms, FCP 96 ms)",
+      "evidence": "font-google-hero.jpg, font-local-hero.jpg, font-google-about.jpg, font-local-about.jpg"
+    },
+    {
+      "command": "diff-aware scans: files changed vs the two reports, do-not-touch list, added-line em dash and machine path scan of tracked diffs and new files",
+      "exitCode": 0,
+      "result": "44 changed paths, all named in reports 15 and 17 or the M1 ADR files; none of the design section 9 do-not-touch files changed; 0 em dash and 0 machine-local paths in added lines or new files",
+      "evidence": "changed.txt"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint, npm test and npm run build were each run by QA on Node 22 with exit codes explicitly captured (build in a copy of the tree, once online and once with network blocked), output tails recorded (348 tests or more; / route First Load JS within 2 kB of 125 kB), and the bundle proof holds: the / route chunks contain no rapier, character-controller, game scene or /game/clips/ references, and loading and scrolling / without hovering Play issues no game chunk, rapier or clips request.",
+      "status": "passed",
+      "evidence": "Lint rc 0, test rc 348 of 348 in 17 files, online build rc 0 and network-denied build rc 0 (control curl failed with exit 6 inside the same sandbox, zero font-fetch errors in the build log). Both builds print / 40.8 kB, First Load JS 125 kB. Bundle proof: the six chunks listed for / in the app build manifest contain none of rapier, KinematicCharacterController, createCharacterController, the clips path, GameScene, WorldView or followCamera; rapier lives only in on-demand chunks 533, 328 and c522081e. Request proof: loading and scrolling the full page with no hover made 69 requests and 10 js files, none of them those chunks or clips; hover then fetched them. Files: build-online.log, build-offline.log, lint.log, test.log, bundle-prod.txt."
+    },
+    {
+      "criterion": "The working-tree diff against afd4f0f was inspected: only files named in reports 15 and 17 changed, design section 9 do-not-touch files are unchanged, hero edits in TalkingAvatar.tsx are limited to the transition shell as described in report 15, and new content has no em dash or machine-local path.",
+      "status": "passed",
+      "evidence": "git status lists 44 paths: every one is named in report 15 or 17 (the three font files and layout.tsx and ASSETS.md from 17) or is an M1 ADR file already accepted. Avatar.tsx, useRealtimeChat.ts, AskHints.tsx, persona.ts, gestures.ts, data/index.ts, app/page.tsx, app/api, public assets, next.config and postcss are untouched. TalkingAvatar.tsx diff read in full: edits are the chrome transition wrappers and inert handling, canvas wrapper (fixed or absolute), scanline move, strip, dialog and live region, and the HERO constants (values equal the old literals: camera 0,-0.3,4.9, fov 32, lights 1.1, 0.7, 1.6, 0.5; the added fog far 1000 is disclosed in report 15). One trailing-whitespace line only. Scan: 0 em dash in added lines and new files, 0 machine-local paths. changed.txt."
+    },
+    {
+      "criterion": "The Play transition was recorded (DevTools protocol screencast or per-frame captures at 1440x900 on a real GPU, both warm after hover and cold without hover, at scroll 0 and a scrolled offset) and judged by eye and by frame diff: every page chrome element fades and slides out with a visible stagger, no layout jump, no hard cut, no blank frame, no T-pose or bind-pose frame, no flash of the hero layout, the avatar turns and walks into the world while the camera settles behind, the HUD fades in, input is enabled by about 2 s after click, and rAF frame time p95 is under 20 ms during the transition; the Boss's noted weak spots (title still about 14 percent opaque at C+360, exit swap pose step 1.9x neighbours) are judged visible or invisible with evidence.",
+      "status": "passed",
+      "evidence": "All four recordings (warm0, cold0, warm300, cold300; Apple M1 Pro real GPU, Chrome 154, 1440x900, production build) reviewed as contact sheets and measured. Chrome fades with visible stagger (status, gestures, nav gone by C+360, title and buttons last), monotonic opacity, section and about rects constant (1 distinct), scrollWidth constant 1430, no blank frames, 0 T-pose rows, ground colour at S matches stage colour. Avatar yaw pi at S, turn complete before S+570, walk 2.17 m by S+1500, camera widens from fov 32 while settling behind, HUD first visible S+1022 and opaque S+1272. Warm input ready at C+1945 to 1947, cold at C+2244 to 2246 (about 2 s, 0.25 s slower cold). rAF p95 17.5 to 17.8 ms in all four runs; exactly one 28 ms frame at the swap per run. Scrolled starts: wrapper slides 300 px smoothly, the page fades 18.9 to 9 brightness over about 250 ms with no snap. Weak spot 1, title at C+360: its brightest pixel falls 182, 91 (C+334), 48 (C+368), 23 (C+384), 7 equals background (C+401), a last step of 16 levels on glyph pixels only; judged invisible. Weak spot 2, exit swap: the swap pair diff is 0.68 against a neighbour median of 2.6 and silhouette bounds are identical across the swap (590 px high before and after), so the swap is invisible; the larger pair (6.56 vs about 2.6, 2.5x in my measure) is the last camera fov step, whose size grows about 7 percent per frame and then stops dead at X+700 because the spec requires ease-in on the exit fov (play-transition.md 4.1). That arrival is a visible but spec-conforming snap; see finding F-M2-2 (low). Files: metrics-*.json, mont-warm0-a.jpg, mont-warm0-b.jpg, mont-swap.jpg, mont-cold0.jpg, mont-cold300.jpg, exit-swap-a.jpg."
+    },
+    {
+      "criterion": "Exit restores the exact pre-Play layout, scroll position (0 and scrolled) and focus on Play with a whole-frame pixel diff; the inline loading strip appears only when assets are held past 400 ms, Cancel and Escape return to the hero, and the sequence resumes without replaying the chrome exit; reduced motion yields a crossfade with no travel; the mobile emulation shows touch controls fading in and a tap skipping the entry.",
+      "status": "failed",
+      "evidence": "PASSES: layout and scroll are exact. DOM signature of all 399 body nodes identical after Exit at scroll 0 and 300 except the typewriter text and caret blink in the hint box; whole-frame pixel diff with canvas hidden and animations frozen is 0 of 1,296,000 px at scroll 300 and 0 px outside the hint box at scroll 0; scrollY restored to 0 and 300; html and body styles clean. Strip absent at C+380, present at C+450, Cancel click and Escape return to hero in 413 and 420 ms with the same rects and scroll, resume replays 0 chrome rows. Reduced motion crossfades with 0 transform frames and the camera snaps (spec 5). Mobile emulation shows controls fading in and the tap skip reaching fov 55. FAILS: the focus-on-Play requirement does not hold after any Play in which the strip was shown. Reproduction (stalestrip.mjs 900, and mobile.mjs/mfocus.mjs for the touch case): hold the load past 400 ms or use a touch device, enter the game, press Exit; the focus log reads Play focused, then Cancel focused (an invisible strip mounted), then BODY, and the final active element is the body. Hover-warm runs, which the dev harness used, never show the strip and so never hit it. Root cause and fix are in finding F-M2-1; mutation check in a copy with one added line gives active element Play and no strip. Files: stalestrip text output, mfocus3.mjs output, mobile.txt, loading*.txt."
+    },
+    {
+      "criterion": "Pause (Escape, P), Resume, tab-hide auto-pause, Play from an active voice session releasing the microphone, and the four failure paths (chunk blocked, clips blocked, WebAssembly rejected, context lost) behave as report 15 claims, each reproduced by QA, and the regular portfolio is usable after every failure.",
+      "status": "passed",
+      "evidence": "pause.txt: Escape and P show the Paused dialog with Resume focused, frameloop never, 0 frames per 500 ms, camera static while paused, second Escape and Resume click resume, held W is ignored after resume, tab hide pauses and stays paused on return. voice.txt: fake mic live, click to track ended 9.2 ms, peer connection closed, stays off after Exit. Failures reproduced: chunk blocked (production and dev chunk names) shows 'Could not start the game' with Retry and Back and Retry enters the game; clips blocked same; WebAssembly rejected shows the dialog and Back restores the hero, gestures clickable, scroll works; context lost shows 'Graphics were interrupted', frameloop never, Back restores hero and the context is live; no WebGL leaves Play disabled and the portfolio scrollable. The Retry then Exit path ends with focus on the body, which is the F-M2-1 defect, not a usability loss. Minor: the WebAssembly case also logs one uncaught promise rejection (F-M2-3, low)."
+    },
+    {
+      "criterion": "Ten Play and Exit cycles and five Play and Cancel cycles leave listener and DOM node counts identical and heap growth after warmup within a few percent, with the numbers recorded; hero camera, gestures, head-follow and talk still work afterwards.",
+      "status": "passed",
+      "evidence": "Production copy, GC before each reading, cycles-prod.json: listeners 506 at baseline and after every cycle; DOM nodes 867 throughout (868 once after a cancel, back to 867 next cycle); heap baseline 12.54 MB, after cycle 1 15.42, cycle 5 16.17, cycle 10 16.51 (plus 7.1 percent vs cycle 1, plus 2.1 percent from cycle 5 to 10), cancel cycles 16.49 to 16.56 (flat). A 30-cycle run (cycles-30-prod.json): 16.46 at 10, 16.68 at 20, 16.81 at 30, plus 2.1 percent over the last 20 cycles, so growth plateaus. Judged warmup, not a leak; the cycle 1 to 10 figure of 7 percent is above 'a few percent' and is recorded as such. Hero camera at 0,-0.3,4.9, head follow delta 0.64 to 0.67, idle animating, wave raises the hand 0.5 m, talk enabled at cycles 1, 5, 10 and after the last cancel. These cycles were all warm (no strip), so they do not cover the F-M2-1 path."
+    },
+    {
+      "criterion": "No Milestone 1 regression: ramp, steps, wall, walk, run, jump, fall and hard landing behave as approved in QA round 3 (spot checks with screenshots), and the self-hosted font renders identically (pixel diff of hero and a content section against the Google-font build, antialiasing noise only) with both woff2 files preloaded and no flash of unstyled text.",
+      "status": "passed",
+      "evidence": "Round-3 harness rerun on the real GPU: wall blocks at x -5.95 (round 3 -5.97), 0.20 step climbed and 0.35 step blocked, 45 degree ramp maxY 0.25 walk and 0.24 run (round 3 0.25 and 0.26), 30 degree ramp climbs (3.87 and 4.0 vs 3.63 and 4.0), stand jump peak 0.95 and soft idle landing, walk jump 0.95, 4 m walk-off falls then recovers, 0.8 m side drop plays fall+land, land, idle+land. State chains equal round 3 for every scenario. Screenshot sheet m1-sheet.png (idle, walk, run, side run, jump, walk-off, side fall) looks as approved. Font: Google-font build copy compared with the self-hosted build: about section 0 px over 32 (max delta 17); hero outside the typewriter box 0 px over 32 (max 29, 171 px over 8), antialiasing only. Self-hosted build preloads both woff2 files, both finish at 33 ms and first contentful paint is 96 ms, so text paints in the final face; computed family is the local mono. Files: phys.log, anim.log, m1-sheet.png, font-*.jpg."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed; owner-deferred camera findings F7, F8 and the Codex minDistance finding are not grounds for rejection.",
+      "status": "passed",
+      "evidence": "Findings F-M2-1 to F-M2-4 below carry all seven fields. Criterion 4 failed, so the verdict is rejected. F7, F8 and the Codex minDistance finding were not used as grounds."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-M2-1",
+      "severity": "medium",
+      "file": "components/game/shell/useExperienceShell.ts",
+      "line": "339-342 (swap) with 262-269 (stripOut) and 271-280 (completeReturn)",
+      "trigger": "Play where the inline strip was shown (load not finished at 400 ms: first cold visit, every touch device because touch prefetches code only, or Retry after a failure), then Exit (HUD, pause menu or Escape path through completeReturn).",
+      "consequence": "swap() calls stripOut() but never clears stripShownAt, so at Exit completeReturn runs stripOut() while stripShownAt is still set, mounts the strip in state out, and LoadingStrip.tsx lines 48-50 move focus to its Cancel button. Focus leaves Play (the focus-on-Play guarantee) and lands on the body when the strip unmounts 150 ms later; keyboard and screen-reader users lose their place. The strip is at opacity 0 so there is no visible flash. Reproduced on desktop and on mobile emulation, and the Retry then Exit path hits it too.",
+      "evidence": "Focus log after Exit with the unmodified tree: Play focused, then Cancel focused, then body; final active element BODY. Same probe against a throwaway copy with one added line in swap() (stripShownAt.current = null): no strip mounted during Exit, active element Play. The dev harness and the shell tests are all warm or never assert focus after a strip run, so none caught it.",
+      "rule": "Acceptance criterion: Exit restores focus on Play; play-transition.md 4.4 (focus on Play at X+700). Suggested fix: reset stripShownAt in swap after stripOut, or in completeReturn before calling stripOut; add a shell test that shows the strip, enters, exits and asserts the active element is Play."
+    },
+    {
+      "id": "F-M2-2",
+      "severity": "low",
+      "file": "components/game/followCamera.ts (exit fov tween, spec play-transition.md 4.1 ease-in)",
+      "line": "n/a (easing is specified; fov step grows to about 1.6 degrees per frame at the end)",
+      "trigger": "Every Exit, last 100 ms before X+700.",
+      "consequence": "The camera fov accelerates into the hero framing (silhouette height grows about 7 percent in the final frame) and then stops dead at the swap, a perceptible landing snap. The swap itself is invisible.",
+      "evidence": "Per-frame fov 37.99, 36.62, 35.2, 33.72, 32.11, then 32.00; screencast silhouette height 506, 526, 548, 589, 590. Swap pair diff 0.68 vs neighbour median 2.6.",
+      "rule": "Pixel perfection request; not an acceptance failure because the spec prescribes ease-in. Optional: ease-in-out on the exit fov."
+    },
+    {
+      "id": "F-M2-3",
+      "severity": "low",
+      "file": "components/game/world/WorldView.tsx or the physics init path in the rapier chunk (WebAssembly.instantiate caller)",
+      "line": "n/a (stack points into the on-demand physics chunk)",
+      "trigger": "WebAssembly rejected.",
+      "consequence": "The dialog is correct, but the browser console also logs one uncaught promise rejection, which monitoring would report as an error.",
+      "evidence": "fail-physics.txt errors line: 'Uncaught (in promise) Error: WebAssembly blocked by the test'.",
+      "rule": "Engineering hygiene: handled failures should not leave an unhandled rejection."
+    },
+    {
+      "id": "F-M2-4",
+      "severity": "nit",
+      "file": "components/game/shell/gameLoader.ts (failure message source)",
+      "line": "n/a",
+      "trigger": "Chunk blocked.",
+      "consequence": "The dialog shows the raw webpack text including a chunk URL ('Loading chunk 186 failed. (error: ...)') instead of a plain sentence.",
+      "evidence": "fail-network-prod.txt dialog msg.",
+      "rule": "Copy polish only."
+    }
+  ],
+  "assumptions": [
+    "Real GPU numbers are from the Apple M1 Pro (ANGLE Metal) under headless Chrome 154; the SwiftShader control returned 44 fps idle and was not used for any timing or visual judgement.",
+    "Production-build recordings use a next start from a copy of this tree; dev server numbers were used only for the M1 regression, the Retry chunk-name case and the unpatched stale-strip reproduction.",
+    "The headless harness injects a store hook and a listener counter; its numbers are the same mechanism as the dev's, but the judgements, the exit-exactness probe, the focus probes and the font comparison are my own.",
+    "Mobile results are touch and coarse-pointer emulation, not a real phone.",
+    "The fix mutation was applied only in a throwaway copy of the tree; the worktree was not edited."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Fix F-M2-1 and add a test that runs a slow-load Play (strip shown), enters, exits and asserts focus is on Play, then re-submit for a short QA round (rerun stalestrip and mobile focus probes only, plus the shell and full suites)."
+  ],
+  "lessonsProposed": [
+    "A warm-only harness hides every slow-load path: always run one cycle where the strip is shown (hold the load past 400 ms) and assert focus after Exit, because state that is only set on the slow path (stripShownAt) can leak into the return path.",
+    "Log focusin and focusout around a transition instead of reading document.activeElement once; the two-step Play then Cancel then body sequence exposed a mount-time autofocus that a single read would call a harmless blur.",
+    "A pair-diff ratio around a swap needs the preceding camera motion removed before blaming the swap: here the 'swap spike' was the last fov step and the swap itself was quieter than its neighbours."
+  ],
+  "screenshotLocation": "Session scratchpad, in the qa folder under a subfolder named m2-qa, inside its out subfolder (contact sheets, screencast frame folders, metrics and exit JSON) plus the m1reg subfolder for the Milestone 1 regression outputs. Harness scripts and build logs are in the same m2-qa folder.",
+  "selfUsage": {
+    "filesRead": 40,
+    "approxLinesRead": 3500,
+    "approxLinesWritten": 650,
+    "retries": 1
+  }
+}

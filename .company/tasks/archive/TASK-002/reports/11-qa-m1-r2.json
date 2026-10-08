@@ -1,0 +1,269 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "11-qa-m1-r2",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read constitution, QA insights, stage contract, round 1 QA report and dev reports 05 and 10. Ran lint, test and build on Node 22 myself (build in a rsync copy of the tree with node_modules symlinked so the dev server .next was untouched). Inspected the working-tree diff against f8da3ab (stat, name filter for protected files, scripted em dash and machine-path scan over every modified and untracked text file, package.json and lock diff). Mutation check: copied the tree, put the f8da3ab player.ts into the copy only (no stash, reset or checkout) and ran the physics test file. Browser: headless Chrome via DevTools protocol against the running dev server (software GL), held keys through Input.dispatchKeyEvent, avatar position read from the three scene, active animation clips read by wrapping AnimationMixer.update through the webpack module cache, bone heights read from the scene. Reran the bake script from the original pulled from git (a891bc4) and compared bytes. Hero checks in a separate session. All scripts and screenshots are in the scratchpad qa/m1-r2 directory. Playwright MCP was not used (it can only tap keys).",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "REJECTED on one important finding. Gates are green (lint 0, 100 tests in 6 files, build 0 with / at 125 kB), diff scope is clean, F1 and F2 are confirmed fixed (peak-height test fails 6 of 6 on the f8da3ab player.ts), straight walk and run, idle, jump and fall look right, and the bake is byte-identical and refuses a baked input. The hard landing clip is visibly wrong: when the avatar lands from a 1.6 to 4 m drop, the land clip plays with the hips pinned at standing height (Hips tracks are stripped) so the legs are tucked up and the toes sit 0.84 to 0.95 m above the ground while the capsule is grounded; it looks like sitting in mid air (screenshots hardland-land-0 to hardland-land-2). Criterion 4 therefore fails. Also reported: camera hidden inside the ramp slabs during drops (minor), and a few 1 px skin-coloured specks at the hero collar and sleeve hem (minor). The faint stripes on the hero shirt are the intended CSS scanline overlay, not shadow acne.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "ASSETS.md",
+      "assets-src/mixamo/run.glb (deleted)",
+      "assets-src/mixamo/walk.glb (deleted)",
+      "assets-src/mixamo/*.fbx (6 new owner-supplied sources)",
+      "components/game/GameScene.tsx",
+      "components/game/animator.ts",
+      "components/game/clips.ts",
+      "components/game/config.ts",
+      "components/game/player.ts",
+      "components/game/__tests__/animator.test.ts",
+      "components/game/__tests__/clips.test.ts",
+      "components/game/__tests__/player.physics.test.ts",
+      "package.json",
+      "package-lock.json",
+      "public/avatar.glb",
+      "public/game/clips/*.glb (idle, walk, run, jump, fall, land)",
+      "scripts/strip-clips.mjs",
+      "scripts/measure-clips.mjs",
+      "scripts/bake-avatar-look.mjs",
+      "scripts/lib/avatar-bake.mjs",
+      "scripts/__tests__/avatar-bake.test.mjs",
+      "vitest.config.mts",
+      ".company/ records (ADR-001 to ADR-006, task files)"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node --version (nvm use 22)",
+      "exitCode": 0,
+      "result": "v22.23.2",
+      "evidence": "v22.23.2"
+    },
+    {
+      "command": "npm run lint (in the worktree)",
+      "exitCode": 0,
+      "result": "0 errors, 1 pre-existing warning",
+      "evidence": "LINT_EXIT=0; ./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef' (react-hooks/exhaustive-deps, file untouched by this task)"
+    },
+    {
+      "command": "npm test (in the worktree)",
+      "exitCode": 0,
+      "result": "6 files, 100 tests passed",
+      "evidence": "TEST_EXIT=0; Test Files 6 passed (6); Tests 100 passed (100)"
+    },
+    {
+      "command": "npm run build (in a rsync copy of the tree, node_modules symlinked)",
+      "exitCode": 0,
+      "result": "Compiled successfully; / First Load JS 125 kB unchanged",
+      "evidence": "BUILD_EXIT=0; Compiled successfully; / 40.8 kB 125 kB; First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "git diff f8da3ab for components/avatar, GameAvatar.tsx, lib, data, app, next.config",
+      "exitCode": 0,
+      "result": "empty (all unchanged)",
+      "evidence": "no file names printed; Avatar.tsx and GameAvatar.tsx unchanged; package.json diff is one line: jpeg-js 0.4.4 (exact, no caret); lock entry 0.4.4 dev:true with integrity hash"
+    },
+    {
+      "command": "python scan of every modified and untracked non-binary file (git ls-files -m -o --exclude-standard, 64 paths) for the em dash character and machine-local home paths",
+      "exitCode": 0,
+      "result": "0 hits",
+      "evidence": "scan ok 64"
+    },
+    {
+      "command": "mutation: copy of tree with player.ts replaced by git show f8da3ab:components/game/player.ts, then npx vitest run components/game/__tests__/player.physics.test.ts",
+      "exitCode": 1,
+      "result": "6 failed | 15 passed (21)",
+      "evidence": "x never climbs the 45 degree ramp from 0.5 m away (walk); 1 m (walk); 2 m (walk); 0.5 m (run); 1 m (run); 2 m (run). On the fixed tree the same file passes."
+    },
+    {
+      "command": "CDP session phys.mjs, held keys, positions from the scene: wall, 0.2 m step, 0.35 m step, ramp 45 at walk and run from z=1, ramp 30 at walk and run",
+      "exitCode": 0,
+      "result": "F1 fixed in the browser; other obstacles as before",
+      "evidence": "wall end x -5.95 z -0.56 maxY 0.005; step-020 maxY 0.20 end z 4.32; step-035 maxY 0.007 end z 1.69; ramp45 walk maxY 0.24 stays at z 2.11, run maxY 0.25 stays at z 2.12 (round 1 was 4.24); ramp30 walk maxY 3.79, run maxY 3.99"
+    },
+    {
+      "command": "CDP animation session anim.mjs with AnimationMixer hook: state sequences for idle, walk, run, side run, standing jump, running jump",
+      "exitCode": 0,
+      "result": "idle, walk, run, jump, fall plug in with blends; no sideways run",
+      "evidence": "idle at start; idle to walk blend about 0.2 s; walk to run blend; standing jump: jump (y to 0.95 m) then fall at apex then idle blend, no land clip (soft); same for walking jump; console errors only the expected missing OPENAI_API_KEY"
+    },
+    {
+      "command": "CDP drop3.mjs and drop.mjs: climb ramp 30 and walk off the side and the end",
+      "exitCode": 0,
+      "result": "falling loop and hard landing trigger; hard landing pose defective",
+      "evidence": "drop from ramp end y 4: walk+fall then fall then fall:0.6+land:0.4 then land; side drop from y 1.6: fall then land; side drop from y 0.98 also triggered land. Foot trace during land: rootY=0 hips=0.984 ltoe=0.334 rtoe=0.375 (blend), then at 1714 ms rootY=0 hips=0.984 lf=0.924 rf=0.878 ltoe=0.945 rtoe=0.839 (feet in the air while grounded)"
+    },
+    {
+      "command": "node scripts/bake-avatar-look.mjs --original <original from git a891bc4> --out <scratch>, run twice, then cmp against public/avatar.glb; then run with --original public/avatar.glb and with a junk file",
+      "exitCode": 0,
+      "result": "byte-identical, deterministic, refuses baked input",
+      "evidence": "original sha256 d8d0a77e... matches the pinned value; baked 13942056 bytes {removedTriangles avaturn_look_0:170, shirtTextures 1, singleSided 1}; cmp reports identical to public/avatar.glb and between two runs; baked input exits 1 with 'refusing to re-bake: the input already carries the avatarLookBake marker' and writes no output; junk input throws and exits non-zero"
+    },
+    {
+      "command": "CDP hero.mjs and scroll.mjs: first frame, mouse left and right, dance and wave gestures, talk button, Play and Exit three times, scroll restore at 0, 120 and 300",
+      "exitCode": 0,
+      "result": "hero works; Play/Exit x3 clean",
+      "evidence": "Head quaternion left [-0.036,0.021,-0.004,0.999] vs right [-0.067,0.186,-0.015,0.98]; talk click fetches /api/realtime-session (local server returns 'OPENAI_API_KEY is not set on the server', environmental, no key configured); after each of 3 rounds: exit button gone, play button focused, canvases 1, body overflow visible; scrollY 120 and 300 preserved through Play and Exit; only console error is the missing API key"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint, npm test and npm run build were each run by QA on Node 22 with exit code 0 (the build in a copy of the tree so the dev server's .next is not clobbered), and the output tails match the claims (100 tests; / route First Load JS 125 kB unchanged).",
+      "status": "passed",
+      "evidence": "LINT_EXIT=0 (1 pre-existing warning in untouched useRealtimeChat.ts), TEST_EXIT=0 with 6 files and 100 tests, BUILD_EXIT=0 in a copy with / at 40.8 kB and 125 kB First Load JS."
+    },
+    {
+      "criterion": "The working-tree diff against f8da3ab was inspected: only files named in reports 05 and 10 changed, components/avatar/Avatar.tsx and components/game/GameAvatar.tsx are unchanged, no design section 9 do-not-touch file changed other than the approved clothing bake of public/avatar.glb, the new jpeg-js devDependency is pinned exactly, and new content has no em dash or machine-local path.",
+      "status": "passed",
+      "evidence": "git diff stat lists only game files, scripts, tests, ASSETS.md, clips, avatar.glb, package files and vitest config from reports 05 and 10, plus the six untracked owner FBX sources and the .company records; the diff for components/avatar, GameAvatar.tsx, lib, data, app and next.config is empty; jpeg-js is 0.4.4 with no range; scan of 64 changed or new text paths found no em dash and no machine-local home path strings."
+    },
+    {
+      "criterion": "F1 and F2 are independently confirmed fixed: QA reruns the peak-height ramp test, confirms it fails against f8da3ab player.ts in a temp copy without git stash, reset or checkout, and in the browser the avatar cannot climb the 45 degree ramp at walk or run while the 30 degree ramp, the 0.2 m step and the 0.35 m step block behave as before.",
+      "status": "passed",
+      "evidence": "Test file passes on the fixed tree (21 tests) and 6 of 6 ramp-45 peak tests fail with the f8da3ab player.ts in a scratch copy. Browser: ramp 45 peak 0.24 (walk) and 0.25 (run) staying at the ramp toe versus 4.24 in round 1; ramp 30 climbed (3.79 and 3.99); 0.2 m step climbed (0.20); 0.35 m step and wall blocked. Note: the avatar does rise 0.25 m onto the toe of the 45 degree ramp (equals stepHeight, test limit 0.3), minor, see finding F7."
+    },
+    {
+      "criterion": "In the browser, standing still plays the new idle, walking and running look straight (no sideways run), a normal jump shows take-off then a soft landing, and walking off a ledge or dropping from at least 1.1 m shows the falling loop and the hard landing; foot sliding at walk and run is judged acceptable, noticeable or severe with screenshots.",
+      "status": "failed",
+      "evidence": "Passes: idle clip at rest (idle-front.png), walk and run face forward from behind, side and three-quarter views (sheet-locomotion.png); standing and walking jump go jump, fall at apex, idle blend with no land clip (sheet-jump.png); the falling loop plays on every drop (sheet-drop.png, hardland-fall.png). Fails: the hard landing pose is defective, see F1 (hardland-land-0.png to hardland-land-2.png, sheet-hardland.png). Foot sliding: judged acceptable by construction and by screenshots (playback rate follows speed over clip speed, 2.2 over 1.54 for walk and 4.8 over 4.86 for run, no visible skating in the captured frames); a numeric measurement was not obtained because software GL ran at about 8 fps under polling, so the speed under test was below nominal (walk about 1.1 m/s, run about 3.3 m/s); this is an honest gap, not a pass of the numeric measurement."
+    },
+    {
+      "criterion": "The clothing bake is confirmed: hero first frame and a gesture, and the game at idle, walk, run, jump and fall from behind, side and three-quarter front, show no shirt specks, neck line or jagged edges; node scripts/bake-avatar-look.mjs reproduces public/avatar.glb byte-identically from the pinned original and refuses an already baked input.",
+      "status": "passed",
+      "evidence": "Bake: byte-identical (cmp), deterministic across two runs, pinned sha256 d8d0a77e matches the git original, baked input refused with exit 1 and no output file. Visuals: hero-first-frame.png, hero-first-frame-zoom.png, hero-gesture-dance.png, hero-gesture-dance-zoom.png, hero-no-scanlines-zoom.png (clean collar, sleeves, hem); game idle, walk, run from behind, side and three-quarter front in sheet-locomotion.png, jump in sheet-jump.png, fall in sheet-drop.png and sheet-hardland.png show no shirt specks, neck line or jagged edges at game scale. At 8x zoom a few single-pixel skin-coloured dots remain at the hero collar and left sleeve hem (hero-collar-6x.png, hero-sleeve-6x.png), recorded as minor finding F5."
+    },
+    {
+      "criterion": "The hero still works: talk button starts a session request, gestures play, head follows the mouse, and Play then Exit three times restores the hero, page scroll and Play focus with no console errors.",
+      "status": "passed",
+      "evidence": "Talk click issued GET /api/realtime-session (the local server answers that OPENAI_API_KEY is not set, an environment condition, not a regression); dance and wave gestures play (hero-gesture-dance.png, hero-gesture-wave.png); Head quaternion y changes 0.021 to 0.186 between mouse left and right (hero-mouse-left.png, hero-mouse-right.png); three Play and Exit rounds restore the hero (hero-after-exit3.png), 1 canvas, Play button focused, scroll 120 and 300 preserved; the only console error in the whole session was the expected missing API key message. Browser observations are supplementary to the Bash gates."
+    },
+    {
+      "criterion": "Any other visual defect QA notices on the hero or in the game is reported as a finding with a screenshot, including whether the faint horizontal stripes visible on the hero shirt (present before and after the bake, possibly shadow acne) are real, their cause, and the severity.",
+      "status": "passed",
+      "evidence": "The stripes are not shadow acne and not in the model: they are the intended CSS scanline overlay in components/avatar/TalkingAvatar.tsx lines 123 to 128 (repeating-linear-gradient, 4 px period, black at 0.22 alpha), present since 710f034 (it was at line 84 there). Hiding that one element removes every stripe (hero-no-scanlines-zoom.png) and the game view has none (sheet-locomotion.png). Not a defect, severity none; it is most visible on the white shirt by design. Other findings F1, F5, F6, F7 are reported with screenshots."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed.",
+      "status": "passed",
+      "evidence": "Findings F1 to F8 below carry file, line, severity, trigger, consequence, evidence and rule in the decisionsProposed and lessonsProposed fields and this summary; verdict is rejected because criterion 4 failed."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "file": "scripts/strip-clips.mjs and components/game/animator.ts (land clip, Hips tracks dropped)",
+      "line": "strip-clips.mjs Hips drop (ASSETS.md line 81); animator.ts enter() 'land' at 118-143",
+      "severity": "important",
+      "trigger": "Walk off the end or side of ramp-30 from 1.5 m or higher (or any drop with impact speed of 6.5 m/s or more), hold nothing, watch the land state (about 0.5 to 1.1 s).",
+      "consequence": "The Hard Landing clip is played rotation-only with the Hips translation removed, so the crouch depth is lost: the hips stay at standing height (0.984 m) while the legs fold up, and the feet end up 0.84 to 0.95 m above the ground while the capsule is grounded. The avatar looks seated in mid air on every hard landing, the main new feature of this round.",
+      "evidence": "Trace at rootY=0: hips=0.984, lf=0.924, rf=0.878, ltoe=0.945, rtoe=0.839 in the land state; screenshots hardland-land-0.png, hardland-land-1.png, hardland-land-2.png, sheet-hardland.png. Fix direction (not made by QA): keep a vertical Hips offset for land (for example derive the hips drop from the source clip and apply it to the avatar root or the hips) or select a landing clip whose crouch is carried by rotations, then re-measure the foot height against the ground.",
+      "rule": "Stage criterion 4 (hard landing shown correctly); pixel perfection and code-review checklist: behaviour must match the criterion"
+    },
+    {
+      "id": "F5",
+      "file": "public/avatar.glb (hero shirt and body meshes)",
+      "line": "n/a (binary)",
+      "severity": "minor",
+      "trigger": "Hero at rest, zoom 3x to 8x on the collar edge and left sleeve hem.",
+      "consequence": "A few single-pixel skin-coloured dots remain at the collar and sleeve hem edges where the body shows through; invisible at normal size, faintly visible in a zoomed screenshot.",
+      "evidence": "hero-collar-6x.png, hero-sleeve-6x.png, hero-no-scanlines-zoom.png",
+      "rule": "Stage criterion 5 (no specks), judged minor and not blocking"
+    },
+    {
+      "id": "F6",
+      "file": "components/game/followCamera.ts and world/layout.ts (ramp blocks blocksCamera true)",
+      "line": "camera probe radius CAMERA.probeRadius 0.2 in config.ts line 74",
+      "severity": "minor",
+      "trigger": "Walk off the end of ramp-30 (drop of 4 m) or off its side between ramp-30 and ramp-45.",
+      "consequence": "For about 0.5 to 1 s the camera ends up behind or inside the ramp slab and the screen is mostly flat grey, so the fall and the landing are not visible; only the test arena, M3 campus not affected yet.",
+      "evidence": "sheet-drop.png frames 4 and 5, sideoff-0.8m.png",
+      "rule": "Judged minor for the M1 test arena; revisit in M3"
+    },
+    {
+      "id": "F7",
+      "file": "components/game/player.ts",
+      "line": "limitSlopeClimb at 87-120",
+      "severity": "minor",
+      "trigger": "Walk or run into the foot of the 45 degree ramp.",
+      "consequence": "The avatar rises 0.24 to 0.25 m at the ramp toe (equals stepHeight 0.25) and stays there; it cannot climb further. Behaviour matches the test limit of 0.3.",
+      "evidence": "ramp45 walk maxY 0.24, run maxY 0.25, both ending at z 2.1",
+      "rule": "Informational"
+    },
+    {
+      "id": "F8",
+      "file": "components/game/config.ts",
+      "line": "ANIMATION.hardLandSpeed 6.5 (line 87 to 99)",
+      "severity": "informational",
+      "trigger": "Drop from about 0.98 m.",
+      "consequence": "The hard landing already triggers at a 0.98 m drop, slightly below the 1.1 m wording in the criterion; a normal 0.9 m jump stays soft (verified). No change needed.",
+      "evidence": "state sequence 'fall then land' from y 0.98 in the side-drop probe",
+      "rule": "Informational"
+    }
+  ],
+  "screenshots": [
+    "sheet-locomotion.png",
+    "idle-front.png",
+    "walk-behind.png",
+    "run-behind.png",
+    "run-side.png",
+    "walk-side.png",
+    "walk-threeq-front.png",
+    "run-threeq-front.png",
+    "sheet-jump.png",
+    "jump-stand-0.png",
+    "jump-walk-0.png",
+    "sheet-drop.png",
+    "sheet-land.png",
+    "sheet-hardland.png",
+    "hardland-fall.png",
+    "hardland-land-0.png",
+    "hardland-land-1.png",
+    "hardland-land-2.png",
+    "sideoff-0.8m.png",
+    "ramp30-walk.png",
+    "ramp30-run.png",
+    "hero-first-frame.png",
+    "hero-first-frame-zoom.png",
+    "hero-gesture-dance.png",
+    "hero-gesture-dance-zoom.png",
+    "hero-gesture-wave.png",
+    "hero-mouse-left.png",
+    "hero-mouse-right.png",
+    "hero-after-exit3.png",
+    "game-entered.png",
+    "sheet-hero.png",
+    "hero-no-scanlines-zoom.png",
+    "hero-collar-6x.png",
+    "hero-sleeve-6x.png"
+  ],
+  "screenshotLocation": "scratchpad qa/m1-r2 directory of the session (not in the repo)",
+  "assumptions": [
+    "The OPENAI_API_KEY is deliberately absent in the local dev environment, so a session request that returns a server error still counts as 'talk starts a session request'.",
+    "Numeric foot sliding could not be measured because software GL runs at about 8 fps while polling; judged by construction (playback rate equals speed over clip speed) and visually.",
+    "The hard landing visual defect is attributed to dropping the Hips translation track, based on ASSETS.md line 81 and the measured hips height; the exact fix is for the owning dev."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Fix round 2 should restore a hips height drop for the land clip (or pick another clip) and add a test that checks the lowest and highest foot height in the land state against the ground."
+  ],
+  "lessonsProposed": [
+    "Dropping Hips tracks from a Mixamo clip is safe for locomotion but not for a crouch or landing: assert foot height against the ground for every clip that changes stance, not only that the clip plays.",
+    "In headless software GL, polling per frame slows the app below 10 fps and scales speeds down; read animation state by wrapping AnimationMixer.update through the webpack module cache and sample on the page side rather than from the driver."
+  ],
+  "selfUsage": {
+    "filesRead": 30,
+    "approxLinesRead": 1500,
+    "approxLinesWritten": 450,
+    "retries": 3
+  }
+}

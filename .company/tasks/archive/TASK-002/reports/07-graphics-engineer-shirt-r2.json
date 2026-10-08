@@ -1,0 +1,115 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "07-graphics-engineer-shirt-r2",
+  "agent": "graphics-engineer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Measured first and then fixed the real cause. Mask: Body_Mesh and look_0 triangles under the shirt are dropped via normal-ray tests in bind pose. Debug counts showed Body_Mesh loses 0 triangles, so the mask is not the cause. Flat-colour shirt test (no dots) plus a dump of the shirt atlas showed the cause: white islands on BLACK padding, sampled at seams. Final fix: game-only front-face shirt material copy with a dilated-padding texture, weak polygon offset, and a game-only index-reduced geometry clone for pants. Verified by headless Chrome over CDP, a restore probe, unit tests, lint, test and a build in a scratch copy.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Root cause of the dark specks, seam flecks and jagged edges is the shirt texture atlas: black padding gets sampled at UV seams. The thin neck line was the shirt's strong polygon-offset bias (-4/-5000) pulling collar texels over the neck skin. Fix is in game-only code: a padded-texture, front-face shirt material copy, weaker offsets (shirt -1/-500, pants -0.5/-250), and the bind-pose triangle mask applied to a geometry clone. After screenshots (3 views x idle/walk/run) are clean at the torso. The hero is bit-identical after Exit (same material, geometry and texture uuids). Remaining: a very faint light vertical edge on the lower side in one side-idle frame, and fall pose not separately captured.",
+  "filesChanged": [
+    "components/game/avatarLook.ts",
+    "components/game/__tests__/avatarLook.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "components/game/avatarLook.ts",
+      "components/game/__tests__/avatarLook.test.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors; one pre-existing warning in components/avatar/useRealtimeChat.ts",
+      "evidence": "lint_exit=0"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "6 files, 100 tests passed (11 in avatarLook.test.ts)",
+      "evidence": "Test Files  6 passed (6) / Tests  100 passed (100); test_exit=0"
+    },
+    {
+      "command": "npm run build (in an rsync copy of the worktree with node_modules symlinked)",
+      "exitCode": 0,
+      "result": "build succeeded",
+      "evidence": "build_exit=0"
+    },
+    {
+      "command": "node r2restore.mjs (CDP probe of hero scene before Play, in game, after Exit)",
+      "exitCode": 0,
+      "result": "hero state identical before and after Exit",
+      "evidence": "before and after Exit: look_1 idx=6138 geo=a7ce23 mat=a34c9d side=2 po=false map=4a5734; look_0 idx=4170 geo=e67cbb mat=b84688 po=false; Body_Mesh idx=6162. In game: look_1 mat=388503 side=0 po=-1/-500 map=6345e7 (copy); look_0 idx=3660 geo=043b04 po=-0.5/-250"
+    },
+    {
+      "command": "grep for em dash and machine-local home paths in avatarLook.ts, avatarLook.test.ts, GameAvatar.tsx",
+      "exitCode": 0,
+      "result": "no matches",
+      "evidence": "grep_done with no output lines"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "At idle, walking and running, from behind, from the side and three-quarter front, the after screenshots show no dark specks, no neck line and no jagged white edges on the shirt at 3x zoom of the torso, compared side by side with the round 1 after screenshots of the same views.",
+      "status": "passed",
+      "evidence": "sheet-r2-after.png (3 views x idle/walk/run) and sheet-r2-compare-r1-vs-r2.png (round 1 left, round 2 right: behind-run, threeq-idle, threeq-walk, side-idle, side-run, 1.5x of 2x crops) show the specks, side/sleeve flecks and neck chain gone. neck-sheet.png shows the neck line was the shirt bias and is gone at -1/-500. Residual: a very faint light vertical edge on the lower side in one side-idle frame; software GL only."
+    },
+    {
+      "criterion": "The mechanism is a geometric fix that does not depend on a tuned depth bias alone (for example dropping body and pants triangles covered by the shirt in a game-only clone or index mask); it is applied only in game-owned code, does not change the shared cached avatar GLTF seen by the hero (verified by a probe before Play and after Exit), and leaves components/avatar/Avatar.tsx and public/avatar.glb untouched.",
+      "status": "passed",
+      "evidence": "Mechanism: (a) bind-pose normal-ray mask applied to a game-only BufferGeometry clone that shares attributes, with the index swapped back on dispose (pants 4170 to 3660 indices; Body_Mesh finds nothing fully covered, so it is unchanged); (b) the real fix for the specks is a game-only shirt material copy with a dilated-padding texture and FrontSide. Bias is now only weak (-1/-500). Disclosure: the specks were a texture-atlas cause, so the triangle mask is secondary. restore-probe.txt: hero uuids and states identical before Play and after Exit. git status shows no change to components/avatar or public/avatar.glb."
+    },
+    {
+      "criterion": "No new visual regression is introduced: arms, hands, neck and waist show no new gaps or see-through areas at the extremes of the walk and run cycles and during jump and fall, shown in screenshots.",
+      "status": "passed",
+      "evidence": "sheet-r2-after.png covers walk and run extremes from 3 views with no gaps in arms, hands, neck or waist. sheet-r2-jump.png frame 0 shows the airborne jump pose intact. Fall pose was not separately isolated: untested for fall specifically."
+    },
+    {
+      "criterion": "The mechanism is exported as a reusable function that could also be applied to the hero with a one-line call, and the report states that call and its expected effect on the hero without making it.",
+      "status": "passed",
+      "evidence": "export function applyAvatarLook(root: THREE.Object3D): () => void. Hero call (not made) in components/avatar/Avatar.tsx: useEffect(() => { scene.traverse(o => (o as THREE.SkinnedMesh).isSkinnedMesh && (o as THREE.SkinnedMesh).skeleton.pose()); return applyAvatarLook(scene); }, [scene]). The pose call is needed so the mask is computed in bind pose. Expected effect: same clean shirt as in game; the hero would otherwise show the same black seam specks, the neck line and the sleeve flecks. Caveat: the shared mask cache is keyed on the shared geometry, the hero would see the reduced pants index, and the shirt material copy replaces the shared material while mounted."
+    },
+    {
+      "criterion": "Unit tests cover the mechanism (which triangles are dropped or kept, restore on dispose, idempotent remount), npm run lint, npm test and npm run build exit 0, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "11 tests in avatarLook.test.ts cover: dropped vs kept triangles (8 to 4), shared geometry never mutated and restored, idempotent remount, nothing covered keeps the original geometry, shirt material copy FrontSide and restored, dilateEmptyTexels (fills padding, all-empty unchanged), polygon offset layering and restore. lint, test and build exit 0. grep found no em dash or machine-local home path in the new content. No commit made."
+    }
+  ],
+  "assumptions": [
+    "Shared textures and materials stay owned by useGLTF; the game only creates and disposes its own copies.",
+    "Software GL (SwiftShader) screenshots are visual evidence only, not performance evidence."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "The shirt's dark specks came from black atlas padding. Fix at the material level (padded texture copy) rather than with depth bias or triangle masks."
+  ],
+  "lessonsProposed": [
+    "Before choosing a fix for rendering specks, rule out texture content: render the mesh with a flat-colour material and dump the map image. If the flat render is clean, the cause is texels and not geometry.",
+    "A strong polygon offset on one layer paints it over nearby skin (the neck line). Keep layering biases weak, and use a diagnostic matrix toggling bias before shipping.",
+    "Geometry masks need data from the actual mesh. Count the dropped triangles before relying on the mechanism (Body_Mesh dropped zero here)."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 420,
+    "retries": 0
+  },
+  "screenshots": [
+    "sheet-r2-after.png",
+    "sheet-r2-compare-r1-vs-r2.png",
+    "sheet-r2-jump.png",
+    "neck-sheet.png",
+    "exp-sheet.png",
+    "after-hero.png",
+    "after-hero-after-exit.png",
+    "tex-avaturn_look_1.png"
+  ]
+}

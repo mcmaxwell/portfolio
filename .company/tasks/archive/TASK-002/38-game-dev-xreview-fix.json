@@ -1,0 +1,257 @@
+{
+  "workItemId": "TASK-002",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "stageId": "38-game-dev-xreview-fix",
+  "assignee": "game-dev",
+  "objective": "Fix the Codex final cross-review findings (reports/37-cross-reviewer-final.json, changes-requested): the follow camera can be forced past the solved clear distance into geometry in a tight pocket, and three git whitespace errors. Also look at M4 QA F4 (free-orbit camera about 2.3 m from the avatar beside the tower passage back wall, jump-pose arm crossing the wall), which touches the same code.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/37-cross-reviewer-final.json",
+    ".company/tasks/active/TASK-002/reports/34-qa-m4.json",
+    "components/game/followCamera.ts",
+    "components/game/__tests__/followCamera.test.ts",
+    "components/game/bodyClearance.ts",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/game/__tests__/stance.test.ts",
+    "components/game/world/texturePaint.ts"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/37-cross-reviewer-final.json"
+  ],
+  "acceptanceCriteria": [
+    "The follow camera never places the camera beyond the solved clear distance for any input (the resolved parameter is always at most the clear distance reported by the collision query); when the clear distance is under the hard minimum in a sealed pocket, the avatar's own body is handled without entering geometry (for example by fading or hiding avatar meshes near the camera, or lifting toward the pivot), with the chosen approach documented in a code comment; a test with an always-immediate-hit query asserts the camera is not beyond the reported clear distance and fails on commit 3c888d6.",
+    "git diff --check 710f034 reports no whitespace errors across the whole task diff including the working tree (TalkingAvatar.tsx trailing whitespace, stance.test.ts and texturePaint.ts blank lines at EOF fixed), and the TalkingAvatar.tsx change stays limited to whitespace.",
+    "M4 QA F4 is reproduced or refuted in the browser at 390x844 and 1440x900 (orbit the camera to the tower passage back wall, then jump): if reproduced and fixable within followCamera.ts or bodyClearance.ts without changing layout or the camera's normal framing, it is fixed with a screenshot before and after; otherwise it is recorded as a known limitation with a one-line reason.",
+    "Short regression on the production build: tower passage camera sweep (centre, left, right) with 0 frames inside geometry, below ground or with head or torso hidden; the M1 drop and minimum-distance camera tests still pass; rAF p95 under 17.5 ms walking the campus at 1440x900; Exit with focus on Play.",
+    "npm run typecheck, npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree); new content has no em dash or machine-local path; no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "Change only followCamera.ts, bodyClearance.ts and their tests, plus whitespace-only edits in the three files named by the review; do not change layout, colliders or the camera's normal framing.",
+    "Every browser you launch must use a --user-data-dir inside your stage output directory, deleted on exit and failure via exit and SIGTERM handlers; check free disk and stop under 5 GB; the dev server on :3100 must stay up; stop every server you start by exact PID and never pkill; run builds in a copy of the tree and delete it; never write evidence under the repository or .company.",
+    "Record host load with every timing measurement; under heavy load rerun a timing-out test file alone with a raised --testTimeout before treating it as a regression.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array.",
+    "Save tokens: reuse harness scripts from upstream evidence directories, keep logs on disk and read only tails."
+  ],
+  "deliverables": [
+    "code",
+    "tests",
+    "screenshots"
+  ],
+  "reportPath": "reports/38-game-dev-xreview-fix.json"
+}

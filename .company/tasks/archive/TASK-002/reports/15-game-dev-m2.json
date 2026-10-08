@@ -1,0 +1,180 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "15-game-dev-m2",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Implemented the play-transition spec as a shell phase machine (hero, chrome-out, waiting, entering, game, leaving, returning) plus game-side entry and exit legs. Verified with headless Chrome 154 over CDP on an Apple M1 Pro GPU (not SwiftShader): per-frame rAF sampler, Page.startScreencast frames, readPixels per render, Fetch interception, heap and listener counters. Production build run in a copy of the tree. Several browser-found defects were fixed along the way (see summary).",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Milestone 2 is implemented: cinematic Play and Exit, inline loading strip with Cancel/Escape, pause/resume and tab-hide pause, failure dialogs, prefetch, and clean repeated cycles. Lint, tests (348 passed, 17 files) and the copy-tree build all exit 0, and / First Load JS is 125 kB. Browser runs (dev and production build) show no layout jump, T-pose or blank frame on Play and Exit. Weak spots: at exactly C+360 the title is still at about 14 percent opacity (it finishes and the chrome is removed at about C+410), and the Exit swap pair has a pose step of 1.9x its neighbours (under the 2x limit but close). I did not touch the clothing bake, avatar.glb, or QA findings F7 and F8.",
+  "filesChanged": [
+    "app/globals.css",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/game/GameAvatar.tsx",
+    "components/game/GameScene.tsx",
+    "components/game/animator.ts",
+    "components/game/entry.ts",
+    "components/game/followCamera.ts",
+    "components/game/session.ts",
+    "components/game/shell/gameLoader.ts",
+    "components/game/shell/useExperienceShell.ts",
+    "components/game/world/WorldView.tsx",
+    "components/game/world/layout.ts",
+    "components/game/poseBlend.ts",
+    "components/game/tween.ts",
+    "components/game/shell/transition.ts",
+    "components/game/shell/Dialog.tsx",
+    "components/game/shell/LoadingOverlay.tsx",
+    "components/game/ui/GameInterface.tsx",
+    "components/game/ui/Hud.tsx",
+    "components/game/ui/PauseMenu.tsx",
+    "components/game/ui/TouchControls.tsx",
+    "components/game/ui/useSession.ts",
+    "components/game/world/resources.ts",
+    "components/game/__tests__/session.test.ts",
+    "components/game/__tests__/gameLoader.test.ts",
+    "components/game/__tests__/shell.test.tsx",
+    "components/game/__tests__/Dialog.test.tsx",
+    "components/game/__tests__/GameInterface.test.tsx",
+    "components/game/__tests__/transition.test.ts",
+    "components/game/__tests__/tween.test.ts",
+    "components/game/__tests__/poseBlend.test.ts",
+    "components/game/__tests__/followCamera.entry.test.ts",
+    "components/game/__tests__/input.test.ts"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "app/globals.css",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/GameAvatar.tsx",
+      "components/game/GameScene.tsx",
+      "components/game/animator.ts",
+      "components/game/entry.ts",
+      "components/game/followCamera.ts",
+      "components/game/session.ts",
+      "components/game/shell/gameLoader.ts",
+      "components/game/shell/useExperienceShell.ts",
+      "components/game/world/WorldView.tsx",
+      "components/game/world/layout.ts",
+      "plus the new files listed in filesChanged"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no errors, 1 pre-existing warning (react-hooks/exhaustive-deps in components/avatar/useRealtimeChat.ts line 224, a protected file I did not edit)",
+      "evidence": "LINT_EXIT=0; lint tail shows only that warning"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "Test Files 17 passed (17), Tests 348 passed (348)",
+      "evidence": "TEST_EXIT=0; new files: session, gameLoader, shell, Dialog, GameInterface, transition, tween, poseBlend, followCamera.entry; input.test extended"
+    },
+    {
+      "command": "npx tsc --noEmit -p .",
+      "exitCode": 0,
+      "result": "no type errors (test files are type-checked by next build too)",
+      "evidence": "TSC_EXIT=0"
+    },
+    {
+      "command": "npm run build (in a copy of the tree, node_modules symlinked)",
+      "exitCode": 0,
+      "result": "Compiled successfully; route / 40.8 kB, First Load JS 125 kB; shared 84.5 kB",
+      "evidence": "build.log ends with BUILD_EXIT=0"
+    },
+    {
+      "command": "bundle proof: scan the 6 JS files listed for / in app-build-manifest.json for rapier, KinematicCharacterController, createCharacterController, /game/clips/, GameScene, followCamera",
+      "exitCode": 0,
+      "result": "no hits; game and rapier code lives only in chunks 328.*.js (39 kB) and c522081e.*.js (2012 kB)",
+      "evidence": "bundle-proof.txt"
+    },
+    {
+      "command": "production browser proof: next start on a copy, load / and scroll the whole page, then hover and click Play (hover.mjs)",
+      "exitCode": 0,
+      "result": "before hover: 0 game, rapier or clips requests (69 requests total). After hover: c522081e and 328 chunks plus 6 clips. After click: no duplicate request.",
+      "evidence": "prod-hover.txt"
+    },
+    {
+      "command": "mutation sanity check: five deliberate breaks of production code",
+      "exitCode": 0,
+      "result": "4 of 5 broke a test as intended (page unlock restore, timer clearing in the return path, loader cancel timer, session reducer panel+PAUSE). The fifth (dropping the defaultPrevented guard in GameInterface) was not caught because Dialog stopPropagation covers the same case; both guards remain.",
+      "evidence": "mutation run output; all breaks reverted"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The Play transition follows play-transition.md sections 2 and 3: page chrome (nav, hero text, buttons, talk button, hints) exits with the specified stagger and easing, the canvas goes full screen with no layout jump, the camera moves from hero framing to the follow position while the avatar turns and walks into the world, the HUD enters, and input is enabled at about 1.9 s after click in the warm case; a recorded frame sequence (DevTools protocol screencast or per-frame captures) at the spec checkpoints shows no hard cut, no blank or T-pose frame and no flash of the hero layout.",
+      "status": "passed",
+      "evidence": "Production run (metrics-prod-warm.json, seq-prod-warm screencast of 222 frames, hover first, 1440x900 headless Chrome 154, Apple M1 Pro): section and #about rects constant (1 distinct each), scrollWidth constant 1430, canvas wrapper rect constant. Chrome fades monotonic with ease-in and stagger; status, gestures and nav are 0 at C+360 and the title was 0.14 at the row nearest C+360 (it started about 50 ms late), and the chrome is removed only when its transitions end, last chrome opacity 0, S at C+417. Camera: start (0,1.2,-16.9) fov 32, fov 36.3 at S+100 (moving), ends at the follow pose (fov 55). Avatar yaw pi at S, still pi at S+150, 0 by S+530. Walk starts S+514, 2.17 m by S+1500. HUD buttons first visible S+1030, opaque S+1280, hint opaque S+1780, entry done announced S+1530 (click to entry done 1948 ms). Held W at S+1550 moved the avatar 1.51 m. T-pose rows 0 (hand-above-hips probe), blank screencast frames 0, readPixels shows 0 empty renders (rp2.mjs). Pixel diff of the pair spanning the swap: avatar-column swap pair 5.9 vs median of 10 neighbours 3.5 (1.7x, under the 2x limit); the ground at S matches the stage colour exactly (5,7,7 to 5,7,7). rAF p95 17.6 ms, p99 18.4, max 21.1 ms. Scrolled start (300 px) metrics-prod-s300.json is equally clean. Not verified: spec timings are met at C+410 to C+420 rather than C+360 for S because S waits for the chrome transitions; the 1.9 s target is met (1.93 to 1.95 s)."
+    },
+    {
+      "criterion": "The loading case follows play-transition.md section 3: no blocking screen, an inline progress strip with Cancel appears only after 400 ms, Escape cancels, the sequence resumes without replaying the chrome exit when assets arrive, the game chunk is prefetched on Play hover, focus or pointerdown, and the M2 bundle proof in design 7.5 (amended for prefetch) passes: loading and scrolling / without hovering Play requests no game chunk, rapier or /game/clips/ file.",
+      "status": "passed",
+      "evidence": "loading.mjs with the game chunk and clips held by Fetch interception (not Slow 3G): strip absent at C+380, present from about C+450 and fully visible by C+600, role=status text, Cancel focused, page not blocked (chrome gone, hero avatar live). Cancel click and Escape each returned to the hero in 404 to 405 ms with identical rect, scrollY, and focus on Play; held requests arriving later did not enter the game. Resume: after release no chrome row reappeared (0 rows) and the game entered; strip gone afterwards. Prefetch (prod-hover.txt): hover, focus (shell tests) and pointerdown (shell tests) trigger it; pointerdown alone fetches without compiling shaders; touch fetches code only (tests). Bundle proof passes (see testsRun). Shell tests cover the 400 ms rule, the 300 ms minimum strip time, and Retry."
+    },
+    {
+      "criterion": "Exit plays the reverse sequence from play-transition.md section 4 and restores the exact pre-Play hero layout, scroll position (tested at 0 and at a scrolled offset) and focus on Play; the prefers-reduced-motion variant (section 5) is a short crossfade with no travel; the mobile variant (section 6) fades touch controls in at the end and a tap skips the sequence.",
+      "status": "passed",
+      "evidence": "exit.mjs: scroll 0 and 300. Hero rect, #about rect, scrollY (0 and 300), scrollWidth identical before Play and after Exit, focus on [ play / explore ], html overflow and gutter empty again; whole-frame pixel diff excluding hint box and avatar 0 percent (0 of 1,034,729 px) at scroll 0. At 300 the numeric diff (0.18 percent) is only my exclusion box not following the scroll offset (diff lies on the avatar legs). Exit: swap at X+720, hero state at X+1130, reverse FLIP at 300 px goes 0 to -300 smoothly, rAF max 21 ms. Reduced motion (reduced.mjs, media emulation): 0 frames with any chrome or nav transform or translate change, S at C+158 to 200, camera snapped to the follow pose and fov 55 at once, no auto-walk (hips z constant -11.995), W works at once, Exit to hero 322 to 361 ms (spec at most 400). Mobile emulation 390x844, coarse pointer, touch (mobile.mjs, labelled emulation): chip row used and nav hidden, touch controls fade in (opacity 0 at S+250), a tap during the entry skipped it (fov reached 55), joystick drag moved the avatar forward 3.7 m, Jump 64x64 px (at least 48), HUD at 47 px top with an emulated 47 px safe-area inset, orientation change gave a correct canvas 844x390 with aspect 2.164, exit by tap restored the hero. Real phone: untested."
+    },
+    {
+      "criterion": "Pause (Escape or P), Resume, tab-hide auto-pause showing Resume, and the frameloop on pause behave per design 2.3; Play from an active voice session stops the voice session and releases the microphone; failures (asset download, physics init, WebGL unavailable, context loss) show the failure dialog with Retry and Back to portfolio and leave the regular portfolio usable.",
+      "status": "passed",
+      "evidence": "pause.mjs: Escape and P pause (dialog, Resume focused), second press resumes, Resume click works, 30 frames per 500 ms while playing and 0 while paused, camera static while paused, key events during pause ignored. Activating another tab set document.hidden true and showed the Paused dialog with Resume; returning did not resume. Frameloop is driven through the Canvas frameloop prop because an imperative setFrameloop was undone by Canvas re-renders (found in browser, fixed). voice.mjs with fake media device and a loopback peer connection: status listening, mic track live, click to mic track ended 13 ms, peer connection closed, stays off after Exit. failures.mjs: blocked game chunk (message, Retry loads the game after unblocking, A6 confirmed), all clips blocked (Retry works), WebAssembly rejected (dialog with the message, Back restores hero, gestures and scroll work), WebGL unavailable (Play stays disabled, portfolio usable), context lost via WEBGL_lose_context (dialog Graphics were interrupted with Retry and Back, rendering stopped, Back restored the hero and the canvas works after restore). A dialog click bug (pointer-events inheritance from the overlay) was found in the browser and fixed. Retry after a runtime or context fault is covered by shell tests only (returns to hero and replays), not run in the browser."
+    },
+    {
+      "criterion": "Ten consecutive Play and Exit cycles and five Play and Cancel cycles in Chrome leave hero camera, idle avatar, gestures, head-follow and talk button working, page scroll restored, focus on Play, and DevTools listener count and JS heap after cycle 10 within noise of cycle 1 (numbers recorded).",
+      "status": "passed",
+      "evidence": "cycles.mjs on dev server, GC before each reading. DevTools jsEventListeners 509 and DOM nodes 1338 identical at baseline and after every one of 10 exit and 5 cancel cycles (cycles-10-5.json). Heap: cycle 1 31.59 MB, cycle 10 33.25 MB (plus 1.66 MB, 5 percent), cancel cycles 33.22 to 33.35 MB. A 30-cycle run (cycles-30.json) shows heap plateauing: 31.54, 32.69 (c5), 33.13 (c10), 33.33 (c15), 33.56 (c20), 33.6 (c25), 33.72 (c30). Hero camera (0,-0.3,4.9), head follow, idle animation, wave gesture (hand 0.5 m above hips) and talk button checked at cycles 1, 5, 10 and the last cancel cycle; scroll, rects and focus on Play checked every cycle. I treat the first-cycle growth as warmup, not a leak, but a 5 percent rise between cycle 1 and 10 is larger than none."
+    },
+    {
+      "criterion": "The automated tests listed for M2 in design section 9 exist and pass (session.test.ts every legal row, gameLoader.test.ts cancel at every step with vi.getTimerCount() 0, retry, timeout, late results ignored; shell.test.tsx with 5 enter and exit cycles balancing listeners; input.test.ts disabled input; Dialog.test.tsx focus trap), plus a test of the transition timeline beat order and durations.",
+      "status": "passed",
+      "evidence": "All exist and pass (348 tests). session.test.ts: every legal row and 22 illegal events returning the same object. gameLoader.test.ts: cancel in code, assets and physics steps with getTimerCount 0, network and asset retry, timeout, results of dead generations ignored, prefetch idempotency. shell.test.tsx (41 tests): 5 Play and Exit cycles and 5 Play and Cancel cycles with window and document listeners balanced, no timers, styles restored; failures, faults, reduced motion, prefetch. input.test.ts gained disabled-input tests. Dialog.test.tsx: focus on open, Tab wrap both directions, Escape, focus return. transition.test.ts: beat order, durations, 1860 ms warm, 2160 ms HUD complete, exit 700 and 1100, stagger bounds. Extra: GameInterface, tween, poseBlend, followCamera entry and exit tests. One jsdom limit: CSS pointer-events inheritance cannot be seen there, so the browser run covers it."
+    },
+    {
+      "criterion": "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the / route First Load JS stays within 2 kB of 125 kB, hero behavior outside the transition is unchanged, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "LINT_EXIT=0, TEST_EXIT=0, BUILD_EXIT=0 (copy tree), TSC_EXIT=0. First Load JS for / is 125 kB (route size 40.8 kB). Hero unchanged outside the transition: no hover or layout differences seen, Pixel diff after Exit 0 percent, gesture hover color transitions kept by explicit transitions. Intentional hero edits: overflow-x clip on the section, scanlines moved into the canvas wrapper, a hero fog (far 1000) so shader programs match the game, ReadySignal now also signals heroReady. Grep of new and changed content found no em dash and no absolute machine path. No commit made."
+    }
+  ],
+  "assumptions": [
+    "Evidence was taken on desktop headless Chrome 154 with a real GPU (Apple M1 Pro, ANGLE Metal, about 60 fps idle) and a dev server for most runs; the headline numbers were repeated against the production build on a second port.",
+    "The loading case was exercised by holding the game chunk and clips with Fetch interception, not Slow 3G throttling.",
+    "The 'warm' case is hover for 1.5 to 2.5 s first (fetch and shader pre-compile), then click; GO is then ready at about C+360 to C+420.",
+    "The HUD 'Energy cells n/3' counter and an Interact touch button were left out because the challenge and interactions arrive in M3 and M4; a fake counter would mislead.",
+    "Safe-area insets were verified with Emulation.setSafeAreaInsetsOverride (47 px top, 34 px bottom), not on a device.",
+    "app/layout.tsx, ASSETS.md and app/fonts/jetbrains-mono appeared in the worktree at 21:42 (self-hosted font change) while this stage was running; I did not author them and left them untouched."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Scroll lock is body position fixed plus overflow-y scroll on the root instead of overflow hidden with scrollbar-gutter stable: measured on classic scrollbars, root overflow hidden shifts the page 10 px even with gutter stable. The reverse restores styles and calls scrollTo.",
+    "Pause is a Canvas frameloop prop derived from the session; an imperative setFrameloop is silently undone by the Canvas on any re-render.",
+    "The game warms up in two places: world shader pre-compile on the first hover or focus on Play (fine pointer only), and a warm-up gate that waits for the chrome exit; the compile stalls the GPU process for about 300 ms and must never overlap the chrome exit.",
+    "The swap waits for the chrome's real CSS transitions (capped 300 ms beyond 360), so S is about C+410 to C+420; the spec's S = C+360 cuts a half-faded title on any frame that starts late.",
+    "World reveal fades material opacity (transparent materials at opacity 1), not colour: a dielectric ground still shows about 6 to 8 levels of specular at a grazing angle.",
+    "Exit swap holds rendering for two frames first, because the hero Avatar commits one frame after the lights and a render in between shows a bare stage.",
+    "Dialog lives in components/game/shell (not ui) because the failure dialog must work before the game chunk loads."
+  ],
+  "lessonsProposed": [
+    "jsdom tests cannot catch CSS pointer-events inheritance or compositor blank frames; run a real-browser click and a readPixels-per-render probe for every overlay and every scene swap.",
+    "Check Canvas props before using imperative R3F setters: Canvas re-applies frameloop on every re-render.",
+    "A mixer does not rewrite a bone whose animated value is unchanged, so another mixer's stopAllAction leaves the bind pose on screen; rebuild the animator in a passive effect after the other owner's cleanup.",
+    "Compile cost belongs to the GPU process, so it freezes CSS animations too; schedule it away from any visible transition."
+  ],
+  "selfUsage": {
+    "filesRead": 45,
+    "approxLinesRead": 5200,
+    "approxLinesWritten": 6800,
+    "retries": 0
+  }
+}

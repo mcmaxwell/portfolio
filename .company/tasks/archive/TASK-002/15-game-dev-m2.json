@@ -1,0 +1,262 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "15-game-dev-m2",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Milestone 2: entry, exit and lifecycle, including the cinematic Play transition the user asked for (page chrome animates out, the avatar turns and walks into the world, reverse on Exit), the non-blocking loader with Cancel, pause and resume, tab-hide auto-pause, failure handling, and clean repeated entry and exit.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/design.md",
+    ".company/tasks/active/TASK-002/play-transition.md",
+    ".company/tasks/active/TASK-002/spec-implementation-plan.md",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/game/shell/useExperienceShell.ts",
+    "components/game/GameScene.tsx",
+    "components/game/followCamera.ts",
+    "components/game/entry.ts",
+    "app/page.tsx",
+    "components/site/Nav.tsx"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/08-product-designer-play-transition.json",
+    ".company/tasks/active/TASK-002/reports/14-qa-m1-r3.json"
+  ],
+  "acceptanceCriteria": [
+    "The Play transition follows play-transition.md sections 2 and 3: page chrome (nav, hero text, buttons, talk button, hints) exits with the specified stagger and easing, the canvas goes full screen with no layout jump, the camera moves from hero framing to the follow position while the avatar turns and walks into the world, the HUD enters, and input is enabled at about 1.9 s after click in the warm case; a recorded frame sequence (DevTools protocol screencast or per-frame captures) at the spec checkpoints shows no hard cut, no blank or T-pose frame and no flash of the hero layout.",
+    "The loading case follows play-transition.md section 3: no blocking screen, an inline progress strip with Cancel appears only after 400 ms, Escape cancels, the sequence resumes without replaying the chrome exit when assets arrive, the game chunk is prefetched on Play hover, focus or pointerdown, and the M2 bundle proof in design 7.5 (amended for prefetch) passes: loading and scrolling / without hovering Play requests no game chunk, rapier or /game/clips/ file.",
+    "Exit plays the reverse sequence from play-transition.md section 4 and restores the exact pre-Play hero layout, scroll position (tested at 0 and at a scrolled offset) and focus on Play; the prefers-reduced-motion variant (section 5) is a short crossfade with no travel; the mobile variant (section 6) fades touch controls in at the end and a tap skips the sequence.",
+    "Pause (Escape or P), Resume, tab-hide auto-pause showing Resume, and the frameloop on pause behave per design 2.3; Play from an active voice session stops the voice session and releases the microphone; failures (asset download, physics init, WebGL unavailable, context loss) show the failure dialog with Retry and Back to portfolio and leave the regular portfolio usable.",
+    "Ten consecutive Play and Exit cycles and five Play and Cancel cycles in Chrome leave hero camera, idle avatar, gestures, head-follow and talk button working, page scroll restored, focus on Play, and DevTools listener count and JS heap after cycle 10 within noise of cycle 1 (numbers recorded).",
+    "The automated tests listed for M2 in design section 9 exist and pass (session.test.ts every legal row, gameLoader.test.ts cancel at every step with vi.getTimerCount() 0, retry, timeout, late results ignored; shell.test.tsx with 5 enter and exit cycles balancing listeners; input.test.ts disabled input; Dialog.test.tsx focus trap), plus a test of the transition timeline beat order and durations.",
+    "npm run lint, npm test and npm run build exit 0 with exit codes explicitly captured (build in a copy of the tree), the / route First Load JS stays within 2 kB of 125 kB, hero behavior outside the transition is unchanged, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit; never run git stash, reset or checkout.",
+    "Keep game code out of the initial bundle (ADR-006 lint boundary); TalkingAvatar may only hold the shell constants and CSS per play-transition.md 7.4.",
+    "Do not touch the clothing bake, public/avatar.glb or the M1 locomotion behavior except where the entry auto-walk requires it.",
+    "Camera findings F7 and F8 from QA round 3 are deferred to M3; do not fix them here unless the entry camera move requires it.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "code",
+    "tests",
+    "frame-sequence evidence",
+    "measurements"
+  ],
+  "reportPath": "reports/15-game-dev-m2.json"
+}

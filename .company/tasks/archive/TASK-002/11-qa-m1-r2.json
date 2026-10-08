@@ -1,0 +1,260 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "11-qa-m1-r2",
+  "assignee": "qa-engineer",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Independently verify Milestone 1 fix round 1 (uncommitted on top of f8da3ab): QA findings F1 and F2, the six new owner-supplied clips with fall and hard landing, the clothing fix baked into public/avatar.glb for both the hero and the game, and that nothing regressed in the hero or the game.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/04-qa-m1.json",
+    ".company/tasks/active/TASK-002/reports/05-game-dev-m1-fix-clips.json",
+    ".company/tasks/active/TASK-002/reports/10-graphics-engineer-bake-avatar-look.json",
+    ".company/tasks/active/TASK-002/design.md",
+    "components/game/player.ts",
+    "components/game/animator.ts",
+    "components/game/config.ts",
+    "scripts/bake-avatar-look.mjs",
+    "scripts/lib/avatar-bake.mjs",
+    "ASSETS.md"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/05-game-dev-m1-fix-clips.json",
+    ".company/tasks/active/TASK-002/reports/07-graphics-engineer-shirt-r2.json",
+    ".company/tasks/active/TASK-002/reports/10-graphics-engineer-bake-avatar-look.json"
+  ],
+  "acceptanceCriteria": [
+    "npm run lint, npm test and npm run build were each run by QA on Node 22 with exit code 0 (the build in a copy of the tree so the dev server's .next is not clobbered), and the output tails match the claims (100 tests; / route First Load JS 125 kB unchanged).",
+    "The working-tree diff against f8da3ab was inspected: only files named in reports 05 and 10 changed, components/avatar/Avatar.tsx and components/game/GameAvatar.tsx are unchanged, no design section 9 do-not-touch file changed other than the approved clothing bake of public/avatar.glb, the new jpeg-js devDependency is pinned exactly, and new content has no em dash or machine-local path.",
+    "F1 and F2 are independently confirmed fixed: QA reruns the peak-height ramp test, confirms it fails against f8da3ab player.ts in a temp copy without git stash, reset or checkout, and in the browser the avatar cannot climb the 45 degree ramp at walk or run while the 30 degree ramp, the 0.2 m step and the 0.35 m step block behave as before.",
+    "In the browser, standing still plays the new idle, walking and running look straight (no sideways run), a normal jump shows take-off then a soft landing, and walking off a ledge or dropping from at least 1.1 m shows the falling loop and the hard landing; foot sliding at walk and run is judged acceptable, noticeable or severe with screenshots.",
+    "The clothing bake is confirmed: hero first frame and a gesture, and the game at idle, walk, run, jump and fall from behind, side and three-quarter front, show no shirt specks, neck line or jagged edges; node scripts/bake-avatar-look.mjs reproduces public/avatar.glb byte-identically from the pinned original and refuses an already baked input.",
+    "The hero still works: talk button starts a session request, gestures play, head follows the mouse, and Play then Exit three times restores the hero, page scroll and Play focus with no console errors.",
+    "Any other visual defect QA notices on the hero or in the game is reported as a finding with a screenshot, including whether the faint horizontal stripes visible on the hero shirt (present before and after the bake, possibly shadow acne) are real, their cause, and the severity.",
+    "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; scope every command to it; do not edit implementation files; never run git stash, reset or checkout.",
+    "The dev server is already running from this worktree on http://localhost:3100; do not start another on port 3000, which belongs to an unrelated project.",
+    "Browser evidence is supplementary to the Bash-run gates; held keys need the DevTools protocol Input.dispatchKeyEvent because the Playwright MCP tools only tap keys.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "QA report with browser evidence"
+  ],
+  "reportPath": "reports/11-qa-m1-r2.json"
+}

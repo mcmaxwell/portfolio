@@ -1,0 +1,68 @@
+{
+  "workItemId": "TASK-002",
+  "assignee": "cross-reviewer",
+  "executionMode": "headless",
+  "vendor": "codex",
+  "authType": "subscription",
+  "requestedModelTier": "top",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "stageId": "37-cross-reviewer-final",
+  "objective": "Independent cross-provider review of the final Claude-authored revision of the playable 3D portfolio game (Milestones 1 to 5): shell and entry transition, physics and locomotion, animator and clips, follow camera and body clearance, campus world and textures (including the texture worker and shader warm-up), interactions and panels, challenge and versioned progress, touch controls, inert page and failure handling, and the tests. Judge correctness, robustness, resource cleanup, accessibility, maintainability and test honesty.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/design.md",
+    ".company/memory/conventions.md",
+    ".company/tasks/active/TASK-002/review-inputs/ADR-001-physics-rapier-fixed-step.md",
+    ".company/tasks/active/TASK-002/review-inputs/ADR-002-single-canvas-shared-avatar.md",
+    ".company/tasks/active/TASK-002/review-inputs/ADR-003-locomotion-retarget-strategy.md",
+    ".company/tasks/active/TASK-002/review-inputs/ADR-005-progress-storage-versioning.md",
+    ".company/tasks/active/TASK-002/review-inputs/ADR-006-lint-gate-and-game-import-boundary.md",
+    "ASSETS.md"
+  ],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/16-cross-reviewer-m1.json",
+    ".company/tasks/active/TASK-002/reports/33-qa-m3-verify.json",
+    ".company/tasks/active/TASK-002/reports/34-qa-m4.json",
+    ".company/tasks/active/TASK-002/reports/36-qa-m5.json"
+  ],
+  "acceptanceCriteria": [
+    "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+    "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+    "The hero is unchanged except the permitted changes (public/avatar.glb clothing bake, the shared clothing mechanism call in components/avatar/Avatar.tsx, and the Play entry and no-WebGL guard in components/avatar/TalkingAvatar.tsx); lib/persona.ts, data/index.ts and app/api are untouched; game code is not imported into the initial portfolio bundle (ADR-006 boundary).",
+    "Tests for physics, camera and body clearance, challenge and progress (ADR-005 fallbacks), touch controls, inert page and no-WebGL assert behaviour that could fail (no end-state-only or always-true assertions), and the M1 cross-review findings (camera minimum distance on pull-in, offline build font) are verified fixed.",
+    "Any correctness, robustness, resource-leak (listeners, timers, workers, GPU objects, Rapier objects), accessibility or maintainability defect in the game code is reported as a finding with severity; the owner-accepted known limitations (toe up to about 6 cm into props in corners, faint interior wall streaks, cold-load gain about 600 ms of 1.1 s, terminal-style dialog wording, no sound or quality presets) are not findings."
+  ],
+  "constraints": [
+    "Read-only: do not modify, stage, commit, stash or reset anything; the working copy is snapshotted and fingerprinted.",
+    "Run checks exactly as listed; do not substitute shorter commands. Use Node 22 if an nvm switch is needed.",
+    "Report verdict not-applicable; put the review outcome in crossReview.verdict (approved or changes-requested)."
+  ],
+  "deliverables": [
+    "crossReview report"
+  ],
+  "reviewScope": {
+    "baseRef": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "headRef": "3c888d6a7d592a739d784b1ae2f3aae7d32986e3",
+    "requiredChecks": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck"
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint"
+      },
+      {
+        "name": "unit",
+        "command": "npm test"
+      },
+      {
+        "name": "build",
+        "command": "npm run build"
+      }
+    ],
+    "workdirProvidedByBoss": true
+  },
+  "reportPath": "reports/37-cross-reviewer-final.json"
+}

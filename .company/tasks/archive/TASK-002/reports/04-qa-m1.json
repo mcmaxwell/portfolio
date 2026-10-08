@@ -1,0 +1,217 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "04-qa-m1",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "rejected",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read constitution, insights, stage contract, game-dev report, design sections 3.1/5.3/8/9. Ran lint, test and build on Node 22 in the worktree. Diffed 710f034..f8da3ab (name filter for the section 9 list, TalkingAvatar diff read in full, em dash and machine-path greps). Browser: the Playwright MCP tools can only tap keys (keydown+keyup in the same call), so the avatar never moved from them. Fell back to Bash: headless system Chrome via DevTools protocol (software GL) against the already-running dev server on port 3100, with real held keys, CDP screenshots and a read-only scene probe (position of the avatar root read from the three scene). Quantified speeds, step/ramp/wall/pit/jump behaviour from position traces. Reproduced the ramp-45 defect in a throwaway Rapier probe test (created and deleted, git status clean), and confirmed the unit test assertion is vacuous.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "REJECTED. Gates are green and match the dev claims (lint 0, 65 tests in 5 files, build 0, / First Load JS 125 kB). Diff scope is clean. The browser gate passes for Play/Exit, WASD, run, jump, camera drag, R, wall, 0.2 m step, 0.35 m step, 30 degree ramp and pit respawn. It FAILS for the 45 degree ramp: the avatar climbs it (feet y reaches 4.24 m) in the browser at both walk and run speed. Reproduced in real Rapier under Node when the capsule starts about 1 m from the ramp (peak 3.13 walking, 4.25 running). The dev's unit test only passes because it starts 2 m away and asserts the end feet height after 5 s, which is also satisfied if the avatar climbs and steps off the top. The criterion requires the 45 degree ramp to block, so the verdict is rejected. Walk and run speeds measured 1.57 and 3.75 m/s, acceptable for the prototype. Mobile and real-GPU checks were not done (out of scope for this gate).",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": "f8da3ab",
+    "targetDiffFiles": [
+      ".eslintrc.json",
+      ".gitignore",
+      "ASSETS.md",
+      "assets-src/mixamo/run.glb",
+      "assets-src/mixamo/walk.glb",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/** (23 files incl. __tests__)",
+      "eslint.config.mjs (deleted)",
+      "package-lock.json",
+      "package.json",
+      "public/game/clips/run.glb",
+      "public/game/clips/walk.glb",
+      "scripts/strip-clips.mjs",
+      "vitest.config.mts",
+      "vitest.setup.ts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node --version",
+      "exitCode": 0,
+      "result": "v22.23.2",
+      "evidence": "v22.23.2"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 warning",
+      "evidence": "LINT_EXIT=0; ./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'. react-hooks/exhaustive-deps (pre-existing, file is on the section 9 list)"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "5 files, 65 tests passed",
+      "evidence": "TEST_EXIT=0; Test Files 5 passed (5); Tests 65 passed (65)"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "Compiled successfully; / unchanged",
+      "evidence": "BUILD_EXIT=0; Compiled successfully; \u250c \u25cb /  40.8 kB  125 kB; + First Load JS shared by all 84.5 kB"
+    },
+    {
+      "command": "git diff 710f034..f8da3ab --name-only filtered by the section 9 do-not-touch names (Avatar.tsx, useRealtimeChat.ts, AskHints.tsx, lib/, data/, app/, public/avatar*, public/animations, next.config*, postcss*)",
+      "exitCode": 1,
+      "result": "no matches (grep exit 1 means none changed)",
+      "evidence": "no output. Em dash count in added text lines 0; machine-local path count 0 (.glb and package-lock excluded)."
+    },
+    {
+      "command": "Chrome DevTools protocol session A against the dev server (headless, software GL): hold W 3 s then Shift+W 2.5 s, positions read from the scene",
+      "exitCode": 0,
+      "result": "walk 1.57 m/s, run 3.75 m/s; jump peak y 0.87 m; no console errors",
+      "evidence": "walk speed m/s 1.57; run speed m/s 3.75; jump y max 0.87 last y 0; console [] (only GL driver ReadPixels perf notices filtered out as informational)"
+    },
+    {
+      "command": "CDP session A continued: exit click, then scrollTo",
+      "exitCode": 0,
+      "result": "Exit restores hero",
+      "evidence": "exit state {\"ov\":\"\",\"active\":\"[ play / explore ]\",\"y\":0,\"canv\":1}; scroll after exit 600 (screenshot A-after-exit.png shows status line, gestures list, talk and play buttons)"
+    },
+    {
+      "command": "CDP session B wall: D to x=-6, hold W up to 25 s",
+      "exitCode": 0,
+      "result": "blocked by wall",
+      "evidence": "end [ -6.18, 0, -0.56 ] (wall face z=-0.25, capsule radius 0.3); held at wall pos [ -6.18, 0, -0.56 ] twice 0.4 s apart"
+    },
+    {
+      "command": "CDP session B steps: W along x=0 then A to x=5 then W",
+      "exitCode": 0,
+      "result": "0.2 m climbed, 0.35 m blocked",
+      "evidence": "0.2 step (x0): max y 0.20 end [0,0,7.69]; 0.35 step (x5) end pos after 14s W [5.13, 0, 1.69] (step face at z=2, blocked, y=0)"
+    },
+    {
+      "command": "CDP session B ramps: approach each ramp low end from z about 1 and hold W",
+      "exitCode": 0,
+      "result": "30 climbed; 45 ALSO CLIMBED (FAIL)",
+      "evidence": "ramp30: max y 3.99 end [-12.2, 0, 11.6]; ramp45: max y 4.24 end [-7.07, 0, 8.24]; with Shift (session C): ramp45 RUN: max y 4.23 end [-7.13, -1.59, 16.46]"
+    },
+    {
+      "command": "CDP session B pit: A to x=10 then W through the pit",
+      "exitCode": 0,
+      "result": "fell and respawned at spawn",
+      "evidence": "pit: min y -8.59; sample [35521,10.14,-1.24,8.74] falling; respawn sample [36322,0,0,-11.99] (spawn is 0,0,-12)"
+    },
+    {
+      "command": "Throwaway Rapier probe test (copy of the player.physics rig, created inside the worktree and deleted afterwards; git status confirmed it was removed): 45 degree ramp, 300 ticks, start z0 in {0,1.1}, run in {false,true}",
+      "exitCode": 0,
+      "result": "reproduces the browser defect in Node",
+      "evidence": "QAPROBE z0=0 run=false peak=0.00; z0=0 run=true peak=0.00; z0=1.1 run=false peak=3.13; z0=1.1 run=true peak=4.25"
+    },
+    {
+      "command": "Independent check of source clips: gltf-transform read of the Hips translation channel in assets-src/mixamo/walk.glb and run.glb",
+      "exitCode": 0,
+      "result": "confirms the dev's root-motion numbers",
+      "evidence": "walk dur 1.367 s, net 139.02 cm along one axis = 1.017 m/s; run dur 0.733 s, 103.65 and 174.72 cm = 2.03 m path = 2.77 m/s"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint, npm test and npm run build were each run by QA in the worktree on Node 22 with exit code 0, and the recorded output tails match the claims in the game-dev report (65 tests in 5 files; / route First Load JS unchanged from the 125 kB baseline).",
+      "status": "passed",
+      "evidence": "Node v22.23.2. LINT_EXIT=0 (1 pre-existing warning), TEST_EXIT=0 (Test Files 5 passed, Tests 65 passed), BUILD_EXIT=0 (/ 40.8 kB, First Load JS 125 kB, shared 84.5 kB). All match the dev report."
+    },
+    {
+      "criterion": "The diff from the base commit to HEAD was inspected: no file on the design section 9 do-not-touch list changed, TalkingAvatar.tsx changes match design section 3.1 minimal M1 scope, and the hero behavior (talk button, gestures list, status line) is preserved in code.",
+      "status": "passed",
+      "evidence": "Name filter over git diff 710f034..f8da3ab found no section 9 file. TalkingAvatar.tsx diff read in full: useExperienceShell hook, Canvas className and touchAction switch, hero children and overlays wrapped in {!inGame}, ReadySignal, GameScene render, Exit button, a Play button beside Talk, talk button disabled while loading. Talk button handler, gesture list and status line code are unchanged (only wrapped in {!inGame}). Observed in browser after Exit: status line, gestures list, talk and play buttons all present (A-after-exit.png). The diff adds a root .gitignore (not a section 9 file; the dev report says the Boss force-adds it), noted only. Minor observation: at the first Playwright MCP load of /?arena=test the page was already in game mode with the avatar moving; a reload showed the normal hero and I could not reproduce it again, so it is probably leftover dev-server hot-reload state and is not a finding."
+    },
+    {
+      "criterion": "In a browser against the running dev server, Play enters the test arena and WASD, Shift run, Space jump, camera drag and R recenter work; walking into the wall shows the idle or walk pose rather than a full-speed run; the 0.2 m step is climbed and the 0.35 m step blocks; the 30 degree ramp is climbed and the 45 degree ramp blocks; falling into the pit respawns at spawn; Exit restores the hero with page scroll and the Play button focused.",
+      "status": "failed",
+      "evidence": "Passed in the browser: Play enters the arena (q-arena-idle.png); W/A/S/D move; Shift run 3.75 m/s vs walk 1.57; Space jump peak 0.87 m; camera drag yaws the camera (A-camera-dragged.png) and R recenters it (A-after-R.png); wall blocks at z=-0.56 and the avatar shows no run pose (B-wall-held.png); 0.2 m step climbed (max y 0.20); 0.35 m step blocked at z=1.69 (B-step035-blocked.png); 30 degree ramp climbed (max y 3.99; B-ramp30-top.png); pit fall reached y -8.59 and respawned at (0,0,-11.99) (pt-4.png falling, pt-5.png after respawn); Exit gives overflow '', activeElement '[ play / explore ]', scrollY works (A-after-exit.png). FAILED: the 45 degree ramp does not block. It is climbed to y 4.24 at walk speed and 4.23 at run speed (B-ramp45-blocked.png, C-ramp45-run.png, sd-1..sd-3 frames). See finding F1. The wall-held pose test needed care: the bones keep changing while blocked (b1 != b2), so a walk or idle cycle is playing, not a run (no run pose seen in B-wall-held.png). Browser evidence is supplementary; the Node probe reproduces the defect in Rapier independently."
+    },
+    {
+      "criterion": "Screenshots of the avatar walking and running from the side and from behind are captured and assessed for the spec section 6 acceptance: no sideways running, no stretched limbs, no pose snapping to an unanimated pose, and foot sliding judged as acceptable, noticeable, or severe, each with the screenshot filename as evidence.",
+      "status": "passed",
+      "evidence": "Walk from the side: q-walk-side-1.png, q-walk-side-2.png, q-walk-side-3.png (and montage frames) show an upright forward-facing gait with natural limb lengths. Run from the side: q-run-side-1.png to q-run-side-4.png show a forward lean, facing the travel direction, not sideways; limbs are not stretched. Walk from behind: q-walk-behind-t1.png, q-walk-behind-t2.png. Run from behind: A-run-behind.png. No pose snaps seen; the only unanimated pose is the idle fallback while falling and standing, expected because idle/jump/fall/land clips are not supplied yet (assumption A7). Foot sliding is judged ACCEPTABLE, from numbers rather than pixel tracking: measured ground speed 1.57 m/s walk and 3.75 m/s run versus the clip speed times playback rate (0.98 x 1.63 = 1.60; 2.93 x 1.30 = 3.81), residual under 2 percent; I did not track foot pixels. Single frames under software GL; no visual-quality or performance claim."
+    },
+    {
+      "criterion": "The measured walk and run speeds (1.6 and 3.8 m per second) and the R1 decision are judged against spec section 5 defaults (2.2 and 4.8) and the verdict states whether the slower values are acceptable for the prototype or must change, as a finding with evidence.",
+      "status": "passed",
+      "evidence": "In-browser measured speeds 1.57 and 3.75 m/s, equal to config within about 2 percent. I independently re-derived the walk Hips root-motion (1.017 m/s) and run path (2.77 m/s) from the source clips; they match the dev numbers. The slower values are ACCEPTABLE for the prototype: the spec defaults would need playback rates 2.2 and 1.6 against the 1.8 clamp and would slide visibly. Recorded as finding F2 (minor, no change required for M1; the owner may later supply a faster walk clip)."
+    },
+    {
+      "criterion": "The gltf clip files public/game/clips/walk.glb and run.glb load without console errors and the animation mixer does not stall (no frozen pose after 10 seconds of walking), confirmed in the browser console and by screenshots at two different times.",
+      "status": "passed",
+      "evidence": "Console after sessions: no errors or exceptions (only informational GL ReadPixels driver notices). Walking backward for 11.5 s, skeleton bone quaternions differed between t=1.5 s and t=11.5 s and again 0.12 s later (bones changed t1->t2 true, t2->t3 true); screenshots A-walkback-t1.png and A-walkback-t2.png show different gait phases. walk and run animate in the earlier side/behind frames."
+    },
+    {
+      "criterion": "Every finding is reported with file, line, severity, trigger, consequence, evidence and rule, and the verdict is approved only if every criterion above passed.",
+      "status": "passed",
+      "evidence": "Findings F1 to F4 carry all fields. Verdict is rejected because the browser criterion above failed."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "file": "components/game/player.ts",
+      "line": "175-195 (STEP_PROBE and autostep, setMaxSlopeClimbAngle at 72-74)",
+      "severity": "important",
+      "trigger": "Approach the 45 degree ramp (TEST_ARENA ramp-45, x -7) from roughly 1 m before its low end (z about 1) and hold W, with or without Shift.",
+      "consequence": "The avatar climbs the 45 degree ramp to its top (feet y 4.24 m) even though maxSlopeDeg is 40, so the M1 collision requirement (45 degree ramp blocks) is not met, and the unit test hides it. Likely cause, not proven: Rapier's autostep or the STEP_PROBE accept path steps up the 0.5 m thick ramp edge and then follows it; I did not bisect which.",
+      "evidence": "Browser: ramp45 max y 4.24, end [-7.07,0,8.24] at walk; run max y 4.23. Node Rapier probe: z0=1.1 run=false peak=3.13; z0=1.1 run=true peak=4.25; z0=0 peak=0.00. Probe file was deleted; git status clean.",
+      "rule": "Spec M1 acceptance (45 degree ramp blocks) and the stage criterion; code-review checklist: behaviour must match the acceptance criterion"
+    },
+    {
+      "id": "F2",
+      "file": "components/game/__tests__/player.physics.test.ts",
+      "line": "193-213",
+      "severity": "important",
+      "trigger": "Run npm test: the test 'climbs a 30 degree ramp and is blocked by a 45 degree ramp' passes while the 45 degree ramp is climbable.",
+      "consequence": "The assertion for the 45 degree ramp is vacuous: it starts 2 m from the ramp (z=0) and checks only feetY < 0.5 after 5 s, which is also true if the avatar climbs and steps off the top. The start position also never reaches the failing case. The regression gate gives false assurance. Fix suggestion: start at z about 1 and assert the peak feet height during the whole run (not the final), for both walk and run, and after fixing F1 confirm by reverting the guard that the test goes red.",
+      "evidence": "Source lines 208-212 (rig at z 0, run(b,5,fwd(true)), expect(feetY) < 0.5). Probe with z0=0 gives peak 0.00 (passes), z0=1.1 gives peak 3.13/4.25.",
+      "rule": "testing skill: assert the behaviour, not the end state; a probe or test never seen to fail is not evidence"
+    },
+    {
+      "id": "F3",
+      "file": "components/game/config.ts",
+      "line": "45-46 (walkSpeed 1.6, runSpeed 3.8)",
+      "severity": "minor",
+      "trigger": "Compare M1 speeds with spec section 5 defaults 2.2 and 4.8.",
+      "consequence": "Movement is about 27 percent (walk) and 21 percent (run) slower than the spec default; acceptable for a prototype since foot sliding stays acceptable. May feel slow on a large campus in M3.",
+      "evidence": "Measured in browser 1.57 and 3.75 m/s; clip playback rates 1.63 and 1.30 within the 0.75 to 1.8 clamp; hips root motion re-derived from source clips matches the dev.",
+      "rule": "Spec section 5 R1; judged acceptable, no change required for M1"
+    },
+    {
+      "id": "F4",
+      "file": "components/game/animator.ts",
+      "line": "not located (no idle, jump, fall or land clip supplied)",
+      "severity": "minor",
+      "trigger": "Stand idle, jump or fall in the arena.",
+      "consequence": "No idle breathing, no jump or fall or land animation yet: the avatar holds the bind pose while idle and falling. Known and expected (assumption A7 and design 5.1 fallbacks), but the jump-animation quality check is only partial.",
+      "evidence": "q-arena-idle.png, fall frames (fall-6.png to fall-8.png) show the arms-down bind pose",
+      "rule": "Design A7 (owner supplies Mixamo idle, jump, falling, landing clips)"
+    }
+  ],
+  "assumptions": [
+    "The Playwright MCP tool set available to me can only tap keys (type/click), so it could not hold keys; I used headless system Chrome driven over the DevTools protocol (software GL) for held keys, against the dev server on port 3100, and I record this plainly. No other server was started and port 3000 was not touched.",
+    "Positions were read from the three.js scene (root group above the first SkinnedMesh) via an injected read-only script; this is test instrumentation, not part of the product.",
+    "Frame rate under software GL was about 27 rAF per second; I did not use it as a performance figure, only that simulated speeds matched config.",
+    "Foot sliding was judged from measured ground speed against the clip speed times playback rate plus visual frames; foot-pixel tracking was not done.",
+    "F1 root cause is a hypothesis; the dev should bisect autostep versus the STEP_PROBE path."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "After the F1 fix, the ramp test should assert peak feet height over the whole run from a start near the ramp for both walk and run, and be mutation-checked."
+  ],
+  "lessonsProposed": [
+    "Playwright MCP key presses are instantaneous keydown+keyup, so they cannot hold a movement key against a polled input state; hold keys with a CDP Input.dispatchKeyEvent session instead, and read avatar position from the scene (an Object.prototype isScene setter injected via Page.addScriptToEvaluateOnNewDocument captures the scene).",
+    "A block-collision test that asserts only the final position can pass while the avatar climbs and steps off: assert the peak over the run, and start near the obstacle, since a far start can hide a near-start failure."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 1900,
+    "approxLinesWritten": 420,
+    "retries": 2
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "05-game-dev-m1-fix-clips",
+  "assignee": "game-dev",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "objective": "Dev round for the M1 QA rejection plus the owner-supplied clips: make slopes steeper than the max climb angle unclimbable with a test that would fail on the old code, and wire six new Mixamo clips (idle, walking, running, jump, falling idle, hard landing) including a visible fall and landing when dropping from a height.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/reports/04-qa-m1.json",
+    "components/game/player.ts",
+    "components/game/__tests__/player.physics.test.ts",
+    "components/game/animator.ts",
+    "components/game/clips.ts",
+    "components/game/config.ts",
+    "scripts/strip-clips.mjs",
+    "ASSETS.md",
+    ".company/tasks/active/TASK-002/design.md"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/04-qa-m1.json",
+    ".company/tasks/active/TASK-002/reports/03-game-dev-m1.json"
+  ],
+  "acceptanceCriteria": [
+    "QA finding F1 is fixed: starting 1 m or less from the 45 degree ramp at both walk and run speed, the capsule feet never rise above 0.3 m, while the 30 degree ramp, the 0.2 m step at walking speed and the 0.35 m step block all still behave as before; the root cause (autostep, STEP_PROBE, or both) is identified with evidence.",
+    "QA finding F2 is fixed: the ramp test asserts the peak feet height over the whole run from start positions at 0.5 m, 1 m and 2 m for walk and run, and the report shows the new test failing on the pre-fix code (red) and passing after the fix (green).",
+    "scripts/strip-clips.mjs reads the six FBX sources in assets-src/mixamo (Idle, Walking, Running, Jump, Falling Idle, Hard Landing) and writes rotation-only, Hips-free game clips idle, walk, run, jump, fall and land under public/game/clips, each under 100 KB, and clips.test.ts covers every produced file including a real GLTFLoader parse.",
+    "The new Walking and Running clips are measured for ground speed and loop period; the report states which walk and run sources ship (new or previous) and why, the curved Run Forward Arc Left is no longer the shipped run if the new Running is straight, and MOVEMENT walk and run speeds are retuned toward 2.2 and 4.8 m per second as far as the 0.75 to 1.8 playback clamp allows, with the resulting values recorded.",
+    "Jumping, walking off a ledge, and dropping from a height play take-off, a looping fall after the configured air-time threshold, and a hard landing on touchdown when the fall exceeded the hard-landing threshold (soft landing otherwise), with animator.test.ts covering every new transition and threshold; the idle clip is used when standing still.",
+    "ASSETS.md records each new source and shipped clip with source (Mixamo), the clip title, the provided-by-owner download date 2026-10-06, and the license note, and the superseded clips are either removed or marked unused.",
+    "npm run lint, npm test and npm run build exit 0 with exit codes and output tails recorded, no file owned by the parallel graphics stage (components/game/GameAvatar.tsx and any new components/game/avatarLook file) or on the design section 9 do-not-touch list is modified, new content has no em dash or machine-local path, and no commit is made."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; do not commit.",
+    "A graphics-engineer stage runs in parallel in the same worktree and owns components/game/GameAvatar.tsx and any new components/game/avatarLook file; do not edit them and do not run git stash, reset or checkout on paths you do not own.",
+    "Use three FBXLoader in Node (add only a devDependency if strictly needed, pinned exactly) to convert FBX; do not install global tools.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "code",
+    "tests",
+    "clips",
+    "ASSETS.md"
+  ],
+  "reportPath": "reports/05-game-dev-m1-fix-clips.json"
+}

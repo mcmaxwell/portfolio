@@ -1,0 +1,92 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "42-tech-writer-docs",
+  "agent": "tech-writer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read the contract, the work item, the target memory files, and only the summary, limitation, and criteria sections of the upstream reports; edited the four named files with the Edit tool; verified the no-em-dash and no-machine-path rules with the Grep tool because this role has no Bash tool; nothing was committed.",
+  "actualModel": "claude-haiku-5-5",
+  "summary": "Documented the playable 3D portfolio world in features.md (new game entry and a Play-entry note on the hero entry), modules.md (new game module section), ADR-005 (implementation notes for the Milestone 4 invalid-record rule, key, and version), and README.md (a Playable 3D world section). Every fact traces to the dev and QA reports, and no source, data, or persona file was touched; no build, lint, or test was run because this role has no Bash tool.",
+  "filesChanged": [
+    ".company/memory/features.md",
+    ".company/memory/modules.md",
+    ".company/memory/decisions/ADR-005-progress-storage-versioning.md",
+    "README.md"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      ".company/memory/features.md",
+      ".company/memory/modules.md",
+      ".company/memory/decisions/ADR-005-progress-storage-versioning.md",
+      "README.md"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "git diff -U0 README.md .company/memory/features.md .company/memory/modules.md | grep '^+' | grep -nE '<em dash>|<home-path>|<tmp-path>'",
+      "exitCode": 1,
+      "result": "no matches on added lines (exit 1 means no match); run by the Boss on this stage's behalf because tech-writer has no Bash",
+      "evidence": "emdash_path_grep_exit=1"
+    },
+    {
+      "command": "git diff --check -- README.md .company/memory",
+      "exitCode": 0,
+      "result": "no whitespace errors; run by the Boss on this stage's behalf",
+      "evidence": "diffcheck=0"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": ".company/memory/features.md gains one concise entry for the playable 3D portfolio game (what it is, the main files under components/game and the hero entry point in components/avatar/TalkingAvatar.tsx, status stable), and the hero entry notes the Play entry point and the no-WebGL guard; .company/memory/modules.md is updated only if it lists modules and the game module is missing.",
+      "status": "passed",
+      "evidence": "features.md: new section 'Playable 3D portfolio world' (about five lines, Files line lists components/game main files and the entry point components/avatar/TalkingAvatar.tsx, Status stable); the hero entry gained a 'Play entry' bullet naming the Play button and the no-WebGL guard (no Canvas and no Play button, talk button stays). modules.md lists modules and had no game module, so a 'game (components/game/)' section was added. Inspection only, no app run."
+    },
+    {
+      "criterion": "ADR-005 records the M4 tightening that a stored record marked completed with fewer than three cells is invalid and falls back, and the progress storage key and version as implemented.",
+      "status": "passed",
+      "evidence": "ADR-005 gained 'Implementation Notes (TASK-002, Milestones 4 and 5)': a record with completed true and fewer than three cells is invalid and falls back to the default record (source: report 31-game-dev-m4.json, assumptions and decisionsProposed); storage key portfolio.game.progress and record version 1 are restated (source: ADR Decision section, see assumptions)."
+    },
+    {
+      "criterion": "README.md gains a short section on the playable world: how to enter and exit, keyboard and mouse controls, touch controls, the energy cell challenge, where progress is stored and how to reset it, failure behaviour, and known limitations (no sound or quality presets, touch verified in emulation only, cold-load gain about 600 ms, toe and wall-streak residuals, entry fade step and passage-mouth framing follow-ups); every fact is taken from the reports, with no invented claims.",
+      "status": "passed",
+      "evidence": "README.md gained a 'Playable 3D world' section before Quick Start with subsections for entering and exiting, controls (keyboard and mouse, touch), the energy cell challenge, progress and reset, failure behaviour, and known limitations. Each limitation traces to report 35-game-dev-m5.json, 40-qa-final.json, 31b-mobile-dev-m4-touch.json or 38-game-dev-xreview-fix.json. The section is longer than 'short' because the criteria require every listed item; flagged for the Boss."
+    },
+    {
+      "criterion": "All new text has no em dash, no machine-local path, puts each full sentence on its own line in long Markdown, and does not touch data/index.ts, lib/persona.ts or source code.",
+      "status": "passed",
+      "evidence": "Grep tool found no em dash or machine-local path on the added lines in features.md, the ADR, or README.md; the modules.md matches are pre-existing lines. Each added sentence sits on its own physical line (checked by inspection). Only the four files listed in filesChanged were edited; data/index.ts, lib/persona.ts and source files were not opened for editing."
+    }
+  ],
+  "assumptions": [
+    "The storage key portfolio.game.progress and record version 1 come from the ADR-005 Decision section; no upstream report restates the key name, so they are documented as the ADR specifies and not confirmed against source.",
+    "The ADR-005 status line still reads 'Proposed' because the criteria do not name it; the Boss may set it to Accepted.",
+    "Keyboard controls W, A, S, D, arrows, Shift, Space and mouse drag come from report 03-game-dev-m1.json and were not contradicted later; E and Escape come from reports 21-game-dev-m3.json and 40-qa-final.json.",
+    "The M1 'R recenter' control was omitted because no later report confirms it.",
+    "Report 40 notes a stale comment at components/game/followCamera.ts:310; a concurrent comment-only game-dev edit is handling it, and no documentation text depends on that comment.",
+    "The game feature is marked stable as the contract requires, while the work item is still in-progress and the pull request and the Codex round-2 minor finding are pending.",
+    "No CHANGELOG line and no docs/<slug>.md file were written, because the criteria name only features.md, modules.md, ADR-005 and README.md; the Boss should decide whether a changelog line is needed.",
+    "The README table of contents was not updated, so the new section is not listed in the manual TOC.",
+    "The 1.1 s cold-load target comes from the Milestone 5 report summary; the 600 ms gain comes from the Milestone 5 decision text and QA finding F1.",
+    "Sound, sound toggle, volume, and quality presets are deferred by the user decision recorded on 2026-10-07 in the work item.",
+    "The heap figures (17.19 to 19.04 MB) and the 945 kB first-play download come from report 40-qa-final.json.",
+    "Boss transcription note: the stage's original testsRun entries had null exit codes because the role has no Bash; the Boss reran the em dash, machine-path and whitespace checks and recorded their real exit codes. The Boss also added the README table-of-contents entry and anchor the stage flagged, and set ADR-002, 003, 005 and 006 to Accepted."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "The README in this repository is an upstream tutorial template with a manual table of contents, so a new project section needs a matching TOC entry to be discoverable from the top of the file."
+  ],
+  "selfUsage": {
+    "filesRead": 22,
+    "approxLinesRead": 2200,
+    "approxLinesWritten": 230,
+    "retries": 0
+  }
+}

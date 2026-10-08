@@ -1,0 +1,266 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "37-cross-reviewer-final",
+  "agent": "cross-reviewer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "codex",
+  "authType": "subscription",
+  "planLabel": "unavailable (ChatGPT subscription)",
+  "executionPlan": "Verified the fixed review head, inspected the complete committed diff and relevant files in context, ran every required check verbatim, audited the acceptance-critical tests and boundaries, and performed read-only hygiene probes.",
+  "actualModel": "GPT-5 (unverified)",
+  "summary": "All four required checks exited 0, including 635 tests and the offline production build. Changes are requested because the camera resolver can cross a reported blocker in a tight pocket, while its regression test asserts only avatar distance and therefore accepts the collision.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": "3c888d6a7d592a739d784b1ae2f3aae7d32986e3",
+    "targetDiffFiles": [
+      ".eslintrc.json",
+      ".gitignore",
+      "ASSETS.md",
+      "app/fonts/jetbrains-mono/OFL.txt",
+      "app/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2",
+      "app/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2",
+      "app/globals.css",
+      "app/layout.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/game/GameAvatar.tsx",
+      "components/game/GameScene.tsx",
+      "components/game/__tests__/Dialog.test.tsx",
+      "components/game/__tests__/GameInterface.test.tsx",
+      "components/game/__tests__/TouchControls.test.tsx",
+      "components/game/__tests__/animator.test.ts",
+      "components/game/__tests__/bodyClearance.test.ts",
+      "components/game/__tests__/challenge.test.ts",
+      "components/game/__tests__/challengeUi.test.tsx",
+      "components/game/__tests__/clips.test.ts",
+      "components/game/__tests__/content.test.ts",
+      "components/game/__tests__/decor.test.ts",
+      "components/game/__tests__/fixedStep.test.ts",
+      "components/game/__tests__/followCamera.entry.test.ts",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/game/__tests__/gameLoader.test.ts",
+      "components/game/__tests__/hairMaterial.test.ts",
+      "components/game/__tests__/input.test.ts",
+      "components/game/__tests__/interactions.test.ts",
+      "components/game/__tests__/layout.test.ts",
+      "components/game/__tests__/noWebgl.test.tsx",
+      "components/game/__tests__/panels.test.tsx",
+      "components/game/__tests__/player.physics.test.ts",
+      "components/game/__tests__/poseBlend.test.ts",
+      "components/game/__tests__/progress.test.ts",
+      "components/game/__tests__/session.test.ts",
+      "components/game/__tests__/shell.test.tsx",
+      "components/game/__tests__/stance.test.ts",
+      "components/game/__tests__/textureWorker.test.ts",
+      "components/game/__tests__/transition.test.ts",
+      "components/game/__tests__/tween.test.ts",
+      "components/game/animator.ts",
+      "components/game/bodyClearance.ts",
+      "components/game/cameraProbe.ts",
+      "components/game/challenge.ts",
+      "components/game/clips.ts",
+      "components/game/config.ts",
+      "components/game/content.ts",
+      "components/game/entry.ts",
+      "components/game/fixedStep.ts",
+      "components/game/followCamera.ts",
+      "components/game/hairMaterial.ts",
+      "components/game/input.ts",
+      "components/game/interactions.ts",
+      "components/game/player.ts",
+      "components/game/poseBlend.ts",
+      "components/game/progress.ts",
+      "components/game/session.ts",
+      "components/game/shell/Dialog.tsx",
+      "components/game/shell/LoadingOverlay.tsx",
+      "components/game/shell/ReadySignal.tsx",
+      "components/game/shell/gameLoader.ts",
+      "components/game/shell/pageInert.ts",
+      "components/game/shell/transition.ts",
+      "components/game/shell/useExperienceShell.ts",
+      "components/game/tween.ts",
+      "components/game/ui/GameInterface.tsx",
+      "components/game/ui/Hud.tsx",
+      "components/game/ui/PauseMenu.tsx",
+      "components/game/ui/TouchControls.tsx",
+      "components/game/ui/panels.tsx",
+      "components/game/ui/useSession.ts",
+      "components/game/world/WorldView.tsx",
+      "components/game/world/builders.ts",
+      "components/game/world/campus.ts",
+      "components/game/world/colliders.ts",
+      "components/game/world/decor.ts",
+      "components/game/world/layout.ts",
+      "components/game/world/materials.ts",
+      "components/game/world/resources.ts",
+      "components/game/world/sky.ts",
+      "components/game/world/texturePaint.ts",
+      "components/game/world/textureWorker.ts",
+      "components/game/world/textures.ts",
+      "components/game/world/warm.ts",
+      "eslint.config.mjs",
+      "package-lock.json",
+      "package.json",
+      "public/avatar.glb",
+      "public/game/clips/fall.glb",
+      "public/game/clips/idle.glb",
+      "public/game/clips/jump.glb",
+      "public/game/clips/land.glb",
+      "public/game/clips/run.glb",
+      "public/game/clips/walk.glb",
+      "scripts/__tests__/avatar-bake.test.mjs",
+      "scripts/bake-avatar-look.mjs",
+      "scripts/lib/avatar-bake.mjs",
+      "scripts/lib/avatar-rig.d.mts",
+      "scripts/lib/avatar-rig.mjs",
+      "scripts/lib/plant-feet.mjs",
+      "scripts/measure-clips.mjs",
+      "scripts/strip-clips.mjs",
+      "vitest.config.mts",
+      "vitest.setup.ts"
+    ],
+    "projectContextUsed": false
+  },
+  "testsRun": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "TypeScript check passed.",
+      "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "Lint passed with one pre-existing warning outside the reviewed game changes.",
+      "evidence": "> portfolio@0.1.0 lint\n> next lint\n./components/avatar/useRealtimeChat.ts\n224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef'."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "30 test files and 635 tests passed.",
+      "evidence": "Test Files  30 passed (30)\nTests  635 passed (635)\nDuration  234.99s"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "Production build completed successfully.",
+      "evidence": "> portfolio@0.1.0 build\n> next build\nCreating an optimized production build ...\n\u2713 Compiled successfully\nGenerating static pages ... \u2713\nRoute (app) /: 40.9 kB, First Load JS 125 kB"
+    },
+    {
+      "command": "git diff --check 710f03404c18e6bb28ec05e4073c4b8bace5e176..3c888d6a7d592a739d784b1ae2f3aae7d32986e3",
+      "exitCode": 2,
+      "result": "Three whitespace errors detected.",
+      "evidence": "components/avatar/TalkingAvatar.tsx:61: trailing whitespace.\ncomponents/game/__tests__/stance.test.ts:297: new blank line at EOF.\ncomponents/game/world/texturePaint.ts:383: new blank line at EOF."
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The diff between baseRef and headRef was inspected in full and every finding cites a file and line in that diff.",
+      "status": "passed",
+      "evidence": "HEAD matched 3c888d6a7d592a739d784b1ae2f3aae7d32986e3; the exact diff-stat and full diff commands were executed, followed by contextual inspection of changed implementation and acceptance-critical tests. Every finding points to a changed file and line."
+    },
+    {
+      "criterion": "Every requiredChecks command was executed verbatim in the working copy and its real exit code and output excerpt are recorded in crossReview.checksRun.",
+      "status": "passed",
+      "evidence": "npm run typecheck, npm run lint, npm test, and npm run build were each run verbatim from the working-copy root and all exited 0."
+    },
+    {
+      "criterion": "The hero is unchanged except the permitted changes (public/avatar.glb clothing bake, the shared clothing mechanism call in components/avatar/Avatar.tsx, and the Play entry and no-WebGL guard in components/avatar/TalkingAvatar.tsx); lib/persona.ts, data/index.ts and app/api are untouched; game code is not imported into the initial portfolio bundle (ADR-006 boundary).",
+      "status": "passed",
+      "evidence": "The scoped diff contains only the permitted avatar binary, Avatar loader configuration, and TalkingAvatar shell integration. lib/persona.ts, data/index.ts, and app/api are absent from the diff. Static imports outside the game remain shell-only, and shell/gameLoader.ts contains the sole runtime dynamic import of components/game/entry."
+    },
+    {
+      "criterion": "Tests for physics, camera and body clearance, challenge and progress (ADR-005 fallbacks), touch controls, inert page and no-WebGL assert behaviour that could fail (no end-state-only or always-true assertions), and the M1 cross-review findings (camera minimum distance on pull-in, offline build font) are verified fixed.",
+      "status": "failed",
+      "evidence": "Physics, body-clearance, challenge, progress fallback, touch, inert-page, and no-WebGL tests contain causal and negative assertions, and the self-hosted font build passes offline. However, followCamera.test.ts:126-133 supplies an immediate-hit obstacle query but asserts only the 0.45 m avatar distance; it does not assert that the resolved camera remains within the reported clear fraction, so it passes while followCamera.ts:369 crosses the blocker."
+    },
+    {
+      "criterion": "Any correctness, robustness, resource-leak (listeners, timers, workers, GPU objects, Rapier objects), accessibility or maintainability defect in the game code is reported as a finding with severity; the owner-accepted known limitations (toe up to about 6 cm into props in corners, faint interior wall streaks, cold-load gain about 600 ms of 1.1 s, terminal-style dialog wording, no sound or quality presets) are not findings.",
+      "status": "passed",
+      "evidence": "Lifecycle paths for listeners, timers, workers, world resources, GPU objects, and Rapier objects were inspected alongside their cleanup tests. The camera correctness defect and diff-hygiene defects are reported; none of the owner-accepted limitations is reported."
+    }
+  ],
+  "assumptions": [],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "Camera regression tests should assert collision clearance and minimum avatar distance together; asserting only one invariant can conceal a forced move through geometry."
+  ],
+  "selfUsage": {
+    "filesRead": 105,
+    "approxLinesRead": 30000,
+    "approxLinesWritten": 0,
+    "retries": 2
+  },
+  "crossReview": {
+    "verdict": "changes-requested",
+    "reviewedHead": "3c888d6a7d592a739d784b1ae2f3aae7d32986e3",
+    "checksRun": [
+      {
+        "name": "typecheck",
+        "command": "npm run typecheck",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 typecheck\n> tsc --noEmit -p ."
+      },
+      {
+        "name": "lint",
+        "command": "npm run lint",
+        "exitCode": 0,
+        "evidence": "> portfolio@0.1.0 lint\n> next lint\nOne warning at components/avatar/useRealtimeChat.ts:224 for the pre-existing gestureRef dependency."
+      },
+      {
+        "name": "unit",
+        "command": "npm test",
+        "exitCode": 0,
+        "evidence": "Test Files  30 passed (30)\nTests  635 passed (635)\nDuration  234.99s"
+      },
+      {
+        "name": "build",
+        "command": "npm run build",
+        "exitCode": 0,
+        "evidence": "Creating an optimized production build ...\n\u2713 Compiled successfully\nGenerating static pages ... \u2713\nRoute / First Load JS: 125 kB"
+      }
+    ],
+    "findings": [
+      {
+        "severity": "important",
+        "file": "components/game/followCamera.ts",
+        "line": 369,
+        "trigger": "When every candidate camera direction has less than 0.45 m of clear space, such as a tight corner or sealed pocket, sol.t is below HARD_MIN divided by the desired-ray length.",
+        "consequence": "Math.max forces the camera beyond the first reported blocker, placing it inside or through geometry even though the module's documented invariant says a position inside a collider is never an option.",
+        "evidence": "Line 366 correctly caps the normal distance floor at sol.t, but line 369 then takes Math.max with HARD_MIN/len, which exceeds sol.t in this case. The committed test at followCamera.test.ts:126-133 uses a query that always reports an immediate hit and checks only that camera distance is at least 0.45 m; it never checks the reported clear distance, so all 635 tests pass while accepting the collision.",
+        "rule": "Camera collision resolution must never place the camera beyond the solved clear distance, and a regression test must assert both obstacle clearance and body-distance invariants."
+      },
+      {
+        "severity": "minor",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 61,
+        "trigger": "Running git diff --check on the reviewed commit range.",
+        "consequence": "The committed trailing whitespace creates avoidable diff noise and fails the standard Git whitespace check.",
+        "evidence": "git diff --check reports: components/avatar/TalkingAvatar.tsx:61: trailing whitespace.",
+        "rule": "Committed source diffs should be free of whitespace errors."
+      },
+      {
+        "severity": "minor",
+        "file": "components/game/__tests__/stance.test.ts",
+        "line": 297,
+        "trigger": "Running git diff --check on the reviewed commit range.",
+        "consequence": "The extra blank line at end of file creates avoidable diff noise and fails the standard Git whitespace check.",
+        "evidence": "git diff --check reports: components/game/__tests__/stance.test.ts:297: new blank line at EOF.",
+        "rule": "Committed test diffs should be free of whitespace errors."
+      },
+      {
+        "severity": "minor",
+        "file": "components/game/world/texturePaint.ts",
+        "line": 383,
+        "trigger": "Running git diff --check on the reviewed commit range.",
+        "consequence": "The extra blank line at end of file creates avoidable diff noise and fails the standard Git whitespace check.",
+        "evidence": "git diff --check reports: components/game/world/texturePaint.ts:383: new blank line at EOF.",
+        "rule": "Committed source diffs should be free of whitespace errors."
+      }
+    ]
+  }
+}

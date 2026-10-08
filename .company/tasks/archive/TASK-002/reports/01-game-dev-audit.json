@@ -1,0 +1,537 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "01-game-dev-audit",
+  "agent": "game-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Read-only audit in the isolated worktree on Node 22. Ran npm run lint and npm run build. Parsed the glTF JSON chunk and accessor binaries of avatar.glb, walk.glb, run.glb (plus durations of the other 7 clips) with scratch Node scripts kept outside the repo. Compared rest rotations of avatar and Mixamo clips. Collected npm view peer-dependency evidence. Downloaded (npm pack to scratch, no install) the rapier3d-compat and @react-three/rapier tarballs to measure the WASM payload. Removed the .next and next-env.d.ts build artifacts afterwards because the repo has no .gitignore.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Build passes (exit 0) but npm run lint is not a working gate: no .eslintrc exists, so next lint opens an interactive setup prompt and exits 0 without linting, and the existing eslint.config.mjs fails under ESLint 8.57 (next/typescript missing). The avatar is a standard Mixamo-named 54-joint Avaturn skeleton with correct Hips/Spine/Neck/Head/foot joints, so reuse is supported. walk.glb and run.glb are real distinct clips whose files are about 98% redundant Mixamo mesh data. A locomotion retarget should drop Hips rotation and translation (Hips rest rotation differs by 89.4 deg), keep quaternion tracks for existing joints, and consider rest-delta correction for feet, neck and arms. Recommend @react-three/rapier@1.5.0 (peer ranges satisfied; WASM about 1.44 MB raw, 765 KB gzip) and Vitest for unit tests.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "710f034",
+    "targetResultCommit": null,
+    "targetDiffFiles": [],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "node --version",
+      "exitCode": 0,
+      "result": "v22.23.2",
+      "evidence": "v22.23.2"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "NOT A REAL PASS: interactive ESLint setup prompt, nothing linted",
+      "evidence": "> next lint | ? How would you like to configure ESLint? https://nextjs.org/docs/basic-features/eslint | Strict (recommended) / Base / Cancel | If you set up ESLint yourself, we recommend adding the Next.js ESLint plugin. | LINT_EXIT=0"
+    },
+    {
+      "command": "ESLINT_USE_FLAT_CONFIG=true npx eslint components/avatar/Avatar.tsx",
+      "exitCode": 2,
+      "result": "fails: existing eslint.config.mjs unusable with eslint 8.57.0 / eslint-config-next 14.1.4",
+      "evidence": "ESLint couldn't find the config \"next/typescript\" to extend from. The config \"next/typescript\" was referenced from the config file in \"\"."
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "Compiled successfully; types valid; 7/7 static pages",
+      "evidence": "Next.js 14.1.4 ... Compiled successfully | Linting and checking validity of types | Generating static pages (7/7) | / 40.8 kB, First Load JS 125 kB | shared 84.5 kB | warnings: caniuse-lite outdated; 'Using edge runtime on a page currently disables static generation for that page' | BUILD_EXIT=0. No .env.local present; build did not need it (only OPENAI_API_KEY in the server route read at runtime and optional NEXT_PUBLIC_AVATAR_URL defaulting to /avatar.glb)."
+    },
+    {
+      "command": "node <scratch>/glb.js and clip.js and rest.js (GLB JSON chunk and accessor parsing)",
+      "exitCode": 0,
+      "result": "measurements recorded in auditFindings",
+      "evidence": "avatar.glb: 66 nodes, 54 joints, 11 meshes, 31 images 3938036 B; walk.glb 42 frames 1.4 s; run.glb 23 frames 0.7667 s"
+    },
+    {
+      "command": "npm view @react-three/rapier@1.5.0 / @2.2.0 peerDependencies; npm pack @dimforge/rapier3d-compat@0.14.0 (scratch)",
+      "exitCode": 0,
+      "result": "1.5.0 peers react >=18.0.0, three >=0.139.0, @react-three/fiber >=8.9.0; 2.2.0 peers react ^19, fiber ^9.0.4",
+      "evidence": "rapier_wasm3d_bg.wasm 1439831 B; rapier.es.js 2059628 B (gzip -9 765295 B); @react-three/rapier 1.5.0 tarball 57716 B"
+    },
+    {
+      "command": "git status --short (final)",
+      "exitCode": 0,
+      "result": "only .company/tasks/active/TASK-002/ untracked",
+      "evidence": "?? .company/tasks/active/TASK-002/"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run build and npm run lint were executed on Node 22 in the isolated worktree and their exit codes and output tails are recorded as the baseline, including any pre-existing failures.",
+      "status": "passed",
+      "evidence": "Node v22.23.2. npm run build exit 0 (Compiled successfully, 7/7 static pages, / 40.8 kB, First Load JS 125 kB; warnings: caniuse-lite outdated, edge runtime on opengraph page disables static generation). npm run lint exit 0 but it only displayed an interactive 'How would you like to configure ESLint?' prompt because there is no .eslintrc*; zero files were linted. Pre-existing failure recorded: eslint.config.mjs (flat config) fails with ESLint 8.57.0 ('next/typescript' not found in eslint-config-next 14.1.4, exit 2 when forced with ESLINT_USE_FLAT_CONFIG=true). Lint has no usable baseline and the build's own 'Linting and checking validity of types' step is the only effective check."
+    },
+    {
+      "criterion": "public/avatar.glb was inspected by parsing its glTF JSON chunk: node count, skin and joint names (including whether Hips, Spine, Head, Neck, LeftFoot, RightFoot exist and the root joint name), mesh and primitive counts, material count, texture and image count with per-image byte sizes, morph target presence, bounding dimensions derived from accessor min/max, and embedded animation count are reported as measured facts.",
+      "status": "passed",
+      "evidence": "See auditFindings.avatarModel: 66 nodes, 1 skin with 54 joints, root joint Hips (scene root Armature, identity transform), all six named joints present, 11 meshes/11 primitives, 11 materials, 31 textures/31 images with 31 per-image byte sizes (total 3938036 B), morph targets on 6 meshes (Head_Mesh 72 targets, ARKit plus visemes), bounds 1.824 x 1.868 x 0.368 m, 1 embedded animation."
+    },
+    {
+      "criterion": "public/animations/walk.glb and public/animations/run.glb were inspected the same way: animation track count and target node names, clip duration, whether the files carry their own mesh geometry and textures (redundant with the avatar), and their file sizes are reported.",
+      "status": "passed",
+      "evidence": "See auditFindings.walkClip and runClip: both 195 channels (65 nodes x translation/rotation/scale), 65 mixamorig:* target nodes, walk 1.4 s / 42 frames / 1876448 B, run 0.7667 s / 23 frames / 1859972 B. Each carries 2 meshes (Beta_Joints, Beta_Surface), 2 materials, 0 textures, 0 images; mesh and skin buffers are 1774280 B of the buffers (about 98%) and the animation data only 39088 B (walk) and 22352 B (run). MD5s differ (clips are not duplicates)."
+    },
+    {
+      "criterion": "The retargeting assumptions in components/avatar/Avatar.tsx (quaternion-only, Hips excluded) are assessed against the measured joint names, and the report states which tracks a locomotion retarget must keep or drop and why, labeled as a recommendation.",
+      "status": "passed",
+      "evidence": "See auditFindings.retargeting. Prefix-strip assumption is confirmed (avatar joint names are identical to Mixamo names without the prefix; 51 of 64 non-Hips rotation tracks bind, 13 target joints absent in the avatar). Hips exclusion is justified by a measured 89.4 deg Hips rest-rotation difference (Mixamo bakes a -90 deg X rotation, Armature scale 0.01) and Hips translation in centimetres (about -100 on local Z) in a different unit and axis frame. Recommendation (not measured behaviour) lists keep/drop/adjust tracks."
+    },
+    {
+      "criterion": "A physics dependency decision is reported with evidence from npm view (peer dependency ranges) for @react-three/rapier against the installed @react-three/fiber, three, and react versions, naming the exact version to install or a concrete reason to choose an alternative, and whether the WASM payload fits inside the 8 MB additional-asset budget.",
+      "status": "passed",
+      "evidence": "Installed: react 18.2.0, three 0.163.0, @react-three/fiber 8.16.2, drei 9.105.4. @react-three/rapier@1.5.0 (latest 1.x) peers react >=18.0.0, three >=0.139.0, @react-three/fiber >=8.9.0 -> compatible; deps @dimforge/rapier3d-compat 0.14.0 (Apache-2.0). Latest 2.2.0 peers react ^19 and fiber ^9.0.4 -> incompatible. Decision: install @react-three/rapier@1.5.0 pinned exactly. WASM measured: 1439831 B raw, bundled in rapier.es.js 2059628 B raw / 765295 B gzip; fits well within 8 MB. Exposes world.createCharacterController(offset) returning KinematicCharacterController (verified in .d.ts). Existing CSP already has 'wasm-unsafe-eval' and worker-src, so no next.config.mjs change is expected."
+    },
+    {
+      "criterion": "A unit test runner is proposed with the exact devDependencies and npm script, based on what works with Next.js 14.1.4 and TypeScript strict without ejecting, and the report explains why.",
+      "status": "passed",
+      "evidence": "See auditFindings.testRunner: Vitest with vite, jsdom, Testing Library, vite-tsconfig-paths and script 'test': 'vitest run'. Proposal is verified by npm view (peers/engines) only; it was NOT installed or run in this read-only stage, so it is untested here."
+    },
+    {
+      "criterion": "The report gives a reuse-or-rebuild decision for the avatar with the concrete evidence behind it, lists asset gaps (jump, fall, land, idle, celebration clips) with a recommended sourcing approach that records license requirements, and lists any initial performance measurement that could not be taken without a browser as an explicit gap rather than a guess.",
+      "status": "passed",
+      "evidence": "See auditFindings.avatarDecision (reuse), assetGaps (jump, fall, land, idle locomotion, celebration; existing dance/silly_dance/wave can serve as celebration; sourcing via Mixamo with recorded Adobe terms, no license record exists in the repo today) and performanceGaps (FPS, frame time, draw calls, memory, load time and mobile figures are untaken; only static build and file-size numbers are given)."
+    },
+    {
+      "criterion": "No tracked product file was modified; git status in the isolated worktree shows only files under .company/tasks/active/TASK-002/ or scratch files outside the repository.",
+      "status": "passed",
+      "evidence": "Final git status --short: '?? .company/tasks/active/TASK-002/'. Build artifacts .next/ and next-env.d.ts (untracked because the repo has no .gitignore) were deleted after the build."
+    }
+  ],
+  "assumptions": [
+    "Walk/run hip displacement is interpreted in Mixamo local space (cm) mapped through the Armature (rot +90 deg X, scale 0.01) so local Y is world-forward (+Z); not visually verified.",
+    "Mixamo license terms are stated from general knowledge of Adobe's Mixamo FAQ and must be re-verified and recorded by the human at download time.",
+    "Rest-delta retarget formula and 'feet visibly pitched about 12 deg' are inferences from rest-quaternion comparison, not observed in a render.",
+    "Vitest/jsdom/Vite version ranges come from current npm metadata and were not install-tested."
+  ],
+  "questions": [],
+  "decisionsProposed": [
+    "Reuse public/avatar.glb and existing walk/run clips; no rigging blocker found.",
+    "Install @react-three/rapier@1.5.0 pinned exactly (do not use 2.x: needs React 19 and fiber 9); use KinematicCharacterController via world.createCharacterController.",
+    "Use Vitest (not next/jest) as the unit test runner because three 0.163 is ESM-only and Vitest handles it natively.",
+    "Add a working lint gate in Milestone 1: add .eslintrc.json extending next/core-web-vitals (or fix eslint.config.mjs to extend only next/core-web-vitals), and add a .gitignore for .next, next-env.d.ts, node_modules, coverage. Needs Boss approval since it touches repo config.",
+    "Create game-only locomotion clips by stripping mesh/skin from walk/run (and new clips) to about 25-40 KB each, and trim the duplicated last frame."
+  ],
+  "lessonsProposed": [
+    "Check that npm run lint actually lints: next lint with no .eslintrc opens an interactive prompt and exits 0.",
+    "When two Mixamo clips share an identical file size, verify before concluding they are duplicates: inspect each clip separately (shell variable leakage caused a false duplicate reading mid-audit).",
+    "Repos without a .gitignore leave .next and next-env.d.ts untracked after a build; clean them in read-only stages."
+  ],
+  "selfUsage": {
+    "filesRead": 14,
+    "approxLinesRead": 900,
+    "approxLinesWritten": 150,
+    "retries": 0
+  },
+  "auditFindings": {
+    "baseline": {
+      "node": "v22.23.2",
+      "build": {
+        "exitCode": 0,
+        "routes": "/ 40.8 kB (First Load JS 125 kB); shared 84.5 kB; /_not-found 882 B; /api/realtime-session dynamic; /opengraph-image edge",
+        "warnings": [
+          "caniuse-lite outdated (browserslist)",
+          "Using edge runtime on a page currently disables static generation for that page"
+        ],
+        "envVarsNeeded": "none; .env.local absent and not created; OPENAI_API_KEY is only read at request time in app/api/realtime-session/route.ts"
+      },
+      "lint": {
+        "exitCode": 0,
+        "effective": false,
+        "detail": "No .eslintrc* in repo; next lint (14.1.4) shows an interactive 'How would you like to configure ESLint?' prompt (Strict/Base/Cancel) and exits 0 without linting. eslint.config.mjs (flat config extending next/core-web-vitals and next/typescript) is not picked up by next lint 14.1.4; forcing flat config with ESLINT_USE_FLAT_CONFIG=true fails (exit 2): 'ESLint couldn't find the config next/typescript to extend from' because eslint-config-next 14.1.4 ships only core-web-vitals and index. Pre-existing, unrelated to game work.",
+        "tooling": "eslint 8.57.0, eslint-config-next 14.1.4, @eslint/eslintrc present"
+      },
+      "repoHygiene": "No .gitignore at repo root (only .company/.gitignore); build leaves untracked .next/ and next-env.d.ts. Removed after the build.",
+      "installed": {
+        "react": "18.2.0",
+        "three": "0.163.0",
+        "@react-three/fiber": "8.16.2",
+        "@react-three/drei": "9.105.4",
+        "next": "14.1.4",
+        "typescript": "5.4.5"
+      },
+      "initialAssetWeight": "avatar.glb 13986728 B + 9 gesture clips 17111968 B (about 17.1 MB, all preloaded by preloadAvatar/GestureClips; Avatar.tsx comment says ~16MB)"
+    },
+    "avatarModel": {
+      "file": "public/avatar.glb",
+      "bytes": 13986728,
+      "glb": {
+        "version": 2,
+        "jsonChunkBytes": 192700,
+        "binChunkBytes": 13794000
+      },
+      "nodeCount": 66,
+      "sceneRoots": [
+        "Armature (no rotation/scale; 66 = 54 joints + 11 meshes + Armature)"
+      ],
+      "skins": 1,
+      "jointCount": 54,
+      "rootJoint": "Hips (joints[0]; skin.skeleton undefined)",
+      "jointNames": "Hips, Spine, Spine1, Spine2, Neck, Head, L/R Shoulder, Arm, ForeArm, Hand, 15 finger joints per hand (Thumb/Index/Middle/Ring/Pinky 1-3), L/R UpLeg, Leg, Foot, ToeBase, LeftEye, RightEye (no mixamorig prefix)",
+      "requiredJointsPresent": {
+        "Hips": true,
+        "Spine": true,
+        "Head": true,
+        "Neck": true,
+        "LeftFoot": true,
+        "RightFoot": true,
+        "LeftToeBase": true,
+        "RightToeBase": true
+      },
+      "meshes": 11,
+      "primitives": 11,
+      "materials": 11,
+      "textures": 31,
+      "images": 31,
+      "imageBytesTotal": 3938036,
+      "imageBytesPerImage": [
+        26592,
+        127796,
+        75136,
+        2300,
+        129124,
+        243392,
+        2300,
+        88840,
+        73832,
+        2300,
+        17388,
+        127828,
+        93420,
+        8972,
+        91116,
+        108048,
+        8972,
+        98152,
+        1143864,
+        144496,
+        24180,
+        178752,
+        221044,
+        9584,
+        102752,
+        29156,
+        317412,
+        23516,
+        72252,
+        29340,
+        316180
+      ],
+      "imageMime": "12 PNG-sized entries mixed with JPEG; largest is a 1143864 B PNG",
+      "nonImageBinaryBytesDerived": 9855964,
+      "vertexTriangleTotals": {
+        "vertices": 17977,
+        "triangles": 21090
+      },
+      "perMesh": "Body_Mesh 2054 tris; Head_Mesh 8232 tris; Teeth 1526; Tongue 148; Eye 312; EyeAO 288; Eyelash 360; hair 1354; shoes 3380 (6018 verts); look_0 1390; look_1 2046",
+      "morphTargets": {
+        "present": true,
+        "meshes": [
+          "Eye_Mesh (11)",
+          "EyeAO_Mesh (32)",
+          "Eyelash_Mesh (31)",
+          "Head_Mesh (72, includes jawOpen, mouthOpen, viseme_*, ARKit set)",
+          "Teeth_Mesh (20)",
+          "Tongue_Mesh (21)"
+        ],
+        "note": "Avatar.tsx comment says the model has no facial blendshapes; that is not true for this file (jawOpen, mouthOpen, viseme_aa, mouthFunnel exist on Head_Mesh), so the mouth-morph branch is active. Not a locomotion blocker."
+      },
+      "boundsMeters": {
+        "min": [
+          -0.9122,
+          -0.0034,
+          -0.1654
+        ],
+        "max": [
+          0.912,
+          1.8651,
+          0.2026
+        ],
+        "size": [
+          1.8242,
+          1.8685,
+          0.368
+        ],
+        "note": "Width 1.82 m is the T-pose arm span; height about 1.865 m with feet on y about 0; collision capsule should use about 1.8 m height, about 0.3-0.35 m radius, not the bounding box."
+      },
+      "embeddedAnimations": {
+        "count": 1,
+        "name": "avaturn_animation",
+        "durationSeconds": 8.083,
+        "frames": 37,
+        "channels": 59,
+        "channelPaths": {
+          "rotation": 52,
+          "translation": 1,
+          "weights": 6
+        },
+        "hipsTracks": [
+          "translation",
+          "rotation"
+        ],
+        "note": "Idle clip (animations[0]) includes a Hips translation track and morph weight tracks; Avatar.tsx applies it unfiltered."
+      },
+      "extensionsUsed": "see raw GLB; not material to the decision"
+    },
+    "walkClip": {
+      "file": "public/animations/walk.glb",
+      "bytes": 1876448,
+      "md5": "6622d32121ef7255b07215e72b9259a4",
+      "glb": {
+        "jsonChunkBytes": 63052,
+        "binChunkBytes": 1813368
+      },
+      "animations": 1,
+      "clipName": "Armature|mixamo.com|Layer0",
+      "channels": 195,
+      "channelPaths": {
+        "translation": 65,
+        "rotation": 65,
+        "scale": 65
+      },
+      "targetNodeCount": 65,
+      "targetNodeNames": "mixamorig:Hips, Spine, Spine1, Spine2, Neck, Head, HeadTop_End, both Shoulder/Arm/ForeArm/Hand plus 4 joints per finger (Thumb/Index/Middle/Ring/Pinky 1-4), both UpLeg/Leg/Foot/ToeBase/Toe_End",
+      "durationSeconds": 1.4,
+      "frames": 42,
+      "fps": 30,
+      "firstFrameEqualsLastFrame": true,
+      "embeddedGeometry": {
+        "meshes": [
+          "Beta_Joints",
+          "Beta_Surface"
+        ],
+        "materials": 2,
+        "textures": 0,
+        "images": 0,
+        "meshAndSkinBufferBytes": 1774280,
+        "animationBufferBytes": 39088,
+        "redundantFraction": "about 98% of the file is Mixamo Beta mesh and skin data redundant with the avatar (animation data about 39 KB)"
+      },
+      "hipsRootMotion": {
+        "translationCmLocalYMin": 1.76,
+        "translationCmLocalYMax": 140.78,
+        "verticalHeightLocalZRangeCm": [
+          -101.4,
+          -91.1
+        ],
+        "lateralXRangeCm": [
+          -0.27,
+          9.76
+        ],
+        "netForwardDisplacementPerLoopMeters": 1.39,
+        "impliedClipForwardSpeedMetersPerSecond": 0.99
+      },
+      "nonHipsLoopClosure": "all non-Hips rotation tracks have first == last quaternion (dot 1.0), so the loop is clean except for one duplicated frame",
+      "armatureNode": "rotation +90 deg about X, scale 0.01 (cm to m, Z-up to Y-up)"
+    },
+    "runClip": {
+      "file": "public/animations/run.glb",
+      "bytes": 1859972,
+      "md5": "0fceb09c7a0764d3377e31534d0d641f",
+      "glb": {
+        "jsonChunkBytes": 63312,
+        "binChunkBytes": 1796632
+      },
+      "animations": 1,
+      "clipName": "Armature|mixamo.com|Layer0",
+      "channels": 195,
+      "channelPaths": {
+        "translation": 65,
+        "rotation": 65,
+        "scale": 65
+      },
+      "targetNodeCount": 65,
+      "targetNodeNames": "same 65 mixamorig:* nodes as walk.glb",
+      "durationSeconds": 0.7667,
+      "frames": 23,
+      "fps": 30,
+      "firstFrameEqualsLastFrame": true,
+      "embeddedGeometry": {
+        "meshes": [
+          "Beta_Joints",
+          "Beta_Surface"
+        ],
+        "materials": 2,
+        "textures": 0,
+        "images": 0,
+        "meshAndSkinBufferBytes": 1774280,
+        "animationBufferBytes": 22352,
+        "redundantFraction": "about 99% mesh/skin data redundant with the avatar"
+      },
+      "hipsRootMotion": {
+        "translationCmLocalX": [
+          0.69,
+          104.34
+        ],
+        "translationCmLocalY": [
+          1.42,
+          176.14
+        ],
+        "netForwardPlusLateral": "clip travels diagonally about 31 deg off the forward axis (about 104 cm lateral, 175 cm forward in 0.767 s)",
+        "hipsRotationDrift": "Hips yaw changes about 36 deg between first and last frame (Hips loop-closure dot 0.9505), so the Hips track is NOT loopable",
+        "impliedClipForwardSpeedMetersPerSecond": "about 2.28 forward (about 2.65 along the diagonal); rough, to be tuned by foot-contact check in a browser"
+      },
+      "nonHipsLoopClosure": "all non-Hips rotation tracks first == last (dot 1.0)",
+      "durationsOfOtherClips": {
+        "wave": 1.2,
+        "dance": 5.233,
+        "silly_dance": 3.867,
+        "zombie": 4.267,
+        "defeated": 6.767,
+        "dodge": 1.467,
+        "climb": 4.033
+      }
+    },
+    "retargeting": {
+      "measured": {
+        "namePrefixAssumption": "Confirmed: after stripping mixamorig:/mixamorig prefix, 52 of the avatar's 54 joints match clip nodes exactly (LeftEye, RightEye have no clip track).",
+        "unmatchedClipNodes": "13 clip nodes do not exist in the avatar: HeadTop_End, 10 finger tip joints (Thumb4, Index4, Middle4, Ring4, Pinky4 per hand), LeftToe_End, RightToe_End",
+        "tracksBoundBySkeleton": "64 non-Hips quaternion tracks kept by retargetClip, of which 51 bind to avatar nodes and 13 reference missing nodes",
+        "restRotationDifferenceDeg": {
+          "Hips": 89.4,
+          "Neck": 25.7,
+          "LeftHandThumb2": 24.8,
+          "LeftArm/RightArm": 17.7,
+          "LeftHandThumb1": 15.8,
+          "Head": 13.4,
+          "Shoulders": 13.0,
+          "LeftFoot/RightFoot": 12.3,
+          "LeftToeBase/RightToeBase": 11.8,
+          "Spine2": 8.0,
+          "Spine": 7.1,
+          "Spine1": 4.4,
+          "UpLeg": 0.8,
+          "Leg": 1.7
+        },
+        "hipsHeight": "avatar Hips rest Y 0.984 m; Mixamo Hips rest in cm (about 1.554 local Y, -104.3 local Z under 0.01 Armature scale)",
+        "tPose": "Both are T-pose bind poses (avatar arm span 1.82 m, Mixamo 1.81 m), so absolute quaternions are close for legs"
+      },
+      "assessment": "Quaternion-only is sound: Mixamo translation tracks are in centimetres and scale tracks are all 1.0 (no information). Hips exclusion is necessary for rotation because Mixamo Hips carries a baked -90 deg X rest rotation (89.4 deg off the avatar) and, for run, a 36 deg yaw drift. Existing approach copies absolute local quaternions rather than rest-relative deltas, which is tolerable where rest rotations match (legs under 2 deg) but leaves about 12 deg error on feet/toes and 18-26 deg on arms/neck.",
+      "recommendationLabel": "RECOMMENDATION (not measured behaviour)",
+      "recommendation": {
+        "keep": [
+          "Quaternion tracks for Spine, Spine1, Spine2, Neck, Head, both Shoulder/Arm/ForeArm/Hand, finger 1-3 joints, UpLeg, Leg, Foot, ToeBase (locomotion legs and counter-swing arms are the point of the clip)"
+        ],
+        "dropOrHandleSeparately": [
+          "Hips quaternion (rest-frame mismatch, run yaw drift)",
+          "Hips translation entirely, as root motion: the character controller owns world position and speed",
+          "All scale tracks and non-Hips translation tracks (Mixamo cm units)",
+          "Tracks targeting nodes absent from the avatar (HeadTop_End, finger 4 joints, Toe_End) to avoid console warnings; filter by skin joint names",
+          "Optionally keep only the vertical (up-axis) Hips bob, scaled by avatar hip height / Mixamo hip height (about 0.984 / about 1.0), if the pelvis looks stiff; verify visually"
+        ],
+        "adjust": [
+          "Apply rest-pose delta correction (avatarRest * inverse(mixamoRest) * clipQuat) for feet, toes, neck, head, shoulders and arms, or accept the 12-18 deg offset after a visual check; requires a browser to validate",
+          "Trim the duplicated last frame (AnimationUtils.subclip to frames-1) so looping has no 1-frame hold",
+          "Strip the avatar's embedded idle Hips translation (or crossfade carefully) because locomotion clips drop Hips translation and a crossfade would otherwise blend a moving Hips with a fixed one",
+          "Set clip timeScale = controllerSpeed / clipSpeed (walk about 0.99 m/s, run about 2.3 m/s forward) to limit foot sliding; scale for avatar height 1.865 m vs Beta 1.809 m (about 1.03)"
+        ],
+        "existingGestureCode": "Keep GestureClips loading and retargetClip behaviour for the talking hero unchanged; add a separate locomotion retarget helper in the game module rather than editing the hero path."
+      }
+    },
+    "physicsDependency": {
+      "installed": {
+        "react": "18.2.0",
+        "three": "0.163.0",
+        "@react-three/fiber": "8.16.2"
+      },
+      "npmViewEvidence": {
+        "@react-three/rapier@1.5.0": {
+          "peerDependencies": {
+            "react": ">=18.0.0",
+            "three": ">=0.139.0",
+            "@react-three/fiber": ">=8.9.0"
+          },
+          "dependencies": {
+            "three-stdlib": "^2.29.4",
+            "suspend-react": "^0.1.3",
+            "@dimforge/rapier3d-compat": "0.14.0"
+          }
+        },
+        "@react-three/rapier@2.2.0 (latest)": {
+          "peerDependencies": {
+            "react": "^19",
+            "three": ">=0.159.0",
+            "@react-three/fiber": "^9.0.4"
+          },
+          "compatible": false
+        },
+        "@react-three/rapier@1.4.0 and 1.3.1": "same peer ranges as 1.5.0 (1.4.0 depends on rapier3d-compat 0.13.1)",
+        "dist-tags": {
+          "latest": "2.2.0",
+          "rc": "0.14.0-rc.4",
+          "canary": "2.0.0-canary.0"
+        }
+      },
+      "decision": "Install @react-three/rapier@1.5.0 exactly (npm install --save-exact @react-three/rapier@1.5.0). It transitively pins @dimforge/rapier3d-compat 0.14.0 (Apache-2.0). Do not use 2.x: requires React 19 and fiber 9, which contradicts the contract's Next 14.1.4 / React 18 / fiber ^8 constraint.",
+      "characterController": "Verified in the 0.14.0 .d.ts: World.createCharacterController(offset) returns KinematicCharacterController (stepping, slope and ground snapping are available); @react-three/rapier 1.5.0 exposes useRapier() for world access.",
+      "wasmPayload": {
+        "rapier_wasm3d_bg.wasm_bytes": 1439831,
+        "rapier.es.js_bytes_with_embedded_wasm": 2059628,
+        "rapier.es.js_gzip9_bytes": 765295,
+        "rapier_wasm3d.js_bytes": 204028,
+        "react-three-rapier_1.5.0_tarball_bytes": 57716,
+        "react-three-rapier_dist_unpacked": "about 280 KB",
+        "fitsIn8MBBudget": true,
+        "remainingBudgetAfterPhysics": "about 7.2 MB on-wire (gzip) or about 5.9 MB measured raw for the largest case (2.06 MB raw + 0.28 MB), leaving room for world assets and stripped locomotion clips"
+      },
+      "csp": "next.config.mjs already allows 'wasm-unsafe-eval' in script-src and worker-src 'self' blob:; compat build embeds the wasm as base64, so no extra connect-src or wasm file serving is expected. No CSP edit predicted; confirm in the browser.",
+      "notYetVerified": "Runtime init under Next 14.1.4 dynamic import and Suspense was not tried (read-only stage, no install)."
+    },
+    "testRunner": {
+      "currentState": "No test runner or test script in package.json.",
+      "recommendation": "Vitest",
+      "install": "npm install --save-dev --save-exact vitest@5.0.3 vite@8.3.3 jsdom@30.1.2 @testing-library/react@16.3.3 @testing-library/dom@10.4.2 @testing-library/jest-dom@7.0.1 vite-tsconfig-paths@6.1.1 (vite is a peer of vitest 5: ^6.4 || ^7 || ^8; @vitejs/plugin-react@6.1.2 requires vite ^8 and is only needed for component tests)",
+      "script": "\"test\": \"vitest run\" (optionally \"test:watch\": \"vitest\")",
+      "config": "vitest.config.ts with plugins [tsconfigPaths()], test.environment 'node' by default and 'jsdom' per file via // @vitest-environment jsdom, so the '@/*' alias from tsconfig.json resolves; no change to next.config.mjs, tsconfig, or the Next build",
+      "why": [
+        "Runs outside the Next build, so Next 14.1.4 and TypeScript strict are untouched (no eject, no Babel config)",
+        "three 0.163 and drei are ESM-only; Vitest transforms ESM natively, whereas next/jest (Jest 29) needs transformIgnorePatterns workarounds for them",
+        "Pure-logic game modules (state machine, input normalisation, collectibles, storage fallback) need no DOM; jsdom is only for hook and cleanup tests",
+        "vite-tsconfig-paths honours the existing '@/*' path mapping; vi.useFakeTimers and vi.stubGlobal cover storage and tab-hide tests"
+      ],
+      "constraints": "vitest 5.0.3 requires Node ^22.12 and jsdom 30.1.2 requires Node ^22.22.2 || ^24.15; local Node 22.23.2 satisfies both, but package.json engines '22.x' is looser, so pin CI/Vercel to a recent 22.x or use an older jsdom if needed. Versions are verified by npm view only; not installed or run here.",
+      "alternativeRejected": "next/jest with jest 29 and jest-environment-jsdom: officially documented for Next 14, but ESM friction with three"
+    },
+    "avatarDecision": {
+      "decision": "REUSE public/avatar.glb and the existing walk/run clips; no rebuild",
+      "evidence": [
+        "Skeleton uses standard Mixamo-compatible joint names (Hips root, Spine/Spine1/Spine2, Neck, Head, Left/Right UpLeg/Leg/Foot/ToeBase), 52 of 54 joints retarget by name",
+        "Rest-pose differences are small for legs (under 2 deg) and moderate for feet (about 12 deg); no missing joints that locomotion needs",
+        "Both T-pose, similar height (1.865 m vs 1.809 m)",
+        "Triangle count 21090 and 31 textures (3.9 MB) are acceptable for a single hero character, but the 14 MB file size is the main budget risk"
+      ],
+      "conditions": [
+        "Visual check in a browser for foot pitch and arm swing after retarget (not possible here)",
+        "Because the 14 MB avatar is already loaded by the hero, the game must reuse the same loaded asset (useGLTF cache) and add no second copy to the 8 MB additional budget",
+        "Optional later: texture or morph-target compression of avatar.glb is out of scope unless performance gaps show a problem"
+      ]
+    },
+    "assetGaps": {
+      "existingClips": "wave, run, walk, dance, silly_dance, zombie, defeated, dodge, climb (9 clips, about 1.86-2.0 MB each because each embeds the redundant Mixamo mesh)",
+      "missing": [
+        "idle (a locomotion-quality idle; the avatar's embedded 8 s avaturn_animation can serve initially but carries Hips translation and morph weights)",
+        "jump (take-off)",
+        "fall (airborne loop)",
+        "land",
+        "celebration (existing dance/silly_dance 3.9-5.2 s can be used as an interim celebration)"
+      ],
+      "recommendedSourcing": "Download the missing clips from Mixamo (Adobe account, 'Without Skin', 30 fps, FBX/GLB via a converter) in the same Beta rig so they pass through the same retarget, e.g. Idle, Jump, Falling Idle, Hard Landing, Victory/Dance; strip mesh and skin to cut each clip to about 25-40 KB. Alternative: author in Blender on the avatar skeleton.",
+      "licenseRequirements": "Record for every new asset: source URL, Adobe ID used, download date, clip name, and the Mixamo terms in force (Mixamo animations are free for personal, commercial and non-profit use but must not be redistributed as standalone asset packs; verify current terms before use). No license record currently exists for avatar.glb (Avaturn) or the 9 existing Mixamo clips; add an ASSETS or license note when new assets are added (constraint: no third-party assets without a recorded source and license).",
+      "budgetNote": "Stripped clips are tiny (about 25-40 KB), so five new clips plus 2 stripped existing ones fit easily within the 8 MB additional-asset budget alongside the about 0.77 MB gzip physics bundle."
+    },
+    "performanceGaps": [
+      "No FPS, frame-time, draw-call, GPU memory, or heap measurement was taken: no browser or device was used in this read-only stage (60 FPS desktop / 30 FPS mobile budgets are unverified)",
+      "Actual download time and on-wire size of avatar.glb plus 9 clips (about 31 MB raw) under throttling not measured",
+      "Rapier WASM initialisation time and main-thread cost not measured",
+      "Skinned mesh cost of the 17977-vertex avatar with 72 morph targets on Head_Mesh at game scale not measured; morph target count is a likely mobile cost to check",
+      "Foot-sliding and visual retarget quality (feet/arms) not visually verified",
+      "Static facts only: build size of / is 40.8 kB (125 kB First Load JS) and the file sizes above"
+    ]
+  }
+}

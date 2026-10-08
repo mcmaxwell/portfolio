@@ -1,0 +1,267 @@
+{
+  "workItemId": "TASK-002",
+  "stageId": "02-architect",
+  "assignee": "architect",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "top",
+  "verificationProfile": "standard",
+  "objective": "Design the module structure, interfaces, lifecycle ownership, physics and animation integration, asset pipeline, and per-milestone implementation boundaries for the playable 3D portfolio, and record the lasting decisions as ADRs in the project workspace.",
+  "contextFiles": [
+    ".company/tasks/active/TASK-002/work-item.json",
+    ".company/tasks/active/TASK-002/spec-implementation-plan.md",
+    ".company/tasks/active/TASK-002/reports/01-game-dev-audit.json",
+    ".company/memory/project-profile.md",
+    ".company/memory/modules.md",
+    "components/avatar/Avatar.tsx",
+    "components/avatar/TalkingAvatar.tsx",
+    "components/avatar/useRealtimeChat.ts",
+    "app/page.tsx",
+    "lib/gestures.ts",
+    "data/index.ts",
+    "next.config.mjs",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "projectId": "portfolio",
+  "targetBaseCommit": "710f034",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-002/reports/01-game-dev-audit.json"
+  ],
+  "acceptanceCriteria": [
+    "A design document at .company/tasks/active/TASK-002/design.md defines every module from the spec section 10 (experience shell, game loader, game session, input controller, player controller, character animator, follow camera, world, interaction system, game interface, progress storage, game configuration) with its file path under a single game directory, its public interface in TypeScript signature form, what it owns, and what it must never touch.",
+    "The design states how the hero and the game share one avatar and one canvas or justifies two canvases, including which component owns the AnimationMixer, the camera, and the head mouse-follow in each mode, and how the Realtime voice session is torn down before the game starts.",
+    "The design specifies the physics integration using @react-three/rapier 1.5.0 with a fixed 60 Hz timestep, capped catch-up, interpolation, capsule dimensions derived from the audit bounds, and which Rapier KinematicCharacterController features implement step, slope, snap, and grace-period jump.",
+    "The design specifies the locomotion animation pipeline: which clip tracks are kept or dropped per the audit retargeting findings, how stripped game-only clips are produced and where they live, how clip speed is matched to controller speed, and the state machine transitions with their guards.",
+    "The design lists the exact dependency additions with pinned versions, the Vitest test setup files, the lint-gate fix (so npm run lint actually lints) and root .gitignore handling, and confirms that no game module is reachable from the initial portfolio bundle by naming the dynamic-import boundary.",
+    "The design maps each milestone M1 to M5 to the files it creates or changes, the tests it adds, and the observable gate check, so each later stage contract can be written from it.",
+    "One or more ADRs under .company/memory/decisions/ (numbered from ADR-001 for this project) record the lasting decisions: physics engine choice, single-versus-dual canvas and avatar ownership, locomotion retarget strategy, test runner, and progress storage format versioning.",
+    "Every design claim about the current code cites a file and line from the project; assumptions are labeled; nothing in the design or ADRs contains a machine-local absolute path."
+  ],
+  "constraints": [
+    "Work only inside the isolated worktree path supplied in the delegation prompt; write only under .company/tasks/active/TASK-002/ and .company/memory/decisions/.",
+    "Stack is fixed: Next.js 14.1.4, React 18, TypeScript strict, three 0.163, @react-three/fiber 8.16, drei 9.105; physics is @react-three/rapier 1.5.0 per the audit; Node 22.",
+    "Reuse public/avatar.glb; do not propose replacing it. Hero behavior (voice, gestures, lip-sync, head follow) must remain unchanged in hero mode.",
+    "Keep every game module out of the initial portfolio bundle; the Play button and loader may live in the hero, the rest behind a dynamic import.",
+    "Prefer the smallest design that meets the spec; no new global state library; fast-changing data in refs or module state, not React state.",
+    "Third-party assets require a recorded source and license; design an ASSETS.md or equivalent record.",
+    "Do not write implementation code. You have no Bash tool; do not promise checks you cannot run.",
+    "Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "deliverables": [
+    "design.md",
+    "ADR files in .company/memory/decisions/"
+  ],
+  "reportPath": "reports/02-architect.json"
+}

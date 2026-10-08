@@ -4,6 +4,9 @@ Keep project work items here. Move one line between sections as its state change
 
 ## Backlog
 
+- [SMALL] Game polish follow-ups from TASK-002 final QA: soften the first step of the entry world fade, and keep the avatar head in frame when jumping at the tower passage mouth.
+- [MEDIUM] Game sound and quality presets, deferred from TASK-002 Milestone 5 by user decision.
+- [SMALL] Measure game performance and touch controls on a physical phone (TASK-002 verified in emulation only).
 - [SMALL] Consolidate duplicate config files: remove the unused `next.config.ts` stub
   (Next 14 loads `.mjs`), and collapse `postcss.config.js`/`postcss.config.mjs` to one
   — raised by TASK-001 audit, deliberately out of scope for onboarding.
@@ -13,5 +16,7 @@ Keep project work items here. Move one line between sections as its state change
 ## Review
 
 ## Done
+
+TASK-002 [LARGE] Playable 3D portfolio game: campus, challenge, saved progress, touch controls, performance and accessibility - playable-3d-portfolio
 
 TASK-001 [MEDIUM] Onboard portfolio: refresh index, record verified project profile + module setup — portfolio-onboarding
