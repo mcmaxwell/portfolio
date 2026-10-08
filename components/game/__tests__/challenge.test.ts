@@ -17,6 +17,7 @@ function setup() {
   const game: GameHandle = createGame({ reducedMotion: true, storage: null });
   game.session.dispatch({ type: "ENTRY_DONE" });
   const challenge = createChallenge(CAMPUS.challenge, game);
+  challenge.update(away); // arm the exit latch, as a player who spawned outside every reach
   const items = [...CAMPUS.interactables, beacon!];
   const interactions = createInteractionSystem(items, game, (i) => i.kind !== "beacon" || challenge.beaconReady(), challenge.activate, (i) => i.kind === "beacon" && challenge.beaconWaiting());
   return { game, challenge, interactions };
@@ -203,6 +204,9 @@ describe("beacon gating, completion and restart", () => {
     game.progress.update(restartChallenge);
     expect(game.progress.getState()).toEqual({ ...defaultProgress(), settings: { ...defaultProgress().settings, quality: "low" } });
     expect(challenge.beaconReady()).toBe(false);
+    challenge.update(feetOf(cell("tower"))); // still standing on the last cell: the latch holds
+    expect(game.progress.getState().collected).toEqual([]);
+    challenge.update(away);
     for (const id of ["lab", "workshop", "tower"]) challenge.update(feetOf(cell(id)));
     press(interactions);
     expect(game.session.getState().mode).toBe("celebrating");
@@ -213,6 +217,7 @@ describe("beacon gating, completion and restart", () => {
     expect(game.progress.persistent).toBe(false);
     game.session.dispatch({ type: "ENTRY_DONE" });
     const challenge = createChallenge(CAMPUS.challenge, game);
+    challenge.update(away);
     for (const c of cells) challenge.update(feetOf(c));
     expect(challenge.beaconReady()).toBe(true);
     challenge.activate(beacon!);

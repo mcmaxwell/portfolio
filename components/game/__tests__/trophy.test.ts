@@ -13,6 +13,8 @@ const terraces = [0, 1, 2].map((i) => getBlock(CAMPUS, `terrace-${i}`));
 const top = (b: (typeof terraces)[number]) => b.center.y + b.size.y / 2;
 const feet = (over: Partial<Vec3> = {}): Vec3 => ({ ...trophy.position, ...over });
 
+const away = (): Vec3 => ({ ...trophy.position, x: trophy.position.x + trophy.radius + 2 });
+
 function setup(storage: Storage | null = null) {
   const game: GameHandle = createGame({ reducedMotion: false, storage });
   game.session.dispatch({ type: "ENTRY_DONE" });
@@ -68,6 +70,7 @@ describe("collection", () => {
 
   it("is collected only within its radius and on its own floor (the ground below does not count)", () => {
     const { game, challenge } = setup();
+    challenge.update(away());
     challenge.update(feet({ x: trophy.position.x + trophy.radius + 0.1 }));
     challenge.update(feet({ y: 0 })); // under the platform
     challenge.update(feet({ y: trophy.position.y + REACH_Y + 0.2 }));
@@ -91,6 +94,7 @@ describe("collection", () => {
     game.session.subscribe(() => {
       if (game.session.getState().mode === "celebrating") dances++;
     });
+    challenge.update(away());
     for (let i = 0; i < 6; i++) challenge.update(feet());
     expect(notified).toBe(1);
     expect(dances).toBe(1);
@@ -103,6 +107,7 @@ describe("collection", () => {
 
   it("nothing is collected outside the playing mode (a pause, a panel, the dance itself)", () => {
     const { game, challenge } = setup();
+    challenge.update(away());
     game.session.dispatch({ type: "PAUSE", reason: "user" });
     challenge.update(feet());
     expect(game.progress.getState().trophy).toBe(false);
@@ -122,19 +127,62 @@ describe("collection", () => {
     expect(store.getState().trophy).toBe(true);
   });
 
-  it("Restart brings it back: it can be collected again", () => {
+  it("Restart in place brings the cup back and does not re-collect it on the next frames", () => {
     const { game, challenge } = setup();
+    challenge.update(away());
     challenge.update(feet());
     game.session.dispatch({ type: "CELEBRATION_DONE" });
     game.progress.update(restartChallenge);
     expect(game.progress.getState().trophy).toBe(false);
+    for (let i = 0; i < 5; i++) challenge.update(feet());
+    expect(game.progress.getState().trophy).toBe(false);
+    expect(game.session.getState().mode).toBe("playing");
+  });
+
+  it("after a Restart, leaving the radius and walking back in collects it with the dance", () => {
+    const { game, challenge } = setup();
+    challenge.update(away());
+    challenge.update(feet());
+    game.session.dispatch({ type: "CELEBRATION_DONE" });
+    game.progress.update(restartChallenge);
+    challenge.update(feet());
+    challenge.update(away());
     challenge.update(feet());
     expect(game.progress.getState().trophy).toBe(true);
-    expect(game.session.getState().mode).toBe("celebrating");
+    expect(game.session.getState()).toMatchObject({ mode: "celebrating", celebration: "trophy" });
+  });
+
+  it("a load that starts inside the radius does not auto-collect until the player has left once", () => {
+    const { game, challenge } = setup();
+    for (let i = 0; i < 5; i++) challenge.update(feet());
+    expect(game.progress.getState().trophy).toBe(false);
+    expect(game.session.getState().mode).toBe("playing");
+    challenge.update(away());
+    challenge.update(feet());
+    expect(game.progress.getState().trophy).toBe(true);
+  });
+
+  it("energy cells share the latch: a Restart standing on a cell, or a load inside it, does not re-collect it", () => {
+    const cell = CAMPUS.challenge.cells[0];
+    const at = { ...cell.position };
+    const out = { ...cell.position, x: cell.position.x + cell.radius + 2 };
+    const { game, challenge } = setup();
+    challenge.update(at);
+    expect(game.progress.getState().collected).toEqual([]); // load inside
+    challenge.update(out);
+    challenge.update(at);
+    expect(game.progress.getState().collected).toEqual([cell.cellId]);
+    game.progress.update(restartChallenge);
+    challenge.update(at);
+    expect(game.progress.getState().collected).toEqual([]);
+    challenge.update(out);
+    challenge.update(at);
+    expect(game.progress.getState().collected).toEqual([cell.cellId]);
   });
 
   it("collecting it leaves the beacon challenge alone: gating, completion and the energy count are unchanged", () => {
     const { game, challenge } = setup();
+    challenge.update(away());
     challenge.update(feet());
     game.session.dispatch({ type: "CELEBRATION_DONE" });
     expect(challenge.beaconReady()).toBe(false);
