@@ -1,0 +1,123 @@
+{
+  "workItemId": "TASK-005",
+  "stageId": "05-qa-final",
+  "agent": "qa-engineer",
+  "status": "completed",
+  "verdict": "approved",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "max",
+  "executionPlan": "Standard profile: own typecheck, lint and full npm test at HEAD 7b63b86; read diff b9776c1..7b63b86; browser check of intro inert and prefetch gating via a scratch same-origin proxy serving a generated test video, then the unset case; gate report filled.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Typecheck, lint (zero warnings) and npm test (1339 passed, 61 s at natural load average 58) all exit 0. In the browser no /game/clips request fired while the intro played, clips were fetched only after it ended, and with the env unset the hero is unchanged. Real Tab key traversal, the jump at the passage mouth and a fresh fade-frame measurement could not be driven in a browser (the available Playwright toolset has no key-press or evaluate tool). Those rest on committed tests and game-dev's recorded measurement. Gate report written to qa-report.json.",
+  "filesChanged": [],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "b9776c1",
+    "targetResultCommit": "7b63b86",
+    "targetDiffFiles": [
+      ".company/memory/features.md",
+      ".company/memory/modules.md",
+      "README.md",
+      "components/avatar/IntroVideo.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/introInert.test.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/game/GameScene.tsx",
+      "components/game/__tests__/bodyClearance.landing.test.ts",
+      "components/game/__tests__/bodyClearance.pose-back-to-wall.test.ts",
+      "components/game/__tests__/bodyClearance.pose-diagonal-other.test.ts",
+      "components/game/__tests__/bodyClearance.pose-diagonal.test.ts",
+      "components/game/__tests__/bodyClearance.pose-facing.test.ts",
+      "components/game/__tests__/bodyClearance.pose-sideways-left.test.ts",
+      "components/game/__tests__/bodyClearance.pose-sideways-right.test.ts",
+      "components/game/__tests__/bodyClearance.test.ts",
+      "components/game/__tests__/bodyClearanceHarness.ts",
+      "components/game/__tests__/cameraHarness.ts",
+      "components/game/__tests__/followCamera.framing.test.ts",
+      "components/game/__tests__/followCamera.test.ts",
+      "components/game/__tests__/tween.test.ts",
+      "components/game/config.ts",
+      "components/game/followCamera.ts",
+      "components/game/tween.ts",
+      "package-lock.json",
+      "package.json",
+      "vitest.config.mts"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "result": "no errors",
+      "evidence": "tsc=0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "zero warnings",
+      "evidence": "\u2714 No ESLint warnings or errors"
+    },
+    {
+      "command": "npm test (host load averages 58.14 53.71 51.25 at start)",
+      "exitCode": 0,
+      "result": "41 files, 1339 tests passed, 61.19 s, no timeouts",
+      "evidence": "Test Files  41 passed (41)  Tests  1339 passed (1339)  Duration  61.19s"
+    },
+    {
+      "command": "Playwright MCP on http://localhost:3103/?intro=1 (next dev 3104 behind scratch same-origin proxy, NEXT_PUBLIC_INTRO_VIDEO_URL=/test-intro.mp4, request log)",
+      "exitCode": 0,
+      "result": "0 /game/clips requests while intro played; 6 clips fetched only after intro ended and Play clicked; game rendered",
+      "evidence": "snapshot during intro showed only [ skip intro ] over aria-hidden hero controls; req.log: /test-intro.mp4 then, after Play, /game/clips/idle,walk,run,jump,fall,land.glb"
+    },
+    {
+      "command": "Playwright MCP on same URL with env unset",
+      "exitCode": 0,
+      "result": "hero unchanged: no skip intro button, no video, controls present",
+      "evidence": "snapshot lines: button [ talk to me ], [ play / explore ], > wave; grep skip intro empty"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone.",
+      "status": "passed",
+      "evidence": "tween.ts stepEnvTween caps the first opening step at 10 ms; tween.test.ts passes in my full run. game-dev's recorded browser measurement: first step 0.85-0.88x median (7-9x before), monotone in 6 of 6 runs. I did not re-measure frames in a browser (no evaluate tool)."
+    },
+    {
+      "criterion": "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame, without camera clipping or geometry occlusion.",
+      "status": "passed",
+      "evidence": "followCamera.ts rule 6 frameHead tilts only the aim; followCamera.framing.test.ts (390x844, 844x390, 1440x900, near+0.3 m, no blocking geometry) passes in my run and failed on base per game-dev. Not re-driven by keyboard in a browser."
+    },
+    {
+      "criterion": "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before.",
+      "status": "passed",
+      "evidence": "introInert.test.tsx passes; TalkingAvatar.tsx diff gates inert, click and prefetch on introActive. Browser: zero /game/clips requests during the intro, clips fetched only after it ended and Play was clicked. Real Tab key not driven (no key tool); inert makes elements unfocusable."
+    },
+    {
+      "criterion": "The game test suite passes without timeouts when run under heavy host load, and the useRealtimeChat lint warning is gone with npm run lint reporting zero warnings.",
+      "status": "passed",
+      "evidence": "npm test exit 0, 1339 passed in 61.19 s at natural load average about 58 (no synthetic load, as instructed). npm run lint exit 0 with no warnings; useRealtimeChat deps now include gestureRef."
+    },
+    {
+      "criterion": "Required checks pass, QA approves, records are committed and a pull request is opened.",
+      "status": "passed",
+      "evidence": "Typecheck, lint and tests exit 0 in my runs; this report approves; commit 7b63b86 exists and the worktree is clean. Opening the PR is the Boss's remaining delivery step."
+    }
+  ],
+  "assumptions": [
+    "Reviewed b9776c1..7b63b86 as instructed although the stage contract names target base 819affe.",
+    "Heavy host load judged on the natural load average of 58 recorded during my run (game-dev also recorded 86 at the same suite passing); no synthetic load was generated."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "The Playwright MCP toolset available to QA has no key-press, evaluate or route tool, so Tab traversal, in-game jumps and per-frame measurements cannot be browser-verified there; a same-origin media route can be emulated with a scratch reverse proxy on the test port."
+  ],
+  "selfUsage": {
+    "filesRead": 8,
+    "approxLinesRead": 700,
+    "approxLinesWritten": 60,
+    "retries": 0
+  }
+}

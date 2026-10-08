@@ -1,0 +1,171 @@
+{
+  "workItemId": "TASK-005",
+  "feature": "playable-3d-portfolio",
+  "projectId": "portfolio",
+  "targetBaseCommit": "b9776c1",
+  "tier": "MEDIUM",
+  "verificationProfile": "standard",
+  "objective": "Fix the polish follow-ups left after TASK-002 to TASK-004: soften the entry world fade first step, keep the avatar head in frame when jumping at the tower passage mouth, make the hero controls inert and defer game prefetch while the intro video plays, remove the load-sensitive test timeouts in the game suite, and clear the useRealtimeChat lint warning.",
+  "sred": {
+    "related": true,
+    "workType": "debugging",
+    "technicalChallenge": "Whether the follow camera can keep the full avatar in frame during a jump in a constrained passage mouth without reintroducing near-plane clipping or wall penetration, and whether the physics-heavy camera and clearance tests can be made deterministic under host load instead of depending on wall-clock timeouts.",
+    "hoursSpent": null,
+    "approachAndResult": "Measured the entry fade per rendered frame with gl.readPixels and found the 47 ms hero-to-world swap frame was counted in full as the first fade step; capping the first opening step at 10 ms took it from 7 to 9x the median step to 0.85x, still monotone. A Rapier-driven framing harness reproduced the head leaving the frame at the passage mouth (crown NDC y 1.09 to 1.14) because the zone rule pulls the camera in while the avatar is airborne; a new aim-tilt rule keeps the crown in frame without moving the camera and the regression test failed 6 of 6 on the base and passes now. The load-sensitive timeouts came from one 226 s single-worker test file; splitting it per wall face cut the suite from 228 s to about 50 to 70 s with zero timeouts at natural host load up to 86. Synthetic load of 140 was not run because generating it was not authorized."
+  },
+  "acceptanceCriteria": [
+    "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone.",
+    "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame, without camera clipping or geometry occlusion.",
+    "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before.",
+    "The game test suite passes without timeouts when run under heavy host load, and the useRealtimeChat lint warning is gone with npm run lint reporting zero warnings.",
+    "Required checks pass, QA approves, records are committed and a pull request is opened."
+  ],
+  "constraints": [
+    "Work in the TASK-005 isolation only; base commit b9776c1 on master.",
+    "No new external asset."
+  ],
+  "approvals": [
+    {
+      "date": "2026-10-08",
+      "by": "user",
+      "scope": "Direct user request: 'fix the polish follow-ups'."
+    }
+  ],
+  "isolation": "scripts/company-work TASK-005 worktree, branch fix/task-005-game-polish-followups",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "intro video inert hero focus game prefetch entry fade follow camera jump passage head crop wall sweep test useRealtimeChat lint",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "app/layout.tsx",
+      "app/provider.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "eslint.config.mjs",
+      "package.json"
+    ],
+    "symbols": [
+      {
+        "name": "ThemeProvider",
+        "type": "function",
+        "file": "app/provider.tsx",
+        "line": 7
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      },
+      {
+        "name": "ChatStatus",
+        "type": "type",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 26
+      },
+      {
+        "name": "runSiteAction",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 6
+      },
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "portfolio",
+        "type": "package",
+        "file": "package.json"
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "app/provider.tsx",
+        "type": "contains",
+        "to": "ThemeProvider",
+        "evidence": "app/provider.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "ChatStatus",
+        "evidence": "components/avatar/useRealtimeChat.ts:26",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "runSiteAction",
+        "evidence": "components/avatar/useRealtimeChat.ts:6",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/useRealtimeChat.ts:41",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "autoprefixer",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint-config-next",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "bossArbitration": [
+    {
+      "date": "2026-10-08",
+      "scope": "Stage 01 criterion on synthetic CPU load",
+      "decision": "Synthetic load generation was denied by the permission classifier and the Boss does not perform it on the agent's behalf. The work-item criterion 'under heavy host load' is judged on the recorded natural host load of 86 (two npm test runs, exit 0, zero timeouts) plus the root-cause split of the bodyClearance matrix; independent QA re-runs under its own recorded load."
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Stage 02 question about the red tween test",
+      "decision": "Resolved: the failure was game-dev's red-before-green test; game-dev's final npm test over the combined tree exited 0 with 1339 passed."
+    }
+  ],
+  "qaRounds": 1
+}

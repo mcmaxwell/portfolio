@@ -18,3 +18,7 @@
 - [TASK-002] The README is an upstream tutorial template with a manual table of contents, so a new section needs a matching TOC entry and anchor.
 - [TASK-003] A bone no clip writes keeps whatever the last owner left, so blend code must remember its own target; and re-run bodyClearance.test.ts after any clip posture change.
 - [TASK-003] Proximity pickups need an exit latch: arm an item only after the player is seen outside its reach, or Restart and reload inside the radius re-collect it on the next frame.
+- [TASK-005] One long test file runs on a single Vitest worker: split heavy matrices per case into files so wall time and per-case time both shrink, and keep a raised testTimeout only as a safety net.
+- [TASK-005] A long first frame after a scene swap becomes a visible fade pop when its dt is consumed by the tween; cap the first step of opening tweens. Measure fades with gl.readPixels per rendered frame, since CDP screencast drops frames under load.
+- [TASK-005] Re-plan the review gate after every committed change and hand QA the domain list from the latest plan; a dependency change adds the operations domain and an older template list fails domain coverage.
+- [TASK-005] IntroVideo must be same-origin (CSP media-src), and inert-state tests must query by text because role queries ignore inert or aria-hidden subtrees.

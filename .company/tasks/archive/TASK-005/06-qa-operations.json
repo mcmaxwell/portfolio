@@ -129,10 +129,10 @@
       }
     ]
   },
-  "targetBaseCommit": "819affe",
+  "targetBaseCommit": "b9776c1",
   "assignee": "qa-engineer",
-  "stageId": "05-qa-final",
-  "objective": "Independent standard review of the TASK-005 diff b9776c1..819affe: verify every work-item acceptance criterion with your own commands and browser checks, then fill the company-review gate report.",
+  "stageId": "06-qa-operations",
+  "objective": "Follow-up QA review of the operations domain the gate plan routed for the package.json, package-lock.json and vitest.config.mts change; the Boss had given QA the wrong domain list.",
   "constraints": [
     "Do not modify, create or delete any file inside the worktree (the gate fingerprints tracked and untracked content); write evidence only to a scratch directory outside it and the gate report only at the qa-report.json path given in the prompt.",
     "Run your own dev or production server on port 3103 and stop it by exact PID; every browser uses a --user-data-dir in scratch, deleted on exit.",
@@ -142,21 +142,13 @@
   ],
   "contextFiles": [],
   "upstreamInputs": [
-    ".company/tasks/active/TASK-005/reports/01-game-dev-polish.json",
-    ".company/tasks/active/TASK-005/reports/02-frontend-dev-intro-a11y.json",
-    ".company/tasks/active/TASK-005/reports/03-tech-writer-docs.json",
-    ".company/tasks/active/TASK-005/reports/04-frontend-dev-vite-paths.json",
-    ".company/tasks/active/TASK-005/work-item.json"
+    ".company/tasks/active/TASK-005/reports/05-qa-final.json"
   ],
   "acceptanceCriteria": [
-    "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone.",
-    "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame, without camera clipping or geometry occlusion.",
-    "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before.",
-    "The game test suite passes without timeouts when run under heavy host load, and the useRealtimeChat lint warning is gone with npm run lint reporting zero warnings.",
-    "Required checks pass, QA approves, records are committed and a pull request is opened."
+    "The dependency and test-config change is consistent and does not affect install, build or tests."
   ],
   "deliverables": [
     "review"
   ],
-  "reportPath": "reports/05-qa-final.json"
+  "reportPath": "reports/06-qa-operations.json"
 }

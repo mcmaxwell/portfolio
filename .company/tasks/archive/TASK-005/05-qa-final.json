@@ -1,37 +1,11 @@
 {
   "workItemId": "TASK-005",
-  "feature": "playable-3d-portfolio",
-  "projectId": "portfolio",
-  "targetBaseCommit": "b9776c1",
-  "tier": "MEDIUM",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
   "verificationProfile": "standard",
-  "objective": "Fix the polish follow-ups left after TASK-002 to TASK-004: soften the entry world fade first step, keep the avatar head in frame when jumping at the tower passage mouth, make the hero controls inert and defer game prefetch while the intro video plays, remove the load-sensitive test timeouts in the game suite, and clear the useRealtimeChat lint warning.",
-  "sred": {
-    "related": true,
-    "workType": "debugging",
-    "technicalChallenge": "Whether the follow camera can keep the full avatar in frame during a jump in a constrained passage mouth without reintroducing near-plane clipping or wall penetration, and whether the physics-heavy camera and clearance tests can be made deterministic under host load instead of depending on wall-clock timeouts.",
-    "hoursSpent": null,
-    "approachAndResult": null
-  },
-  "acceptanceCriteria": [
-    "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone.",
-    "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame, without camera clipping or geometry occlusion.",
-    "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before.",
-    "The game test suite passes without timeouts when run under heavy host load, and the useRealtimeChat lint warning is gone with npm run lint reporting zero warnings.",
-    "Required checks pass, QA approves, records are committed and a pull request is opened."
-  ],
-  "constraints": [
-    "Work in the TASK-005 isolation only; base commit b9776c1 on master.",
-    "No new external asset."
-  ],
-  "approvals": [
-    {
-      "date": "2026-10-08",
-      "by": "user",
-      "scope": "Direct user request: 'fix the polish follow-ups'."
-    }
-  ],
-  "isolation": "scripts/company-work TASK-005 worktree, branch fix/task-005-game-polish-followups",
+  "projectId": "portfolio",
   "projectContext": {
     "projectId": "portfolio",
     "query": "intro video inert hero focus game prefetch entry fade follow camera jump passage head crop wall sweep test useRealtimeChat lint",
@@ -155,16 +129,35 @@
       }
     ]
   },
-  "bossArbitration": [
-    {
-      "date": "2026-10-08",
-      "scope": "Stage 01 criterion on synthetic CPU load",
-      "decision": "Synthetic load generation was denied by the permission classifier and the Boss does not perform it on the agent's behalf. The work-item criterion 'under heavy host load' is judged on the recorded natural host load of 86 (two npm test runs, exit 0, zero timeouts) plus the root-cause split of the bodyClearance matrix; independent QA re-runs under its own recorded load."
-    },
-    {
-      "date": "2026-10-08",
-      "scope": "Stage 02 question about the red tween test",
-      "decision": "Resolved: the failure was game-dev's red-before-green test; game-dev's final npm test over the combined tree exited 0 with 1339 passed."
-    }
-  ]
+  "targetBaseCommit": "b9776c1",
+  "assignee": "qa-engineer",
+  "stageId": "05-qa-final",
+  "objective": "Independent standard review of the TASK-005 diff b9776c1..819affe: verify every work-item acceptance criterion with your own commands and browser checks, then fill the company-review gate report.",
+  "constraints": [
+    "Do not modify, create or delete any file inside the worktree (the gate fingerprints tracked and untracked content); write evidence only to a scratch directory outside it and the gate report only at the qa-report.json path given in the prompt.",
+    "Run your own dev or production server on port 3103 and stop it by exact PID; every browser uses a --user-data-dir in scratch, deleted on exit.",
+    "Do not generate synthetic CPU load; record the natural host load with any timing.",
+    "Gate report values: specVerdict and qualityVerdict 'pass', layer status 'pass' with evidence, criterion status 'passed', gaps []. Any important or critical finding needs a 'challenge' layer and disposition fixed or refuted with verification; findings need a relative file and a valid line.",
+    "Copy every acceptanceCriteria string verbatim into both your stage report and the gate report."
+  ],
+  "contextFiles": [],
+  "upstreamInputs": [
+    ".company/tasks/active/TASK-005/reports/01-game-dev-polish.json",
+    ".company/tasks/active/TASK-005/reports/02-frontend-dev-intro-a11y.json",
+    ".company/tasks/active/TASK-005/reports/03-tech-writer-docs.json",
+    ".company/tasks/active/TASK-005/reports/04-frontend-dev-vite-paths.json",
+    ".company/tasks/active/TASK-005/work-item.json"
+  ],
+  "acceptanceCriteria": [
+    "The entry world fade first step is no larger than the previously accepted level (about 2.3x the neighbour median luminance step) and the fade stays monotone.",
+    "Jumping at the tower passage mouth keeps the avatar head in frame on every sampled frame, without camera clipping or geometry occlusion.",
+    "While the intro video plays, the covered hero controls are inert and not keyboard focusable, and game prefetch does not start until the intro ends; after the intro, Play focus and prefetch behave as before.",
+    "The game test suite passes without timeouts when run under heavy host load, and the useRealtimeChat lint warning is gone with npm run lint reporting zero warnings.",
+    "Required checks pass, QA approves, records are committed and a pull request is opened."
+  ],
+  "deliverables": [
+    "review"
+  ],
+  "reportPath": "reports/05-qa-final.json",
+  "bossCorrection": "2026-10-08: targetBaseCommit corrected from 819affe to b9776c1 after QA; the dispatch prompt already named b9776c1 and QA reviewed b9776c1..7b63b86."
 }
