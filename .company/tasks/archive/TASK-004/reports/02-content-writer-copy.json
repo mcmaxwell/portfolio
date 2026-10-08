@@ -1,0 +1,70 @@
+{
+  "workItemId": "TASK-004",
+  "stageId": "02-content-writer-copy",
+  "agent": "content-writer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Read contract, data/index.ts, lib/persona.ts and the two live-site text captures; rewrote the four project entries, reordered the project list, and aligned the persona; checked for em dashes by grep. No Bash, so no tests run.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Rewrote XecSuite, Apex Mind, AI Talking Avatar and E-commerce entries in data/index.ts, reordered projects to XecSuite, NewsStocks.live, Apex Mind, E-commerce, AI HR Assistant, AI Talking Avatar, and updated lib/persona.ts (removed archive bot, family agent, Dewy; added Node.js, 20+ stores, refreshed Apex Mind and XecSuite). Nothing committed.",
+  "filesChanged": ["data/index.ts", "lib/persona.ts"],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "4b886a8",
+    "targetResultCommit": null,
+    "targetDiffFiles": ["data/index.ts", "lib/persona.ts"],
+    "projectContextUsed": false
+  },
+  "testsRun": [],
+  "criteria": [
+    {
+      "criterion": "Apex Mind entry (title and description) reflects what apexmind.studio says now (practical AI automation for 5 to 50 person businesses in London, ON: quoting, scheduling, invoicing, follow-ups, paperwork, phone calls, social posts; map the week, build into existing tools, train the team), drops the stale '(Public site launching soon.)', and keeps Maksym's role accurate to the existing content; nothing is claimed that the site or the existing content does not support.",
+      "status": "passed",
+      "evidence": "BEFORE title: 'Apex Mind Automation — Automation Studio'. AFTER title: 'Apex Mind - AI Automation Studio'. BEFORE des: 'My automation studio: I design custom automations, AI agents and web apps for businesses — from lead handling and content pipelines to full multi-agent systems. The brand system pairs a GSAP + Lenis marketing site with Node generators that produce branded docs, decks and one-pagers automatically. (Public site launching soon.)' AFTER des: 'Practical AI automation for 5-50 person businesses in London, ON: quoting, scheduling, invoicing, follow-ups, paperwork, phone calls and social posts. We map the week, build the automations into the tools you already run, and train your team to keep them going. Co-founded with Olha Liutsko; the marketing site is built with GSAP + Lenis.' Tag stays 'Founder', link and icons unchanged. Support: apexmind.txt lines 15-36 (hero, 3-step map/build/train), 438-446 (Olha and Maksym Liutsko co-founders); GSAP + Lenis from existing content. Dewy/A-Cure/CalmPlan from the live site were deliberately not mentioned (user removed Dewy). Dropped the unsupported-on-site 'Node generators' claim and 'full multi-agent systems' from the card; the persona keeps multi-agent systems from existing resume content."
+    },
+    {
+      "criterion": "XecSuite entry is checked against the live site text and updated only where it is now inaccurate or stale (for example the site's own positioning as the AI operating layer for supply chain teams in Canada and the United States), keeping the Startup Weekend award and Maksym's co-founder and CTO role from the existing content.",
+      "status": "passed",
+      "evidence": "BEFORE title: 'XecSuite — AI Operating Layer for 3PLs'. AFTER title: 'XecSuite - AI Operating Layer for Supply Chain Teams'. BEFORE des: 'The operating layer cross-border (Canada–US) logistics companies run on. A tenant-private company-memory core plus configurable modules — CRM, marketing, meeting intelligence, freight analysis, ops/SOP and an executive assistant — run by a governed, approval-gated agent workforce with hybrid model routing (private models for routine work, frontier models for high-stakes reasoning). Built and awarded at a Startup Weekend; now live.' AFTER des: 'The AI operating layer for supply chain teams in Canada and the United States. It connects your systems and company knowledge and puts them to work across freight, finance and customer operations. A tenant-private company-memory core plus connected modules - Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent and RFP - run by a governed, approval-gated agent workforce with hybrid model routing (private models for routine work, frontier models for high-stakes reasoning). Built and awarded at a Startup Weekend; now live.' Support: xecsuite.txt lines 17-23 (positioning) and 52-65 (module names). Stale module list (marketing, freight analysis, ops/SOP, executive assistant) replaced by the site's module names; memory core, approval-gated workforce, hybrid routing and award kept from existing content. Co-founder/CTO role lives in persona and is unchanged."
+    },
+    {
+      "criterion": "AI Talking Avatar Portfolio entry describes the site as it is on this branch: a cinematic intro video that hands off to a real-time 3D avatar you can talk to (React Three Fiber, OpenAI Realtime API, voice-driven navigation, gestures, live lip-sync); it does not mention the unmerged playable 3D world.",
+      "status": "passed",
+      "evidence": "Title unchanged: 'AI Talking Avatar Portfolio'. BEFORE des: 'This site — a real-time 3D avatar you can talk to, built with React Three Fiber and the OpenAI Realtime API, with voice-driven navigation, gestures and live lip-sync.' AFTER des: 'This site: a cinematic intro video that hands off to a real-time 3D avatar you can talk to. Built with React Three Fiber and the OpenAI Realtime API, with voice-driven navigation, gestures and live lip-sync.' No mention of a playable world, game or locomotion. Intro-video claim comes from the stage contract's own description of this branch; not independently verified in components."
+    },
+    {
+      "criterion": "E-commerce entry states that Maksym successfully launched 20+ online stores, alongside the existing Magento 2 / Adobe Commerce experience, clients and stack, without inventing other numbers.",
+      "status": "passed",
+      "evidence": "BEFORE title: 'E-commerce — Magento / Adobe Commerce'. AFTER title: 'E-commerce - Magento / Adobe Commerce'. BEFORE des start: 'Six+ years building and supporting Magento 2 (Adobe Commerce) storefronts for retail brands across Canada, NZ and Australia — theme development, ...' AFTER des start: 'Successfully launched 20+ online stores. Six+ years building and supporting Magento 2 (Adobe Commerce) storefronts for retail brands across Canada, NZ and Australia: theme development, ...' Rest of text, clients list, icons, tag unchanged. Only new number is the user's 20+."
+    },
+    {
+      "criterion": "Project order in data/index.ts is: XecSuite, NewsStocks.live, Apex Mind, E-commerce, AI HR Assistant, AI Talking Avatar, so the four cards with images fill the first two rows and the two text-only cards share the last row; NewsStocks.live and AI HR Assistant copy is unchanged.",
+      "status": "passed",
+      "evidence": "Array order now: id 1 XecSuite, id 2 NewsStocks.live, id 3 Apex Mind, id 9 E-commerce, id 4 AI HR Assistant, id 8 AI Talking Avatar (ids kept). NewsStocks.live entry not edited; AI HR Assistant entry moved byte-for-byte unchanged."
+    },
+    {
+      "criterion": "lib/persona.ts is consistent with the site: the Document & Image Archive Bot (Telegram archive bot), the self-hosted family AI agent and Dewy are removed everywhere (bio, experience bullets, extraKnowledge); Node.js back-end is in the skills; the 20+ online stores launched fact and the refreshed Apex Mind and XecSuite descriptions are reflected; nothing else in the persona changes.",
+      "status": "passed",
+      "evidence": "about: 'Shipped so far: an autonomous financial-news platform, an AI HR assistant, document-processing bots and a private family AI agent.' -> 'Shipped so far: an autonomous financial-news platform and an AI HR assistant, plus 20+ online stores successfully launched.' skills: added 'Node.js (back-end)' to the Languages & frameworks line. Apex experience detail: 'Design and ship AI-integrated products ... Built NewsStocks.live, an AI HR assistant, document-processing bots and a self-hosted family AI agent.' -> 'Practical AI automation for 5-50 person businesses in London, ON - quoting, scheduling, invoicing, follow-ups, paperwork, phone calls and social posts. We map the week, build into the tools clients already run, and train the team. Also build multi-agent systems, LLM assistants and automated content/data pipelines. Built NewsStocks.live and an AI HR assistant.' XecSuite experience detail now begins 'AI operating layer for supply chain teams in Canada and the United States - ...' (was 'for cross-border Canada–US 3PLs — ...'). extraKnowledge: Telegram archive bot line, family agent line and Dewy line deleted; Apex line and XecSuite line rewritten to match the cards (Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent, RFP); Magento line now 'Magento / Adobe Commerce client work (6+ years), with 20+ online stores successfully launched - theme builds...'. Remaining text untouched, including the Apex 'Co-Founder & AI Automation Engineer' role line and the 'Apex Mind Automation' name in about and experience company field (legal name per site footer)."
+    },
+    {
+      "criterion": "All new or rewritten text has no em dash (use a plain dash or rephrase, including in the titles of the entries rewritten here), no machine-local path, stays concise in the existing voice of the site, and no source code other than these two data files is touched; no commit is made.",
+      "status": "passed",
+      "evidence": "Grep for the em dash in both files: remaining occurrences are only in untouched lines (grid titles, NewsStocks.live title, work experience titles, comments, testimonial, persona about/education/Overdose/NewsStocks extraKnowledge/prompt template). All four rewritten project titles and descriptions and all rewritten persona lines are em-dash free, including the unchanged tail of the E-commerce description which was converted to a colon. No paths written. Only data/index.ts and lib/persona.ts edited; no commit."
+    }
+  ],
+  "assumptions": [
+    "Maksym's role on Apex Mind stays 'Co-Founder & AI Automation Engineer' and tag 'Founder', consistent with the site's 'Co-founder - Founding partner'.",
+    "Olha Liutsko is named on the Apex card because the public site names her as co-founder.",
+    "The cinematic intro video claim for the avatar entry was taken from the stage contract, not verified in components (no Bash and out of scope).",
+    "The GSAP + Lenis marketing-site mention is retained from existing content; the earlier 'Node generators for branded docs' line was dropped because the live site does not support it.",
+    "Untouched em dashes in pre-existing copy were left alone per 'new or rewritten text' scope."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [],
+  "selfUsage": {"filesRead": 6, "approxLinesRead": 1250, "approxLinesWritten": 60, "retries": 0}
+}

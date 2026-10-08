@@ -6,6 +6,7 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
+import { IntroVideo } from "./IntroVideo";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
 import { LoadingStrip, FailureDialog } from "@/components/game/shell/LoadingOverlay";
@@ -51,6 +52,11 @@ const TalkingAvatar = () => {
     useRealtimeChat(gestureRef);
 
   const active = status !== "idle" && status !== "error";
+  // ?capture=1 shows the avatar alone, for screenshotting the intro video's
+  // last frame (same camera and background as the live hero).
+  const [capture] = useState(
+    () => new URLSearchParams(window.location.search).has("capture")
+  );
 
   // Play / explore: the game mounts in this same canvas (design 3.1). The hero subtree renders
   // only outside the game; the page chrome stays mounted while it animates out and back.
@@ -74,6 +80,8 @@ const TalkingAvatar = () => {
   shellRef.current = shell;
   const { phase, inGame, reduced } = shell;
   const busy = phase !== "hero";
+  // IntroVideo keeps its own state and renders a <video> only while the intro plays or fades.
+  const introPlaying = () => !!sectionRef.current?.querySelector("video");
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
   const GameInterface = shell.game?.module.GameInterface;
@@ -130,7 +138,11 @@ const TalkingAvatar = () => {
       ref={sectionRef}
       id="talk"
       aria-label="Interactive 3D AI avatar — talk to Maksym"
-      className="relative h-screen w-full [overflow-x:clip]"
+      className={
+        capture
+          ? "fixed inset-0 z-[100] bg-term-bg"
+          : "relative h-screen w-full [overflow-x:clip]"
+      }
     >
       {/* Canvas wrapper: absolute in the hero, fixed from the click (the section keeps its h-screen
           place, so nothing below it shifts). The scanlines travel with the canvas. */}
@@ -185,8 +197,9 @@ const TalkingAvatar = () => {
           )}
         </Canvas>
         )}
-        {/* scanline overlay: stays over the canvas until the world takes over, then fades */}
-        <div
+        {/* scanline overlay: stays over the canvas until the world takes over, then fades
+            (not in ?capture=1, which screenshots the bare avatar for the intro video's last frame) */}
+        {!capture && <div
           className="pointer-events-none absolute inset-0 z-10"
           style={{
             opacity: scanOpacity,
@@ -194,10 +207,14 @@ const TalkingAvatar = () => {
             backgroundImage:
               "repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.22) 3px, rgba(0,0,0,0) 4px)",
           }}
-        />
+        />}
       </div>
 
-      {shell.chromeMounted && <>
+      {/* Cinematic intro (only when NEXT_PUBLIC_INTRO_VIDEO_URL is set): a z-30 cover over the hero chrome
+          that hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
+      <IntroVideo />
+
+      {!capture && shell.chromeMounted && <>
       {/* Status line */}
       <div
         {...inert}
@@ -269,7 +286,9 @@ const TalkingAvatar = () => {
           {webgl && (
           <button
             ref={playRef}
-            onClick={shell.play}
+            onClick={() => {
+              if (!introPlaying()) shell.play();
+            }}
             onPointerEnter={() => shell.prefetch("hover")}
             onFocus={() => shell.prefetch("focus")}
             onPointerDown={() => shell.prefetch("press")}

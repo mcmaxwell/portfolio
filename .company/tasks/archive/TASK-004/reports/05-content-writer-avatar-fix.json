@@ -1,0 +1,41 @@
+{
+  "workItemId": "TASK-004",
+  "stageId": "05-content-writer-avatar-fix",
+  "agent": "content-writer",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Read contract and QA finding F1, edited the one claim in data/index.ts line 129, grepped lib/persona.ts for intro-video wording. No Bash, so no commands run.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Removed the unsupported cinematic intro video claim from the AI Talking Avatar entry in data/index.ts line 129. lib/persona.ts has no intro-video claim, so it is unchanged. Nothing committed.",
+  "filesChanged": ["data/index.ts"],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "4b886a8",
+    "targetResultCommit": null,
+    "targetDiffFiles": ["data/index.ts"],
+    "projectContextUsed": true
+  },
+  "testsRun": [],
+  "criteria": [
+    {
+      "criterion": "The AI Talking Avatar entry in data/index.ts reads along the lines of 'This site: a real-time 3D avatar you can talk to. Built with React Three Fiber and the OpenAI Realtime API, with voice-driven navigation, gestures and live lip-sync.' with no intro-video claim, and lib/persona.ts makes no intro-video claim that this task added.",
+      "status": "passed",
+      "evidence": "Before: \"This site: a cinematic intro video that hands off to a real-time 3D avatar you can talk to. Built with React Three Fiber and the OpenAI Realtime API, with voice-driven navigation, gestures and live lip-sync.\" After: \"This site: a real-time 3D avatar you can talk to. Built with React Three Fiber and the OpenAI Realtime API, with voice-driven navigation, gestures and live lip-sync.\" Case-insensitive grep of lib/persona.ts for intro|cinematic|video matched only lines 31, 32 and 109 (ElevenLabs/HeyGen/Kling AI media tooling and NewsStocks social video publishing); none concern a site intro video."
+    },
+    {
+      "criterion": "Only those lines change; no em dash; no commit is made.",
+      "status": "passed",
+      "evidence": "Single Edit replaced one phrase on data/index.ts line 129; no other file edited besides this report. The new text contains only plain hyphens or none, no em dash. No git commands run (no Bash)."
+    }
+  ],
+  "assumptions": [
+    "Lines 31, 32 and 109 of lib/persona.ts mention video only in the context of AI media tooling and NewsStocks, not the site intro video, so they are out of scope."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [],
+  "selfUsage": {"filesRead": 4, "approxLinesRead": 400, "approxLinesWritten": 40, "retries": 0}
+}

@@ -122,7 +122,7 @@ describe("prompt labels", () => {
   it("names the featured projects by their data titles only", () => {
     expect(promptTarget({ kind: "project", projectId: 1 })).toBe("XecSuite");
     expect(promptTarget({ kind: "project", projectId: 2 })).toBe("NewsStocks.live");
-    expect(promptTarget({ kind: "project", projectId: 3 })).toBe("Apex Mind Automation");
+    expect(promptTarget({ kind: "project", projectId: 3 })).toBe("Apex Mind");
     expect(promptTarget({ kind: "skills" })).toBeNull();
     expect(promptTarget(undefined)).toBeNull();
   });

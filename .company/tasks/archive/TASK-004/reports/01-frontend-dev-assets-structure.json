@@ -1,0 +1,97 @@
+{
+  "workItemId": "TASK-004",
+  "stageId": "01-frontend-dev-assets-structure",
+  "agent": "frontend-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Edited data/index.ts, captured live screenshots and text with headless Chrome via playwright-core, verified locally on port 3200.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Replaced both project screenshots with fresh 1280x800 captures, extracted live site text for both sites, removed three projects and added Node.js to the tech stack card. Build passes; lint script is non-functional on baseline (interactive prompt).",
+  "filesChanged": [
+    "data/index.ts",
+    "public/proj-xecsuite.png",
+    "public/proj-apexmind.png"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "4b886a8",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      "data/index.ts",
+      "public/proj-xecsuite.png",
+      "public/proj-apexmind.png"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm ci",
+      "exitCode": 0,
+      "result": "installed",
+      "evidence": "ci exit 0"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "no lint performed",
+      "evidence": "? How would you like to configure ESLint? (interactive prompt, no config used)"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "build succeeded",
+      "evidence": "\u25cb (Static) prerendered as static content; build exit 0"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "public/proj-xecsuite.png and public/proj-apexmind.png are replaced with fresh above-the-fold screenshots of https://www.xecsuite.com and https://apexmind.studio taken now at a 1440x900 desktop viewport (device scale 1) and saved at 1280x800 like the existing project images, with no cookie banners, loading spinners, scroll artifacts or half-played animations, and file sizes comparable to the current images; if a site is down or blocks capture, the old image is kept and the reason recorded.",
+      "status": "passed",
+      "evidence": "Chrome headless 1440x900 dsf1, fonts ready, 5s settle, XecSuite cookie banner dismissed via Essential only, Apex scroll-progress bar hidden, scrolled top; resized with sips to 1280x800 (PNG 1280x800). Sizes 437889 B (was 473996) and 345895 B (was 258213). Evidence: <scratchpad>/t4-fe/shots/xecsuite-1440x900.png, apexmind-1440x900.png, xecsuite-1280x800.png, apexmind-1280x800.png. Both sites returned HTTP 200 (xecsuite redirects to apex-domain xecsuite.com; apexmind to www)."
+    },
+    {
+      "criterion": "The visible text of each live site (home page headline, subheadline, key sections, and any about or product page linked from the main navigation) is saved as plain text files in the stage output directory for the content stage, with the fetch date and URL.",
+      "status": "passed",
+      "evidence": "Saved <scratchpad>/t4-fe/site-text/xecsuite.txt (home plus 15 nav-linked pages incl. platform, modules, council, lodestar, pricing, case-studies, team, trust, faq) and apexmind.txt (single-page site, all sections), each with SOURCE url and FETCHED 2026-10-08 header; no page errors."
+    },
+    {
+      "criterion": "data/index.ts no longer contains the Document & Image Archive Bot, Self-Hosted Family AI Agent and Dewy entries; any public image used only by those entries is deleted; the tech stack card reads 'React, TypeScript, Node.js, Tailwind & AI' (or an equivalent that names Node.js back-end); no other content is changed (the content stage owns copy).",
+      "status": "passed",
+      "evidence": "git diff: data/index.ts 1 insertion 22 deletions (3 entries removed, tech stack now 'React, TypeScript, Node.js, Tailwind & AI'). The three removed entries had no img field and used only shared icons, so no public image was deleted. Diff has 0 em dashes, 0 local paths."
+    },
+    {
+      "criterion": "The projects section renders cleanly with the remaining projects at 1440x900 and 390x844 (no empty grid cells, broken images, or layout shift), checked in a browser with one screenshot each, including the two new images.",
+      "status": "passed",
+      "evidence": "Local next start on port 3200 (stopped by PID): 6 cards, 3 two-column rows desktop, 0 page errors, all 4 screenshot images complete naturalWidth 1280, section height stable across 1.5s. Evidence: <scratchpad>/t4-fe/shots/projects-1440x900.png, projects-390x844.png (full section), projects-390x844-viewport.png, projects-1440x900-viewport.png. Pre-existing: private cards stretch to row height leaving blank space in cards 04 and 05; not changed (out of scope)."
+    },
+    {
+      "criterion": "npm ci, npm run lint and npm run build exit 0 with exit codes explicitly captured (npm test too if the script exists on this branch), git diff --check is clean, new content has no em dash or machine-local path, and no commit is made.",
+      "status": "passed",
+      "evidence": "npm ci exit 0; npm run build exit 0; git diff --check exit 0; no npm test script on branch; no commit. CAVEAT: npm run lint exits 0 but does not actually lint: next lint 14.1.4 opens an interactive ESLint setup prompt, and direct eslint fails on the baseline eslint.config.mjs (cannot find next/typescript). Pre-existing branch issue, not fixed; type checking covered by next build."
+    }
+  ],
+  "assumptions": [
+    "Removed entries used no exclusive public images, so none deleted",
+    "XecSuite nav pages sampled as the 15 main-nav and footer-linked pages"
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "portfolio: next lint 14.1.4 is interactive and eslint.config.mjs references next/typescript unavailable on 14.1.4; lint gate is ineffective"
+  ],
+  "selfUsage": {
+    "filesRead": 8,
+    "approxLinesRead": 700,
+    "approxLinesWritten": 200,
+    "retries": 1
+  }
+}

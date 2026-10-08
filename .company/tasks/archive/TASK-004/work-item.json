@@ -1,0 +1,258 @@
+{
+  "workItemId": "TASK-004",
+  "feature": "portfolio-content",
+  "projectId": "portfolio",
+  "targetBaseCommit": "4b886a8",
+  "tier": "SMALL",
+  "verificationProfile": "smoke",
+  "objective": "Refresh portfolio content: add Node.js back-end to the stack, refresh the XecSuite and Apex Mind screenshots and text from their live sites, remove the Document & Image Archive Bot, Self-Hosted Family AI Agent and Dewy projects, update the AI Talking Avatar and E-commerce entries (add: successfully launched 20+ online stores), and keep the voice avatar persona consistent.",
+  "sred": {
+    "related": false
+  },
+  "acceptanceCriteria": [
+    "Node.js back-end appears in the site's tech stack and the persona skills.",
+    "XecSuite and Apex Mind project images are fresh screenshots of their live sites, and their text matches what those sites say now.",
+    "Document & Image Archive Bot, Self-Hosted Family AI Agent and Dewy are removed from the site and the persona.",
+    "The AI Talking Avatar entry describes the site as it is now, and the E-commerce entry states that 20+ online stores were successfully launched.",
+    "Required checks pass, QA approves, and the change ships in a pull request against master."
+  ],
+  "constraints": [
+    "No invented results or claims; facts come from the live sites, the existing content, or the user's own statements (20+ online stores launched).",
+    "No em dash in new content."
+  ],
+  "approvals": [
+    {
+      "date": "2026-10-08",
+      "by": "user",
+      "scope": "Direct user request (Ukrainian): update the website; add a bit of Node.js back-end; update the XecSuite picture (it is different now); update Apex Mind picture and review its texts together with its website; remove Documents Chatbot and Self-hosted Family AI Agent; update the AI avatar text; remove Dewy; update e-commerce; add: successfully launched more than 20 online stores."
+    }
+  ],
+  "isolation": "scripts/company-work worktree for TASK-004 on content/task-004-portfolio-content-refresh from origin/master",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "3D playable game avatar locomotion animation canvas hero transition talking avatar gestures projects skills contact",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "components/avatar/AskHints.tsx",
+      "components/avatar/Avatar.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "components/site/Contact.tsx",
+      "components/site/Projects.tsx",
+      "lib/gestures.ts"
+    ],
+    "symbols": [
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "Avatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 80
+      },
+      {
+        "name": "AvatarProps",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 23
+      },
+      {
+        "name": "Contact",
+        "type": "function",
+        "file": "components/site/Contact.tsx",
+        "line": 4
+      },
+      {
+        "name": "GestureClips",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 59
+      },
+      {
+        "name": "GestureName",
+        "type": "type",
+        "file": "lib/gestures.ts",
+        "line": 15
+      },
+      {
+        "name": "GestureTrigger",
+        "type": "type",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 21
+      },
+      {
+        "name": "gestureUrl",
+        "type": "function",
+        "file": "lib/gestures.ts",
+        "line": 17
+      },
+      {
+        "name": "preloadAvatar",
+        "type": "function",
+        "file": "components/avatar/Avatar.tsx",
+        "line": 229
+      },
+      {
+        "name": "Projects",
+        "type": "function",
+        "file": "components/site/Projects.tsx",
+        "line": 4
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "AskHints",
+        "type": "function",
+        "file": "components/avatar/AskHints.tsx",
+        "line": 16
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/AskHints.tsx",
+        "type": "contains",
+        "to": "AskHints",
+        "evidence": "components/avatar/AskHints.tsx:16",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "Avatar",
+        "evidence": "components/avatar/Avatar.tsx:80",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "AvatarProps",
+        "evidence": "components/avatar/Avatar.tsx:23",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureClips",
+        "evidence": "components/avatar/Avatar.tsx:59",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "GestureTrigger",
+        "evidence": "components/avatar/Avatar.tsx:21",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/Avatar.tsx",
+        "type": "contains",
+        "to": "preloadAvatar",
+        "evidence": "components/avatar/Avatar.tsx:229",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "TalkingAvatar",
+        "evidence": "components/avatar/TalkingAvatar.tsx:42",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Contact.tsx",
+        "type": "contains",
+        "to": "Contact",
+        "evidence": "components/site/Contact.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/site/Projects.tsx",
+        "type": "contains",
+        "to": "Projects",
+        "evidence": "components/site/Projects.tsx:4",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "GestureName",
+        "evidence": "lib/gestures.ts:15",
+        "confidence": "exact"
+      },
+      {
+        "from": "lib/gestures.ts",
+        "type": "contains",
+        "to": "gestureUrl",
+        "evidence": "lib/gestures.ts:17",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/AskHints.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:8",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/Avatar.tsx",
+        "evidence": "components/avatar/TalkingAvatar.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "imports",
+        "to": "components/avatar/useRealtimeChat.ts",
+        "evidence": "components/avatar/TalkingAvatar.tsx:9",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "status": "done",
+  "userRequests": [
+    "Онови вебсайт. додай трохи back-end на node.js. Далі онови картинку для xecsuite, там інша картинка зараз. онови Apex mind, картинку, подивись тексти, може також треба оновити, спільно з вебсайтом. Прибери документами Chatbot із Self-hosted Family AI Agent, прибери. онови AI  avatar текст. прибери dewy. онови e-commerce. додай: успішно запущено більше 20 онлайн-сторів."
+  ],
+  "decisions": [
+    {
+      "date": "2026-10-08",
+      "by": "boss",
+      "decision": "Interpretations recorded without blocking the user: 'Documents Chatbot' is the Document & Image Archive Bot entry; 'add a bit of Node.js back-end' means adding Node.js back-end to the stated tech stack and persona skills; the AI avatar text describes the site on master (cinematic intro video handing off to the real-time talking 3D avatar), not the unmerged TASK-002 game; lib/persona.ts is updated alongside data/index.ts so the voice avatar does not describe removed projects."
+    },
+    {
+      "date": "2026-10-08",
+      "by": "boss",
+      "decision": "QA round 1 (reports/04) rejected on F1: the live site does not play the intro video (NEXT_PUBLIC_INTRO_VIDEO_URL unset), so the avatar entry's intro-video clause was removed (reports/05). Accepted non-blocking findings: F2 Apex Mind card empty space from equal-height grid rows; F3 legacy claims (tenant-private, model routing, Startup Weekend award, GSAP + Lenis) kept as prior user-supplied content pending user confirmation; F4 the gridItems tech stack card is not rendered, Node.js is visible through the persona skills list. Pre-existing lint warning in components/avatar/useRealtimeChat.ts:224 left for a separate behaviour-tested change."
+    }
+  ],
+  "qaOverrides": []
+}

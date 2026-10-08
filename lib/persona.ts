@@ -20,12 +20,12 @@ export const owner = {
     "open-source models, plus media tools like ElevenLabs, HeyGen and Kling AI. " +
     "It's all backed by 12+ years of front-end engineering (React, TypeScript, " +
     "Tailwind) and Adobe Certified Expert–level Adobe Commerce experience. Shipped " +
-    "so far: an autonomous financial-news platform, an AI HR assistant, " +
-    "document-processing bots and a private family AI agent.",
+    "so far: an autonomous financial-news platform and an AI HR assistant, " +
+    "plus 20+ online stores successfully launched.",
 };
 
 export const skills = [
-  "Languages & frameworks: React, Next.js, Vue.js, TypeScript, JavaScript, KnockoutJS, jQuery, PHP",
+  "Languages & frameworks: React, Next.js, Vue.js, TypeScript, JavaScript, Node.js (back-end), KnockoutJS, jQuery, PHP",
   "AI & agents: multi-agent orchestration, RAG, prompt engineering, voice assistants, real-time lip-sync",
   "Models: OpenAI, Anthropic Claude (Claude Code), Google Gemini, self-hosted open-source LLMs",
   "AI media: ElevenLabs (voice/TTS), HeyGen (AI video avatars), Kling AI (video generation), DALL·E",
@@ -42,14 +42,14 @@ export const experience = [
     company: "XecSuite",
     period: "2026 – present",
     detail:
-      "AI operating layer for cross-border Canada–US 3PLs — a tenant-private company-memory core and a governed, approval-gated agent workforce. Lead the technical architecture: agent runtime, hybrid model routing, and product engineering. Built and awarded at a Startup Weekend; now live.",
+      "AI operating layer for supply chain teams in Canada and the United States - a tenant-private company-memory core and a governed, approval-gated agent workforce. Lead the technical architecture: agent runtime, hybrid model routing, and product engineering. Built and awarded at a Startup Weekend; now live.",
   },
   {
     role: "Co-Founder & AI Automation Engineer",
     company: "Apex Mind Automation",
     period: "2026 – present",
     detail:
-      "Design and ship AI-integrated products and end-to-end automation for businesses — multi-agent systems, LLM assistants, and automated content/data pipelines. Built NewsStocks.live, an AI HR assistant, document-processing bots and a self-hosted family AI agent.",
+      "Practical AI automation for 5-50 person businesses in London, ON - quoting, scheduling, invoicing, follow-ups, paperwork, phone calls and social posts. We map the week, build into the tools clients already run, and train the team. Also build multi-agent systems, LLM assistants and automated content/data pipelines. Built NewsStocks.live and an AI HR assistant.",
   },
   {
     role: "E-commerce Developer",
@@ -109,15 +109,12 @@ AI automation focus (recent work):
 - NewsStocks.live — an autonomous financial-news platform: a cron pipeline scrapes S&P 500 news, GPT-4o-mini writes per-article summaries and daily/weekly/monthly market analysis from historical data, and the system auto-generates social posts and short videos (using ElevenLabs voice, HeyGen and Kling AI) published to TikTok, YouTube, Instagram and Facebook. Telegram bot for subscribers. (live: newsstocks.live)
 
 I work across multiple AI providers and models — OpenAI, Anthropic Claude (including Claude Code), Google Gemini, and self-hosted open-source LLMs — picking the right model per task, plus media tools like ElevenLabs, HeyGen and Kling AI.
-- Apex Mind Automation (apexmind.studio) — my automation studio; I build custom automations, AI agents and web apps for businesses.
+- Apex Mind (apexmind.studio) - my automation studio, co-founded with Olha Liutsko. Practical AI automation for 5-50 person businesses in London, ON: quoting, scheduling, invoicing, follow-ups, paperwork, phone calls and social posts. We map the client's week, build the automations into the tools they already run, and train the team to keep them going.
 - AI HR assistant — answers candidate questions on social media, books interviews, parses and structures résumés, and shortlists candidates automatically.
-- Telegram archive bot — send it a photo or document; it extracts and analyzes the text, saves structured records to Google Docs and a database, and replies with a link and summary.
-- A private, self-hosted family AI agent on open-source LLMs — searches our photo/document archive, plans schedules (school activities, meals), analyzes data (calories, recipes) and generates images and code, with no subscriptions or per-token cost.
-- XecSuite (xecsuite.com) — I'm co-founder & CTO. An AI operating layer for cross-border Canada–US 3PLs: a tenant-private company-memory core plus modules (CRM, marketing, meeting intelligence, freight analysis, ops/SOP, executive assistant) run by a governed, approval-gated agent workforce. Built and awarded at a Startup Weekend; now live.
-- Dewy — an AI plant-care PWA (Next.js + Capacitor, Google Gemini Smart Scan).
+- XecSuite (xecsuite.com) - I'm co-founder & CTO. The AI operating layer for supply chain teams in Canada and the United States: it connects systems and company knowledge across freight, finance and customer operations. A tenant-private company-memory core plus connected modules (Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent, RFP) run by a governed, approval-gated agent workforce. Built and awarded at a Startup Weekend; now live.
 - Ongoing work with multi-agent orchestration for automation systems.
 
-Magento / Adobe Commerce client work (6+ years) — theme builds, support, deep customization, custom checkout and from-scratch builds for retail brands across Canada, NZ and Australia, using Knockout.js, jQuery, LESS/SASS and Gulp/Grunt. Clients include Rexall, Tepperman's, Max (NZ), Coco Republic (AU), BK Products and West Coast Kids.
+Magento / Adobe Commerce client work (6+ years), with 20+ online stores successfully launched - theme builds, support, deep customization, custom checkout and from-scratch builds for retail brands across Canada, NZ and Australia, using Knockout.js, jQuery, LESS/SASS and Gulp/Grunt. Clients include Rexall, Tepperman's, Max (NZ), Coco Republic (AU), BK Products and West Coast Kids.
 `;
 
 /** Assembles the full system instructions for the Realtime model. */
