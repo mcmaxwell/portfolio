@@ -87,14 +87,16 @@ Per clip the script: removes the `mixamorig` prefix from node names; keeps only 
 `land` keeps source frames 2 to 58 (touchdown, crouch, rise; frame 0 is still airborne and frame 59 starts the wrap), the Hips rotation as authored, and a Hips translation track: x and z are the source pelvis travel scaled to the avatar, y is derived per frame so the avatar's lowest foot or toe joint stands on the ground (the pelvis height matches the source within 0.031 m).
 The one-knee landing's trailing foot hangs up to 0.13 m high, so `scripts/lib/plant-feet.mjs` lowers it with a two-bone leg IK (largest drop 0.092 m on 35 of 57 frames) and both feet end within 0.05 m of the ground.
 `fall` ships only a vertical Hips translation derived the same way, so the feet stay on the capsule bottom and a touchdown starts from the ground.
+`idle`, `walk` and `run` also get a constant forward pitch on the Spine, Spine1 and Spine2 rotations (and a counter-pitch on Neck and Head that keeps the gaze level), solved per clip by `scripts/lib/posture.mjs` so the mean forward pitch of the Hips-to-Head line is 2.2, 3.3 and 7 degrees (TASK-003): without the Hips tracks the avatar's chest leaned behind vertical while walking (about -6 degrees) and the run threw the head back.
+The leg tracks are untouched, so the feet are exactly as before. The targets are `leanMean` and `headMean` in `scripts/strip-clips.mjs`.
 The avatar skeleton for these solves is read from `public/avatar.glb` by `scripts/lib/avatar-rig.mjs`.
 Ground speeds are measured by `node scripts/measure-clips.mjs`.
 
 | File | Source (Mixamo) | Clip title | Provided by owner | License note | Modifications | Size |
 |---|---|---|---|---|---|---|
-| `public/game/clips/idle.glb` | `assets-src/mixamo/Idle.fbx` | Idle | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, resampled | 15.5 KB |
-| `public/game/clips/walk.glb` | `assets-src/mixamo/Walking.fbx` | Walking | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, loop trimmed (31 frames) | 31.0 KB |
-| `public/game/clips/run.glb` | `assets-src/mixamo/Running.fbx` | Running | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, loop trimmed (19 frames) | 26.8 KB |
+| `public/game/clips/idle.glb` | `assets-src/mixamo/Idle.fbx` | Idle | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, resampled, forward lean added | 15.5 KB |
+| `public/game/clips/walk.glb` | `assets-src/mixamo/Walking.fbx` | Walking | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, loop trimmed (31 frames), forward lean added | 31.0 KB |
+| `public/game/clips/run.glb` | `assets-src/mixamo/Running.fbx` | Running | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, loop trimmed (19 frames), forward lean added | 26.8 KB |
 | `public/game/clips/jump.glb` | `assets-src/mixamo/Jump.fbx` | Jump | 2026-10-06 | note 1 and note 3 | rotation-only, Hips removed, frames 21 to 39 only (0.6 s) | 26.7 KB |
 | `public/game/clips/fall.glb` | `assets-src/mixamo/Falling Idle.fbx` | Falling Idle | 2026-10-06 | note 1 and note 3 | rotation plus a planted vertical Hips translation, loop trimmed (21 frames) | 25.8 KB |
 | `public/game/clips/land.glb` | `assets-src/mixamo/Hard Landing.fbx` | Hard Landing | 2026-10-06 | note 1 and note 3 | rotations plus Hips rotation and translation, frames 2 to 58 (1.867 s), trailing foot lowered by leg IK | 51.1 KB |

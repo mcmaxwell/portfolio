@@ -15,11 +15,15 @@ export type Settings = {
   reducedMotion: "system" | "on" | "off";
   quality: "auto" | "low" | "high";
 };
-export type ProgressV1 = { version: 1; collected: CellId[]; completed: boolean; settings: Settings };
+/**
+ * `trophy` was added to version 1 without a version bump (ADR-005): a stored record without it is the
+ * same record with no trophy, and an older build that reads a newer record simply ignores the field.
+ */
+export type ProgressV1 = { version: 1; collected: CellId[]; completed: boolean; trophy: boolean; settings: Settings };
 export type ParseStatus = "ok" | "empty" | "invalid" | "migrated";
 
 export const defaultSettings = (): Settings => ({ soundOn: true, volume: 0.6, reducedMotion: "system", quality: "auto" });
-export const defaultProgress = (): ProgressV1 => ({ version: 1, collected: [], completed: false, settings: defaultSettings() });
+export const defaultProgress = (): ProgressV1 => ({ version: 1, collected: [], completed: false, trophy: false, settings: defaultSettings() });
 
 /** Migration n -> n + 1 for a known older record. Version 1 is the first shipped shape, so there are none yet. */
 export type Migrations = Readonly<Record<number, (old: Record<string, unknown>) => Record<string, unknown>>>;
@@ -33,6 +37,8 @@ function validate(x: unknown): ProgressV1 | null {
   if (!isRecord(x) || x.version !== PROGRESS_VERSION) return null;
   if (!Array.isArray(x.collected) || !x.collected.every(isCellId)) return null;
   if (typeof x.completed !== "boolean") return null;
+  // Absent in records saved before the trophy existed: no trophy yet. Present, it must be a boolean.
+  if (x.trophy !== undefined && typeof x.trophy !== "boolean") return null;
   const s = x.settings;
   if (!isRecord(s)) return null;
   if (typeof s.soundOn !== "boolean") return null;
@@ -46,6 +52,7 @@ function validate(x: unknown): ProgressV1 | null {
     version: 1,
     collected,
     completed: x.completed,
+    trophy: x.trophy === true,
     settings: { soundOn: s.soundOn, volume: Math.min(1, Math.max(0, s.volume)), reducedMotion: s.reducedMotion, quality: s.quality },
   };
 }
@@ -104,10 +111,15 @@ export function completeChallenge(p: ProgressV1): ProgressV1 {
   return { ...p, completed: true };
 }
 
-/** Clears the cells and the completion and keeps the settings. */
+/** Idempotent: the trophy is collected once. Returns the same object when it already is. */
+export function collectTrophy(p: ProgressV1): ProgressV1 {
+  return p.trophy ? p : { ...p, trophy: true };
+}
+
+/** Clears the cells, the completion and the trophy and keeps the settings. */
 export function restartChallenge(p: ProgressV1): ProgressV1 {
-  if (p.collected.length === 0 && !p.completed) return p;
-  return { ...p, collected: [], completed: false };
+  if (p.collected.length === 0 && !p.completed && !p.trophy) return p;
+  return { ...p, collected: [], completed: false, trophy: false };
 }
 
 export interface ProgressStore extends Store<ProgressV1> {

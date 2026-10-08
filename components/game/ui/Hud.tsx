@@ -162,6 +162,16 @@ export function ChallengeHud({
       >
         {counterText(progress)}
       </div>
+      {progress.trophy && (
+        // The sentence is announced by the game's own live region when the cup is collected; this chip only keeps it on screen.
+        <div
+          aria-hidden="true"
+          className="flex min-h-[44px] items-center border border-term-cyan bg-term-bg/85 px-4 py-2 text-xs text-term-cyan backdrop-blur"
+          data-trophy-chip
+        >
+          Trophy collected
+        </div>
+      )}
       <p
         role="status"
         aria-live="polite"

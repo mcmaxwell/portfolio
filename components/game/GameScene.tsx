@@ -17,7 +17,7 @@ import type { CharacterAnimator } from "./animator";
 import { solidsOf, type BodyClearance } from "./bodyClearance";
 import { createChallenge, type ChallengeSystem } from "./challenge";
 import { jointNamesOf, loadCelebrationClip, toGameClip, type GameAssets } from "./clips";
-import { CAMERA, CELEBRATION, FEET_TO_CENTER, MOTOR_CONFIG, MOVEMENT, PHYSICS, resolveQuality, type Vec3 } from "./config";
+import { CAMERA, CELEBRATION, FEET_TO_CENTER, MOTOR_CONFIG, MOVEMENT, PHYSICS, resolveQuality, TROPHY, type Vec3 } from "./config";
 import { createFixedStepper, type FixedStepper } from "./fixedStep";
 import { createObstacleQuery } from "./cameraProbe";
 import { createFollowCamera, type FollowCamera } from "./followCamera";
@@ -134,8 +134,8 @@ type Runtime = {
   cam: FollowCamera;
   interactions: InteractionSystem;
   challenge: ChallengeSystem;
-  /** The beacon celebration in progress (seconds played, how long it lasts), or null. */
-  celebration: { t: number; duration: number } | null;
+  /** The beacon celebration or the trophy dance in progress (seconds played, how long it lasts), or null. */
+  celebration: { t: number; duration: number; kind: "beacon" | "trophy" } | null;
   intent: MotorIntent;
   frame: MotorState;
   tmp: Vec3;
@@ -460,25 +460,39 @@ function ActiveGame({
     rt.challenge.update(feet);
 
     // The beacon celebration: the lighting effect and the gesture, then the completion panel (design 2.3).
-    // A pause skips it: after Resume the panel opens at once.
+    // The trophy dance: the same gesture in place, no lighting effect and no camera move, then back to play.
+    // A pause skips either: after Resume the beacon's panel opens at once, the dance is simply over.
     const cel = rt.celebration;
     if (mode === "celebrating") {
       if (!cel) {
+        const kind = session.getState().celebration ?? "beacon";
+        const trophy = kind === "trophy";
         const raw = celebrationClip.current;
         const grp = groupRef.current;
-        const clip = !game.reducedMotion && raw && grp ? toGameClip(raw, jointNamesOf(grp)) : undefined;
-        const duration = game.reducedMotion ? CELEBRATION.reducedSeconds : clip ? Math.min(clip.duration, CELEBRATION.maxSeconds) : CELEBRATION.noClipSeconds;
+        // Reduced motion drops the beacon's gesture and light show, but the trophy dance still plays (it is the reward).
+        const clip = (trophy || !game.reducedMotion) && raw && grp ? toGameClip(raw, jointNamesOf(grp)) : undefined;
+        const duration = trophy
+          ? clip
+            ? Math.min(clip.duration, TROPHY.danceMaxSeconds)
+            : TROPHY.danceNoClipSeconds
+          : game.reducedMotion
+            ? CELEBRATION.reducedSeconds
+            : clip
+              ? Math.min(clip.duration, CELEBRATION.maxSeconds)
+              : CELEBRATION.noClipSeconds;
         if (clip) void animatorRef.current?.playCelebration(clip);
-        rt.celebration = { t: 0, duration };
+        rt.celebration = { t: 0, duration, kind };
       } else {
         cel.t += dtc;
-        // Reduced motion: one short fade up to a steady lower level, held, and one fade out. Nothing moves
-        // or breathes in between, so there is no pulse (the full version swells over 0.4 s and drains over 0.8 s).
-        const reducedFade = TIMING.reduced.fadeMs / 1000;
-        const up = game.reducedMotion ? reducedFade : 0.4;
-        const down = game.reducedMotion ? reducedFade : 0.8;
-        const peak = game.reducedMotion ? 0.5 : 1;
-        worldRef.current?.setCelebration(Math.max(0, Math.min(peak, (peak * cel.t) / up, (peak * (cel.duration - cel.t)) / down)));
+        if (cel.kind === "beacon") {
+          // Reduced motion: one short fade up to a steady lower level, held, and one fade out. Nothing moves
+          // or breathes in between, so there is no pulse (the full version swells over 0.4 s and drains over 0.8 s).
+          const reducedFade = TIMING.reduced.fadeMs / 1000;
+          const up = game.reducedMotion ? reducedFade : 0.4;
+          const down = game.reducedMotion ? reducedFade : 0.8;
+          const peak = game.reducedMotion ? 0.5 : 1;
+          worldRef.current?.setCelebration(Math.max(0, Math.min(peak, (peak * cel.t) / up, (peak * (cel.duration - cel.t)) / down)));
+        }
         if (cel.t >= cel.duration) {
           animatorRef.current?.stopCelebration(0.4);
           worldRef.current?.setCelebration(0);
@@ -490,7 +504,7 @@ function ActiveGame({
       animatorRef.current?.stopCelebration(0.2);
       worldRef.current?.setCelebration(0);
       rt.celebration = null;
-      if (mode === "playing" && game.progress.getState().completed) session.dispatch({ type: "OPEN_PANEL", panel: { kind: "completion" } });
+      if (cel.kind === "beacon" && mode === "playing" && game.progress.getState().completed) session.dispatch({ type: "OPEN_PANEL", panel: { kind: "completion" } });
     }
 
     // Session progress.

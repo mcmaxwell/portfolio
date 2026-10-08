@@ -77,6 +77,13 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
     }
   }, [state.mode]);
 
+  // The trophy: announced once when it is collected during this visit (a restored one stays quiet).
+  const trophyRef = useRef(progress.trophy);
+  useEffect(() => {
+    if (progress.trophy && !trophyRef.current) setAnnounce("Trophy collected");
+    trophyRef.current = progress.trophy;
+  }, [progress.trophy]);
+
   const pause = useCallback(() => session.dispatch({ type: "PAUSE", reason: "user" }), [session]);
   const resume = useCallback(() => session.dispatch({ type: "RESUME" }), [session]);
   // Restart clears the cells and the completion (settings stay) and goes straight back to the game.

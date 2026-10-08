@@ -57,6 +57,20 @@ describe("reduceSession: every legal row", () => {
     expect(reduceSession(at("playing"), { type: "BEACON_ACTIVATED" }).mode).toBe("celebrating");
   });
 
+  it("playing + TROPHY_COLLECTED -> celebrating for the trophy; the dance ends back in playing, not in a panel", () => {
+    const dancing = reduceSession(at("playing"), { type: "TROPHY_COLLECTED" });
+    expect(dancing).toMatchObject({ mode: "celebrating", celebration: "trophy" });
+    expect(reduceSession(dancing, { type: "CELEBRATION_DONE" })).toMatchObject({ mode: "playing", panel: null, celebration: null });
+    expect(reduceSession(at("entering"), { type: "TROPHY_COLLECTED" }).mode).toBe("entering");
+    expect(reduceSession(at("panel", { panel: PANEL }), { type: "TROPHY_COLLECTED" }).mode).toBe("panel");
+  });
+
+  it("a pause during the trophy dance resumes to playing and forgets the dance", () => {
+    const dancing = reduceSession(at("playing"), { type: "TROPHY_COLLECTED" });
+    const paused = reduceSession(dancing, { type: "PAUSE", reason: "user" });
+    expect(reduceSession(paused, { type: "RESUME" })).toMatchObject({ mode: "playing", celebration: null });
+  });
+
   it("celebrating + CELEBRATION_DONE -> panel (completion)", () => {
     expect(reduceSession(at("celebrating"), { type: "CELEBRATION_DONE" })).toMatchObject({ mode: "panel", panel: { kind: "completion" } });
   });

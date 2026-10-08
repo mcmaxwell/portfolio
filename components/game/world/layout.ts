@@ -72,6 +72,8 @@ export type Challenge = {
   /** Collected by walking into them (no key); `position` is feet level, the glow floats above it. */
   cells: readonly Interactable[];
   beacon: Interactable | null;
+  /** The trophy cup on the highest terrace platform (an optional reward, not part of the cell count); also collected by walking into it. */
+  trophy: Interactable | null;
 };
 
 export type Layout = {
@@ -108,7 +110,7 @@ export const TEST_ARENA: Layout = {
   spawn: v(0, 0, -12),
   spawnYawDeg: 0,
   interactables: [],
-  challenge: { cells: [], beacon: null },
+  challenge: { cells: [], beacon: null, trophy: null },
   beacon: null,
   signs: [],
   destinations: [],

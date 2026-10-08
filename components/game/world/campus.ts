@@ -9,7 +9,7 @@
 // A separate visual pass (dusk lighting, materials, trees, props) follows this stage, so the
 // geometry here is primitives only, and blocks are tagged so that visuals and colliders stay
 // separate: `collide: false` blocks are visual only.
-import type { Interactable } from "../config";
+import { TROPHY, type Interactable } from "../config";
 import { blk, pathStrip, placeBlocks, placePoint, ramp, v } from "./builders";
 import type { Block, Destination, Layout, Room, Sign } from "./layout";
 
@@ -242,6 +242,15 @@ export function buildCampus(): Layout {
     { id: "cell-workshop", kind: "cell", cellId: "workshop", position: at(WORKSHOP, [0, WORKSHOP_FLOOR, 2.6]), radius: CELL_RADIUS, prompt: "Energy cell" },
     { id: "cell-tower", kind: "cell", cellId: "tower", position: at(TOWER, [0, TOWER_FLOOR, 2.0]), radius: CELL_RADIUS, prompt: "Energy cell" },
   ];
+  // The trophy cup stands in the middle of the top of the highest terrace platform (terrace-2).
+  const top = blocks.find((b) => b.id === "terrace-2")!;
+  const trophy: Interactable = {
+    id: "trophy",
+    kind: "trophy",
+    position: v(top.center.x, top.center.y + top.size.y / 2, top.center.z),
+    radius: TROPHY.radius,
+    prompt: "Trophy",
+  };
   const beacon: Interactable = { id: "beacon", kind: "beacon", position: v(0, 0, 1.5), radius: 2.0, prompt: "Light the beacon" };
 
   const sign = (id: string, text: string, o: { origin: { x: number; z: number }; yaw: number }, p: readonly [number, number, number], width: number, height: number, accent: Sign["accent"]): Sign => ({
@@ -267,7 +276,7 @@ export function buildCampus(): Layout {
     spawn: v(0, 0, -6),
     spawnYawDeg: 0,
     interactables,
-    challenge: { cells, beacon },
+    challenge: { cells, beacon, trophy },
     beacon: v(0, 0, 1.5),
     signs,
     destinations: [

@@ -103,11 +103,12 @@ export function WorldView({
 
   // Challenge visuals: set to the current progress on mount, then follow it each frame.
   const celebRef = useRef(0);
-  const challengeCache = useRef<{ progress: ProgressV1 | null; collected: Set<string>; all: boolean; completed: boolean }>({
+  const challengeCache = useRef<{ progress: ProgressV1 | null; collected: Set<string>; all: boolean; completed: boolean; trophy: boolean }>({
     progress: null,
     collected: new Set(),
     all: false,
     completed: false,
+    trophy: false,
   });
   const frameOf = (time: number, dt: number) => {
     const p = challenge?.progress.getState();
@@ -117,10 +118,11 @@ export function WorldView({
       c.collected = new Set(p.collected);
       c.all = allCollected(p);
       c.completed = p.completed;
+      c.trophy = p.trophy;
     }
     // The beam shows from the third cell until the beacon is lit, and stays through the celebration.
     const beam = c.all && (!c.completed || celebRef.current > 0);
-    return { time, dt, collected: c.collected, beam, glow: celebRef.current, reduced: challenge?.reducedMotion ?? false };
+    return { time, dt, collected: c.collected, trophy: c.trophy, beam, glow: celebRef.current, reduced: challenge?.reducedMotion ?? false };
   };
   useLayoutEffect(() => {
     resources.challenge?.snap(frameOf(0, 0));

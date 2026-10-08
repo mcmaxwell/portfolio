@@ -3,7 +3,7 @@
 // Restart in the pause menu (settings kept) and the completion panel actions.
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { collectCell } from "../progress";
+import { collectCell, collectTrophy, restartChallenge } from "../progress";
 import { createGame, type GameHandle } from "../session";
 import { GameInterface } from "../ui/GameInterface";
 
@@ -127,5 +127,38 @@ describe("completion panel", () => {
     act(() => game.session.dispatch({ type: "OPEN_PANEL", panel: { kind: "completion" } }));
     fireEvent.click(screen.getByText("[ contact ]"));
     expect(game.session.getState().panel).toEqual({ kind: "contact" });
+  });
+});
+
+describe("trophy", () => {
+  const announce = () => document.querySelector("[data-game-announce]") as HTMLElement;
+  const chip = () => document.querySelector("[data-trophy-chip]");
+
+  it("collecting it announces 'Trophy collected' in the polite live region and keeps a chip on screen", () => {
+    expect(announce()).toHaveAttribute("aria-live", "polite");
+    expect(chip()).toBeNull();
+    act(() => game.progress.update(collectTrophy));
+    expect(announce()).toHaveTextContent("Trophy collected");
+    expect(chip()).toHaveTextContent("Trophy collected");
+    expect(chip()).toHaveAttribute("aria-hidden", "true"); // announced once, by the live region
+  });
+
+  it("Restart removes the chip", () => {
+    act(() => game.progress.update(collectTrophy));
+    act(() => game.progress.update(restartChallenge));
+    expect(chip()).toBeNull();
+  });
+});
+
+describe("trophy restored from a saved record", () => {
+  it("is shown without being announced again", () => {
+    cleanup();
+    game.dispose();
+    game = createGame({ reducedMotion: true, storage: null });
+    game.progress.update(collectTrophy);
+    render(<GameInterface game={game} onExit={vi.fn()} />);
+    act(() => game.session.dispatch({ type: "ENTRY_DONE" }));
+    expect(document.querySelector("[data-trophy-chip]")).not.toBeNull();
+    expect(document.querySelector("[data-game-announce]")).not.toHaveTextContent("Trophy collected");
   });
 });

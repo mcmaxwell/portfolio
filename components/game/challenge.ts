@@ -4,7 +4,7 @@
 // interactable that answers only after the third cell. No DOM, no three, no Rapier.
 import type { Interactable, Vec3 } from "./config";
 import { REACH_Y } from "./interactions";
-import { canActivateBeacon, collectCell, completeChallenge } from "./progress";
+import { canActivateBeacon, collectCell, collectTrophy, completeChallenge } from "./progress";
 import type { GameHandle } from "./session";
 import type { Challenge } from "./world/layout";
 
@@ -29,6 +29,13 @@ export function createChallenge(challenge: Challenge, game: Pick<GameHandle, "se
       if (session.getState().mode !== "playing") return;
       for (const cell of challenge.cells) {
         if (cell.cellId && inReach(player, cell)) progress.update((p) => collectCell(p, cell.cellId!));
+      }
+      // The trophy: once, by walking into it. Saved first, so a reload during the dance keeps it; the dance
+      // then plays in place (the session's "celebrating" mode releases the controls for its duration).
+      const trophy = challenge.trophy;
+      if (trophy && !progress.getState().trophy && inReach(player, trophy)) {
+        progress.update(collectTrophy);
+        session.dispatch({ type: "TROPHY_COLLECTED" });
       }
     },
     beaconReady: () => canActivateBeacon(progress.getState()),

@@ -22,7 +22,7 @@ export type PanelId =
  */
 export type Interactable = {
   id: string;
-  kind: "project" | "all-projects" | "skills" | "experience" | "contact" | "cell" | "beacon";
+  kind: "project" | "all-projects" | "skills" | "experience" | "contact" | "cell" | "beacon" | "trophy";
   position: Vec3; // where the player stands: feet level, in front of the display
   radius: number; // horizontal reach in metres
   prompt: string;
@@ -109,6 +109,12 @@ export const ANIMATION = {
 /** The existing gesture (lib/gestures.ts) the avatar performs at the beacon, and how long of it plays (s). */
 export const CELEBRATION = { gesture: "dance", maxSeconds: 3.6, noClipSeconds: 2.2, reducedSeconds: 1.0 } as const;
 export const CELEBRATION_GESTURE = CELEBRATION.gesture;
+
+/**
+ * The trophy cup on the highest terrace platform: collected by walking into it, like an energy cell
+ * (no key). The avatar then plays the dance gesture in place for `danceSeconds` at most.
+ */
+export const TROPHY = { radius: 0.9, danceMaxSeconds: 3.6, danceNoClipSeconds: 0.8 } as const;
 
 export const INPUT = { joystickRunThreshold: 0.85 } as const;
 

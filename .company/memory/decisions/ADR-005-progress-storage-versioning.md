@@ -47,3 +47,11 @@ To change format, bump `version` and add a migration rather than editing version
 - The storage key as implemented is `portfolio.game.progress`, and the record version is `1`.
 - Restart clears `collected` and `completed` and keeps `settings`, as in the Decision section.
 - Sound and quality-preset settings were deferred by user decision on 2026-10-07, so no UI for them ships; the settings fields remain part of the record shape above.
+
+## Implementation Notes (TASK-003, trophy)
+
+- The record gained `trophy: boolean` (the optional trophy cup on the highest terrace platform) without a version bump: the field is additive and optional on read.
+- A stored version 1 record without `trophy` is valid and loads with `trophy: false`, its cells and completion intact; a `trophy` that is present but not a boolean makes the record invalid.
+- Every write includes `trophy`. An older build that reads a newer record ignores the field (it copies only the fields it knows), so there is no downgrade loss beyond the trophy itself.
+- Restart clears `trophy` together with `collected` and `completed` and keeps the settings.
+- The rule in the Consequences above still holds for any incompatible change: bump `version` and add a migration. An additive optional field with a default does not need one.

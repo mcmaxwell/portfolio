@@ -7,6 +7,7 @@ import {
   browserStorage,
   canActivateBeacon,
   collectCell,
+  collectTrophy,
   completeChallenge,
   createProgressStore,
   defaultProgress,
@@ -218,5 +219,75 @@ describe("browserStorage", () => {
     });
     expect(browserStorage()).toBeNull();
     spy.mockRestore();
+  });
+});
+
+describe("trophy (additive field of version 1, ADR-005)", () => {
+  const legacy = (over: Record<string, unknown> = {}) =>
+    JSON.stringify({ version: 1, collected: ["lab", "workshop"], completed: false, settings: defaultProgress().settings, ...over });
+
+  it("a stored version 1 record without the trophy field loads with its cells and completion intact and no trophy", () => {
+    const r = parseProgress(legacy());
+    expect(r.status).toBe("ok");
+    expect(r.progress).toMatchObject({ version: 1, collected: ["lab", "workshop"], completed: false, trophy: false });
+    const done = parseProgress(legacy({ collected: ["lab", "workshop", "tower"], completed: true }));
+    expect(done.status).toBe("ok");
+    expect(done.progress).toMatchObject({ completed: true, collected: ["lab", "workshop", "tower"], trophy: false });
+  });
+
+  it("a stored trophy is kept; a trophy that is not a boolean makes the record invalid", () => {
+    expect(parseProgress(legacy({ trophy: true })).progress.trophy).toBe(true);
+    expect(parseProgress(legacy({ trophy: "yes" })).status).toBe("invalid");
+    expect(parseProgress(legacy({ trophy: 1 })).progress).toEqual(defaultProgress());
+  });
+
+  it("the trophy is unique: collecting twice counts once and returns the same record", () => {
+    const once = collectTrophy(defaultProgress());
+    expect(once.trophy).toBe(true);
+    expect(collectTrophy(once)).toBe(once);
+    expect(allCollected(once)).toBe(false); // the cup is a reward, not one of the three cells
+    expect(canActivateBeacon(once)).toBe(false);
+  });
+
+  it("saves, and a new store (reload) restores a collected trophy next to the cells", () => {
+    const storage = memoryStorage();
+    const store = createProgressStore(storage);
+    store.update((p) => collectCell(p, "lab"));
+    store.update(collectTrophy);
+    expect(JSON.parse(storage.data[PROGRESS_KEY])).toMatchObject({ version: 1, collected: ["lab"], trophy: true });
+    expect(createProgressStore(storage).getState()).toMatchObject({ collected: ["lab"], trophy: true });
+  });
+
+  it("a legacy record in storage is upgraded in place on the next save, keeping its cells", () => {
+    const storage = memoryStorage({ [PROGRESS_KEY]: legacy() });
+    const store = createProgressStore(storage);
+    expect(store.getState()).toMatchObject({ collected: ["lab", "workshop"], trophy: false });
+    store.update(collectTrophy);
+    expect(JSON.parse(storage.data[PROGRESS_KEY])).toMatchObject({ collected: ["lab", "workshop"], trophy: true });
+  });
+
+  it("Restart clears the trophy with the cells, keeps the settings, and a trophy alone is enough to be cleared", () => {
+    const settings = { soundOn: false, volume: 0.2, reducedMotion: "on" as const, quality: "low" as const };
+    const r = restartChallenge({ ...full({ completed: true, settings }), trophy: true });
+    expect(r).toMatchObject({ collected: [], completed: false, trophy: false, settings });
+    const onlyTrophy = collectTrophy(defaultProgress());
+    expect(restartChallenge(onlyTrophy).trophy).toBe(false);
+    const storage = memoryStorage();
+    const store = createProgressStore(storage);
+    store.update(collectTrophy);
+    store.update(restartChallenge);
+    expect(JSON.parse(storage.data[PROGRESS_KEY]).trophy).toBe(false);
+  });
+
+  it("when storage fails the trophy lives in memory", () => {
+    const storage = memoryStorage();
+    storage.setItem = () => {
+      throw new Error("quota");
+    };
+    const store = createProgressStore(storage);
+    store.update(collectTrophy);
+    expect(store.getState().trophy).toBe(true);
+    expect(store.persistent).toBe(false);
+    expect(createProgressStore(null).getState().trophy).toBe(false);
   });
 });

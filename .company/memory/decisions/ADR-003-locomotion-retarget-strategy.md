@@ -40,3 +40,12 @@ Resolve the gltf-transform version at install time with `npm view @gltf-transfor
 ## Rollback Plan
 
 Delete `public/game/clips/` and the script, point `CLIP_URLS` in `components/game/config.ts` at the original `public/animations/*.glb`, and let `toGameClip` do all filtering at runtime; this costs download size but no code outside `clips.ts` changes.
+
+## Outcome (TASK-003, user report "bent backward when I walk")
+
+The Hips-free clips left the avatar's chest behind vertical.
+Measured in the browser at 1440x900 from a side camera (hips-to-head line, degrees from vertical, positive forward): stand -3.6, walk -8.3 mean (down to -10.5), run -3.1 mean with the head thrown back about 18 degrees; the same clips on the plain Mixamo skeleton give walk -0.9 and run +12.5.
+Two causes: the dropped Hips rotation carried the source's pelvis pitch (walk +2, run +10 degrees) and the spine was keyed against it, and the avatar's Hips kept a stale -31 degree yaw from the hero pose (the hand-over blend never converged for a bone no clip writes).
+The decision above stands (rotation-only, Hips-free).
+`scripts/strip-clips.mjs` now adds a solved constant forward pitch on the spine (and a counter-pitch on Neck and Head) to idle, walk and run, and `components/game/poseBlend.ts` blends bones the mixer does not write toward their own pose.
+This is the "rest-pose delta correction" option of the Decision, applied to the torso only; the legs, and so the feet, are unchanged.

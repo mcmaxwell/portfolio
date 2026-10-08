@@ -66,4 +66,18 @@ describe("pose blend", () => {
     const { root } = rig();
     expect(createPoseBlend(captureBones(root), 0).done).toBe(true);
   });
+
+  it("a bone the mixer never writes (the Hips) converges to its own pose and does not freeze part-way", () => {
+    const { root, hips, head } = rig();
+    hips.quaternion.copy(q(31)); // the pelvis twist the hero left on the skeleton
+    const blend = createPoseBlend(captureBones(root), 0.4);
+    hips.quaternion.copy(q(0)); // the game's skeleton reset: bind pose, which no clip rewrites
+    for (let i = 0; i <= 40; i++) {
+      head.quaternion.copy(q(0)); // the mixer writes the head every frame, the Hips never
+      blend.apply(i === 0 ? 0 : 1 / 60);
+      if (i === 0) expect(hips.quaternion.angleTo(q(31))).toBeLessThan(1e-6); // first frame is the hero pose
+    }
+    expect(blend.done).toBe(true);
+    expect(hips.quaternion.angleTo(q(0))).toBeLessThan(1e-6);
+  });
 });

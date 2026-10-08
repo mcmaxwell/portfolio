@@ -10,7 +10,7 @@ import { createMaterials } from "./materials";
 import { createSky } from "./sky";
 import { buildTextures, buildTexturesInWorker, type TexName } from "./textures";
 import { nextFrame, skinnedMeshes, warmGameState, type WarmPlan, type WarmProbe } from "./warm";
-import { resolveQuality } from "../config";
+import { resolveQuality, type Vec3 } from "../config";
 
 const SIGN_ACCENT: Record<Sign["accent"], string> = { green: "#2fe58a", cyan: "#35d0e8" };
 
@@ -62,6 +62,7 @@ export type ChallengeFrame = {
   time: number; // seconds, any monotonic clock
   dt: number;
   collected: ReadonlySet<string>; // cell ids
+  trophy: boolean; // the trophy cup has been collected (it is gone)
   beam: boolean; // all three collected, beacon not yet lit
   glow: number; // 0..1 celebration level
   reduced: boolean;
@@ -236,7 +237,7 @@ function createWorldResources(layout: Layout, prebuilt: Record<TexName, THREE.Te
       signs.push({ sign, material, mesh });
     }
   }
-  const challenge = mats ? createChallengeVisuals(layout, geos, mats.get("neon-cyan"), root, batches) : null;
+  const challenge = mats ? createChallengeVisuals(layout, geos, mats.get("neon-cyan"), mats.get("lamp-glow"), root, batches) : null;
   const { mesh: sky, material: skyMat } = createSky();
   const all = [...(mats?.all ?? []), ...signs.map((s) => s.material)];
   return {
@@ -295,12 +296,14 @@ function createChallengeVisuals(
   layout: Layout,
   geos: Record<Shape, THREE.BufferGeometry>,
   material: THREE.Material,
+  gold: THREE.Material,
   root: THREE.Group,
   batches: THREE.InstancedMesh[]
 ): ChallengeVisuals | null {
   const cells = layout.challenge.cells;
   const beacon = layout.challenge.beacon;
-  if (cells.length === 0 && !beacon) return null;
+  const trophy = layout.challenge.trophy;
+  if (cells.length === 0 && !beacon && !trophy) return null;
   const cellMesh = new THREE.InstancedMesh(geos.box, material, Math.max(1, cells.length));
   cellMesh.name = "box|neon-cyan|cells";
   const beamMesh = new THREE.InstancedMesh(geos.cyl, material, 1);
@@ -313,6 +316,7 @@ function createChallengeVisuals(
     root.add(m);
     batches.push(m);
   }
+  const trophyParts = trophy ? createTrophyVisuals(trophy.position, gold, geos, root, batches) : null;
   const scale = cells.map(() => 1);
   let beamK = 0;
   const m4 = new THREE.Matrix4();
@@ -347,10 +351,132 @@ function createChallengeVisuals(
       cells.forEach((_, i) => (scale[i] = target(f, i)));
       beamK = f.beam ? 1 : 0;
       write(f);
+      trophyParts?.snap(f);
     },
     update(f) {
       cells.forEach((_, i) => (scale[i] = f.reduced ? target(f, i) : lerpTo(scale[i], target(f, i), f.dt, 9)));
       beamK = f.reduced ? (f.beam ? 1 : 0) : lerpTo(beamK, f.beam ? 1 : 0, f.dt, 3);
+      write(f);
+      trophyParts?.update(f);
+    },
+  };
+}
+
+/** How long the cup's collect effect lasts (s), and how large the cup is (the instance scale of its parts). */
+export const TROPHY_POP_SECONDS = 0.5;
+const TROPHY_SCALE = 1.5;
+/** The cup floats this far above the platform top (m, before the scale). */
+const TROPHY_LIFT = 0.45;
+
+// One part of the cup: a unit shape placed relative to the cup's centre, before the cup's own scale and spin.
+type CupPart = { shape: "cyl" | "cone" | "orb"; x: number; y: number; z: number; sx: number; sy: number; sz: number; flip?: boolean };
+const CUP: readonly CupPart[] = [
+  { shape: "cyl", x: 0, y: 0.03, z: 0, sx: 0.34, sy: 0.06, sz: 0.34 }, // foot
+  { shape: "cyl", x: 0, y: 0.17, z: 0, sx: 0.1, sy: 0.22, sz: 0.1 }, // stem
+  { shape: "cone", x: 0, y: 0.47, z: 0, sx: 0.54, sy: 0.4, sz: 0.54, flip: true }, // bowl: a cone upside down
+  { shape: "cyl", x: 0, y: 0.675, z: 0, sx: 0.58, sy: 0.05, sz: 0.58 }, // rim
+  { shape: "orb", x: 0.3, y: 0.5, z: 0, sx: 0.07, sy: 0.24, sz: 0.2 }, // handles
+  { shape: "orb", x: -0.3, y: 0.5, z: 0, sx: 0.07, sy: 0.24, sz: 0.2 },
+];
+
+/**
+ * The trophy cup: a gold-amber cup from primitives (the world's own cylinder, cone and orb geometry and its
+ * lamp-glow material, so it adds no shader program), turning and bobbing on the top of the highest terrace,
+ * with a thin pillar of light so it reads from the plaza. Collected, it grows, rises and spins while eight sparks fly
+ * out (0.5 s) and is gone; under reduced motion it is simply gone.
+ */
+function createTrophyVisuals(
+  base: Vec3,
+  material: THREE.Material,
+  geos: Record<Shape, THREE.BufferGeometry>,
+  root: THREE.Group,
+  batches: THREE.InstancedMesh[]
+): { update(f: ChallengeFrame): void; snap(f: ChallengeFrame): void } {
+  const PILLAR_H = 5;
+  // cyl batch: the cup's three cylinders and the pillar; cone: the bowl; orb: the handles and the collect sparks.
+  const cupOf = (shape: CupPart["shape"]) => CUP.filter((c) => c.shape === shape);
+  const make = (shape: CupPart["shape"], count: number) => {
+    const m = new THREE.InstancedMesh(geos[shape], material, count);
+    m.name = `${shape}|lamp-glow|trophy`;
+    m.frustumCulled = false;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    m.userData.cast = false;
+    m.userData.receive = false;
+    root.add(m);
+    batches.push(m);
+    return m;
+  };
+  const cyls = cupOf("cyl");
+  const cylMesh = make("cyl", cyls.length + 1);
+  const coneMesh = make("cone", 1);
+  const handles = cupOf("orb").length;
+  const SPARKS = 8;
+  const orbMesh = make("orb", handles + SPARKS);
+  const m4 = new THREE.Matrix4();
+  const spinQ = new THREE.Quaternion();
+  const partQ = new THREE.Quaternion();
+  const flipQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+  const o = new THREE.Vector3();
+  const pos = new THREE.Vector3();
+  const sc = new THREE.Vector3();
+  const place = (mesh: THREE.InstancedMesh, i: number, part: CupPart, s: number, centreY: number) => {
+    o.set(part.x, part.y, part.z).multiplyScalar(s * TROPHY_SCALE).applyQuaternion(spinQ);
+    partQ.copy(spinQ);
+    if (part.flip) partQ.multiply(flipQ);
+    const k = s * TROPHY_SCALE;
+    m4.compose(pos.set(base.x + o.x, centreY + o.y, base.z + o.z), partQ, sc.set(Math.max(1e-4, part.sx * k), Math.max(1e-4, part.sy * k), Math.max(1e-4, part.sz * k)));
+    mesh.setMatrixAt(i, m4);
+  };
+  const hide = (mesh: THREE.InstancedMesh, i: number) => {
+    m4.compose(pos.set(base.x, base.y, base.z), partQ.identity(), sc.set(1e-4, 1e-4, 1e-4));
+    mesh.setMatrixAt(i, m4);
+  };
+  // popK: -1 while the cup stands, 0..1 through the collect effect, 2 when it is gone.
+  let popK = -1;
+  const write = (f: ChallengeFrame) => {
+    const standing = popK < 0;
+    const gone = popK >= 1;
+    const k = standing ? 0 : Math.min(1, popK);
+    const s = gone ? 0 : (1 + 0.5 * k) * (1 - k * k);
+    const bob = f.reduced ? 0 : Math.sin(f.time * 2) * 0.06;
+    const spin = f.reduced ? Math.PI / 5 : f.time * 0.9 + k * k * 9;
+    spinQ.setFromAxisAngle(Y_UP, spin);
+    const centreY = base.y + TROPHY_LIFT * TROPHY_SCALE + bob + k * 0.9;
+    // The cup's own parts. A part at scale 0 is hidden by the floor in `place` (1e-4).
+    cyls.forEach((part, i) => (gone ? hide(cylMesh, i) : place(cylMesh, i, part, s, centreY)));
+    cupOf("cone").forEach((part, i) => (gone ? hide(coneMesh, i) : place(coneMesh, i, part, s, centreY)));
+    cupOf("orb").forEach((part, i) => (gone ? hide(orbMesh, i) : place(orbMesh, i, part, s, centreY)));
+    // The pillar of light from the cup up (fades by thinning), and the ring that spreads from the cup at the collect.
+    const n = cyls.length;
+    if (gone) {
+      hide(cylMesh, n);
+    } else {
+      const w = 0.07 * (1 - k);
+      m4.compose(pos.set(base.x, centreY + 0.9 * TROPHY_SCALE + PILLAR_H / 2, base.z), partQ.identity(), sc.set(Math.max(1e-4, w * 2), PILLAR_H, Math.max(1e-4, w * 2)));
+      cylMesh.setMatrixAt(n, m4);
+    }
+    for (let i = 0; i < SPARKS; i++) {
+      if (standing || gone) {
+        hide(orbMesh, handles + i);
+        continue;
+      }
+      const ang = (i / SPARKS) * Math.PI * 2 + 0.4;
+      const r = 0.2 + 1.5 * k;
+      const d = 0.16 * (1 - k) + 1e-4;
+      m4.compose(pos.set(base.x + Math.cos(ang) * r, centreY + 0.5 + k * 0.7 + (i % 2) * 0.25, base.z + Math.sin(ang) * r), partQ.identity(), sc.set(d, d, d));
+      orbMesh.setMatrixAt(handles + i, m4);
+    }
+    for (const m of [cylMesh, coneMesh, orbMesh]) m.instanceMatrix.needsUpdate = true;
+  };
+  return {
+    snap(f) {
+      popK = f.trophy ? 1 : -1;
+      write(f);
+    },
+    update(f) {
+      if (f.trophy && popK < 0) popK = f.reduced ? 1 : 0; // collected now: start the effect (or vanish at once)
+      else if (!f.trophy && popK >= 0) popK = -1; // a restart brings the cup back
+      else if (popK >= 0 && popK < 1) popK = Math.min(1, popK + f.dt / TROPHY_POP_SECONDS);
       write(f);
     },
   };

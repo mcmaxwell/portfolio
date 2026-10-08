@@ -14,6 +14,8 @@ export type SessionState = {
   fault: "context-lost" | "runtime" | null;
   /** True once the player skipped the rest of the entry (movement key or touch). */
   entrySkipped: boolean;
+  /** What the "celebrating" mode is for: the beacon (then the completion panel) or the trophy dance (then back to play). */
+  celebration: "beacon" | "trophy" | null;
 };
 export type SessionEvent =
   | { type: "ENTRY_DONE" }
@@ -23,6 +25,7 @@ export type SessionEvent =
   | { type: "OPEN_PANEL"; panel: PanelId }
   | { type: "CLOSE_PANEL" }
   | { type: "BEACON_ACTIVATED" }
+  | { type: "TROPHY_COLLECTED" }
   | { type: "CELEBRATION_DONE" }
   | { type: "EXIT_BEGIN" }
   | { type: "FAULT"; fault: "context-lost" | "runtime" };
@@ -34,6 +37,7 @@ export const INITIAL_SESSION: SessionState = {
   panel: null,
   fault: null,
   entrySkipped: false,
+  celebration: null,
 };
 
 /** Pure reducer. An illegal event returns the very same state object. */
@@ -54,10 +58,11 @@ export function reduceSession(s: SessionState, e: SessionEvent): SessionState {
     case "playing":
       if (e.type === "PAUSE") return { ...s, mode: "paused", resumeTo: "playing", pauseReason: e.reason };
       if (e.type === "OPEN_PANEL") return { ...s, mode: "panel", panel: e.panel };
-      if (e.type === "BEACON_ACTIVATED") return { ...s, mode: "celebrating" };
+      if (e.type === "BEACON_ACTIVATED") return { ...s, mode: "celebrating", celebration: "beacon" };
+      if (e.type === "TROPHY_COLLECTED") return { ...s, mode: "celebrating", celebration: "trophy" };
       return s;
     case "paused":
-      if (e.type === "RESUME") return { ...s, mode: "playing", resumeTo: null, pauseReason: null, entrySkipped: false };
+      if (e.type === "RESUME") return { ...s, mode: "playing", resumeTo: null, pauseReason: null, entrySkipped: false, celebration: null };
       return s;
     case "panel":
       // PAUSE is ignored: input is already stopped while a panel is open.
@@ -66,7 +71,11 @@ export function reduceSession(s: SessionState, e: SessionEvent): SessionState {
       return s;
     case "celebrating":
       if (e.type === "PAUSE") return { ...s, mode: "paused", resumeTo: "playing", pauseReason: e.reason };
-      if (e.type === "CELEBRATION_DONE") return { ...s, mode: "panel", panel: { kind: "completion" } };
+      if (e.type === "CELEBRATION_DONE") {
+        // The trophy dance ends where it began: the game goes on. The beacon celebration opens the completion panel.
+        if (s.celebration === "trophy") return { ...s, mode: "playing", celebration: null };
+        return { ...s, mode: "panel", panel: { kind: "completion" }, celebration: null };
+      }
       return s;
     case "leaving":
       return s;

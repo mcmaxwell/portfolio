@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { buildAvatarRig } from "./lib/avatar-rig.mjs";
 import { plantRaisedFeet } from "./lib/plant-feet.mjs";
+import { solveLean, withLean } from "./lib/posture.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = resolve(root, "assets-src/mixamo");
@@ -43,10 +44,18 @@ const FPS = 30;
 // plantHips: only the vertical Hips translation, derived the same way. The Falling Idle pose
 // has bent legs: with the Hips stuck at standing height its feet hang 0.4 m above the capsule
 // bottom, so every touchdown would start with the feet 0.4 m in the air.
+// leanMean: the mean forward pitch (degrees from vertical, Hips to Head) the torso should have over
+// the clip. The Hips tracks are stripped, so the pelvis pitch the source authored (walk about +2, run
+// about +10 degrees) is lost and the chest ends up behind vertical (walk -6, run -1, idle -1 measured
+// in the game, TASK-003). The script solves a constant forward pitch on Spine, Spine1 and Spine2 that
+// hits the target; the legs are untouched, so the feet stay planted. Targets: run 7 (the Mixamo run
+// itself leans 10 to 16 degrees), walk 3.3 (the Mixamo walk is near upright), idle 2.2 (a relaxed stand).
+// headMean: the mean forward tilt of the Head bone; the Neck and Head are counter-pitched so the gaze
+// stays level instead of dropping with the chest (the old Hips-free run threw the head back 18 degrees).
 const CLIPS = {
-  idle: { file: "Idle.fbx", loop: true, resample: 0.0005 },
-  walk: { file: "Walking.fbx", loop: true },
-  run: { file: "Running.fbx", loop: true },
+  idle: { file: "Idle.fbx", loop: true, resample: 0.0005, leanMean: 2.2, headMean: 0 },
+  walk: { file: "Walking.fbx", loop: true, leanMean: 3.3, headMean: 0 },
+  run: { file: "Running.fbx", loop: true, leanMean: 7, headMean: -2 },
   jump: { file: "Jump.fbx", frames: [21, 39] },
   fall: { file: "Falling Idle.fbx", loop: true, plantHips: true },
   land: { file: "Hard Landing.fbx", frames: [2, 58], groundHips: true, plantRaisedFoot: true },
@@ -138,6 +147,16 @@ for (const [name, opt] of Object.entries(CLIPS)) {
       k.times = k.times.slice(0, -1).map((x) => x + 1 / FPS);
       k.values = k.values.slice(0, -4);
     }
+  }
+
+  if (opt.leanMean !== undefined) {
+    const r = solveLean(rig, name, kept, opt.leanMean, opt.headMean);
+    const leaned = withLean(kept, r.deg, r.gaze);
+    kept.forEach((k, i) => (k.values = leaned[i].values));
+    const f = (v) => v.toFixed(2);
+    console.log(
+      `${name}: forward lean ${r.deg.toFixed(2)} degrees on the spine, ${r.gaze.toFixed(2)} on neck and head (head tilt mean ${r.headBefore.mean.toFixed(1)} -> ${r.headStats.mean.toFixed(1)}); torso pitch ${f(r.before.min)}/${f(r.before.mean)}/${f(r.before.max)} -> ${f(r.stats.min)}/${f(r.stats.mean)}/${f(r.stats.max)} (min/mean/max)`
+    );
   }
 
   // Vertical Hips offset dy: moving the Hips by dy lifts the whole posed avatar by dy, so
