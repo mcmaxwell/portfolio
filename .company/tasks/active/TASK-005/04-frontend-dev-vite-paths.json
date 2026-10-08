@@ -1,0 +1,153 @@
+{
+  "workItemId": "TASK-005",
+  "executionMode": "native-subagent",
+  "vendor": "claude",
+  "authType": "subscription",
+  "requestedModelTier": "mid",
+  "verificationProfile": "standard",
+  "projectId": "portfolio",
+  "projectContext": {
+    "projectId": "portfolio",
+    "query": "intro video inert hero focus game prefetch entry fade follow camera jump passage head crop wall sweep test useRealtimeChat lint",
+    "indexCommit": "710f03404c18e6bb28ec05e4073c4b8bace5e176",
+    "sourceFingerprint": "sha256:8714f8203b7f58967307f46c4ee45e12ae7e9b063bef6dc47a1f507e4fad7d5a",
+    "truncated": true,
+    "relevantFiles": [
+      "app/layout.tsx",
+      "app/provider.tsx",
+      "components/avatar/TalkingAvatar.tsx",
+      "components/avatar/useRealtimeChat.ts",
+      "eslint.config.mjs",
+      "package.json"
+    ],
+    "symbols": [
+      {
+        "name": "ThemeProvider",
+        "type": "function",
+        "file": "app/provider.tsx",
+        "line": 7
+      },
+      {
+        "name": "useRealtimeChat",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 41
+      },
+      {
+        "name": "CameraRig",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 25
+      },
+      {
+        "name": "ChatStatus",
+        "type": "type",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 26
+      },
+      {
+        "name": "runSiteAction",
+        "type": "function",
+        "file": "components/avatar/useRealtimeChat.ts",
+        "line": 6
+      },
+      {
+        "name": "TalkingAvatar",
+        "type": "function",
+        "file": "components/avatar/TalkingAvatar.tsx",
+        "line": 42
+      },
+      {
+        "name": "portfolio",
+        "type": "package",
+        "file": "package.json"
+      }
+    ],
+    "connections": [
+      {
+        "from": "TalkingAvatar",
+        "type": "calls",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/TalkingAvatar.tsx:46",
+        "confidence": "exact"
+      },
+      {
+        "from": "app/provider.tsx",
+        "type": "contains",
+        "to": "ThemeProvider",
+        "evidence": "app/provider.tsx:7",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/TalkingAvatar.tsx",
+        "type": "contains",
+        "to": "CameraRig",
+        "evidence": "components/avatar/TalkingAvatar.tsx:25",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "ChatStatus",
+        "evidence": "components/avatar/useRealtimeChat.ts:26",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "runSiteAction",
+        "evidence": "components/avatar/useRealtimeChat.ts:6",
+        "confidence": "exact"
+      },
+      {
+        "from": "components/avatar/useRealtimeChat.ts",
+        "type": "contains",
+        "to": "useRealtimeChat",
+        "evidence": "components/avatar/useRealtimeChat.ts:41",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "autoprefixer",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint-config-next",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      },
+      {
+        "from": "portfolio",
+        "type": "depends-on",
+        "to": "eslint",
+        "evidence": "package.json:1",
+        "confidence": "exact"
+      }
+    ]
+  },
+  "targetBaseCommit": "c5f4d0c",
+  "assignee": "frontend-dev",
+  "stageId": "04-frontend-dev-vite-paths",
+  "objective": "Every vitest run prints 'The plugin vite-tsconfig-paths is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option.' Replace the plugin with the native option in vitest.config.mts and remove the now-unused vite-tsconfig-paths devDependency with npm uninstall so package.json and package-lock.json stay consistent.",
+  "constraints": [
+    "Work only in the supplied worktree; edit only vitest.config.mts, package.json and package-lock.json; do not commit; never run git stash, reset or checkout.",
+    "No em dash. Copy every acceptanceCriteria string verbatim into the report criteria array."
+  ],
+  "contextFiles": [
+    "vitest.config.mts",
+    "package.json"
+  ],
+  "upstreamInputs": [],
+  "acceptanceCriteria": [
+    "npm test exits 0 with the same 1339 tests passing and no vite-tsconfig-paths deprecation notice in its output.",
+    "vite-tsconfig-paths is removed from package.json and package-lock.json, npm run typecheck and npm run lint exit 0, and no commit is made."
+  ],
+  "deliverables": [
+    "fix"
+  ],
+  "reportPath": "reports/04-frontend-dev-vite-paths.json"
+}
