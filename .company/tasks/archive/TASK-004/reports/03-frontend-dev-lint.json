@@ -1,0 +1,96 @@
+{
+  "workItemId": "TASK-004",
+  "stageId": "03-frontend-dev-lint",
+  "agent": "frontend-dev",
+  "status": "completed",
+  "verdict": "not-applicable",
+  "vendor": "claude",
+  "authType": "subscription",
+  "planLabel": "user-confirmed subscription plan",
+  "executionPlan": "Compared against the reference branch, added .eslintrc.json extending next/core-web-vitals (game boundary overrides omitted), removed the broken eslint.config.mjs, proved the gate with a temporary violation, then ran npm ci, build and lint.",
+  "actualModel": "claude-sonnet-5-5",
+  "summary": "Added .eslintrc.json and deleted eslint.config.mjs (ADR-006 shape); npm run lint is now non-interactive and real. The lint script and eslint/eslint-config-next versions already matched the reference, so package.json and package-lock.json are unchanged. One pre-existing warning, no errors.",
+  "filesChanged": [
+    ".eslintrc.json",
+    "eslint.config.mjs"
+  ],
+  "targetEvidence": {
+    "projectId": "portfolio",
+    "targetBaseCommit": "4b886a8",
+    "targetResultCommit": null,
+    "targetDiffFiles": [
+      ".eslintrc.json",
+      "eslint.config.mjs"
+    ],
+    "projectContextUsed": true
+  },
+  "testsRun": [
+    {
+      "command": "npm run lint (baseline, before change)",
+      "exitCode": 0,
+      "result": "no lint performed",
+      "evidence": "? How would you like to configure ESLint? (interactive prompt)"
+    },
+    {
+      "command": "npm run lint with temporary components/site/ZzLintProbe.tsx (hook called conditionally)",
+      "exitCode": 1,
+      "result": "fails on deliberate violation",
+      "evidence": "Error: React Hook \"useState\" is called in function \"notAComponent\" ... react-hooks/rules-of-hooks; probe file removed afterwards"
+    },
+    {
+      "command": "npm ci",
+      "exitCode": 0,
+      "result": "installed",
+      "evidence": "ci exit 0"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "build succeeded",
+      "evidence": "First Load JS shared by all 84.5 kB; (Static) prerendered as static content"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "0 errors, 1 warning",
+      "evidence": "./components/avatar/useRealtimeChat.ts 224:6 Warning: React Hook useCallback has a missing dependency: 'gestureRef' react-hooks/exhaustive-deps"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "clean",
+      "evidence": "no output"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "npm run lint runs non-interactively and actually lints the app (proven by a temporary deliberate violation that makes it exit non-zero, then removed), using the same configuration files, package scripts and lint dependency versions as origin/feat/task-002-3d-portfolio-game for everything that is not game-specific (game import-boundary rules are omitted because components/game does not exist on this branch).",
+      "status": "passed",
+      "evidence": "Non-interactive run printed real lint output. Temporary probe with a conditional hook call made npm run lint exit 1 (rules-of-hooks error); probe removed and lint returned to exit 0. Same .eslintrc.json base (extends next/core-web-vitals), same lint script (next lint), same eslint ^8 and eslint-config-next 14.1.4 as the reference branch; only the game-specific overrides are omitted. Logs in <scratchpad>/t4-lint."
+    },
+    {
+      "criterion": "npm run lint exits 0 on this branch with no errors; any warnings are listed; any genuine lint errors in existing code are fixed minimally or reported with file and line if fixing would change behaviour.",
+      "status": "passed",
+      "evidence": "Exit 0, no errors. One pre-existing warning (not behaviour-safe to change here): components/avatar/useRealtimeChat.ts line 224 col 6 react-hooks/exhaustive-deps missing dependency gestureRef. data/index.ts and lib/persona.ts (edited in parallel) were linted as part of the run and raised nothing."
+    },
+    {
+      "criterion": "npm ci, npm run build and npm run lint exit 0 with exit codes explicitly captured; git diff --check is clean; package-lock.json changes only for the lint dependencies; no em dash or machine-local path; no commit is made.",
+      "status": "passed",
+      "evidence": "npm ci 0, npm run build 0, npm run lint 0, git diff --check 0. package.json and package-lock.json are unchanged (the lint deps already matched). No em dash or machine-local path in .eslintrc.json. No commit made. Build artifacts .next and next-env.d.ts were removed afterwards. eslint.config.mjs deletion is staged via git rm."
+    }
+  ],
+  "assumptions": [
+    "Did not port the reference @types/node ^22 bump or typecheck script; they are not lint-related."
+  ],
+  "questions": [],
+  "decisionsProposed": [],
+  "lessonsProposed": [
+    "next lint 14.1.4 ignores eslint.config.mjs flat config and prompts interactively without .eslintrc*; a proof-of-gate probe must use an error-level rule such as react-hooks/rules-of-hooks, since next/image and next/head probes are only warnings or not flagged."
+  ],
+  "selfUsage": {
+    "filesRead": 6,
+    "approxLinesRead": 300,
+    "approxLinesWritten": 40,
+    "retries": 1
+  }
+}
