@@ -221,7 +221,7 @@ export function useRealtimeChat(
       setStatus("error");
       cleanup();
     }
-  }, [cleanup, startVolumeLoop]);
+  }, [cleanup, gestureRef, startVolumeLoop]);
 
   const disconnect = useCallback(() => {
     cleanup();

@@ -80,8 +80,9 @@ const TalkingAvatar = () => {
   shellRef.current = shell;
   const { phase, inGame, reduced } = shell;
   const busy = phase !== "hero";
-  // IntroVideo keeps its own state and renders a <video> only while the intro plays or fades.
-  const introPlaying = () => !!sectionRef.current?.querySelector("video");
+  // IntroVideo keeps its own state and reports whether its cover is up (playing or fading). While it
+  // is, the hero controls beneath it are inert, Play is ignored and the game prefetch waits.
+  const [introActive, setIntroActive] = useState(false);
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
   const GameInterface = shell.game?.module.GameInterface;
@@ -99,7 +100,7 @@ const TalkingAvatar = () => {
   };
   // Tailwind's transition-colors, kept for the buttons whose inline transition replaces it.
   const COLORS = ", color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1)";
-  const inert = leavingChrome ? INERT : {};
+  const inert = leavingChrome || introActive ? INERT : {};
 
   // Loading progress never goes backwards.
   const progressRef = useRef(0);
@@ -212,7 +213,7 @@ const TalkingAvatar = () => {
 
       {/* Cinematic intro (only when NEXT_PUBLIC_INTRO_VIDEO_URL is set): a z-30 cover over the hero chrome
           that hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
-      <IntroVideo />
+      <IntroVideo onActiveChange={setIntroActive} />
 
       {!capture && shell.chromeMounted && <>
       {/* Status line */}
@@ -285,13 +286,20 @@ const TalkingAvatar = () => {
           </button>
           {webgl && (
           <button
+            {...(introActive ? INERT : {})}
             ref={playRef}
             onClick={() => {
-              if (!introPlaying()) shell.play();
+              if (!introActive) shell.play();
             }}
-            onPointerEnter={() => shell.prefetch("hover")}
-            onFocus={() => shell.prefetch("focus")}
-            onPointerDown={() => shell.prefetch("press")}
+            onPointerEnter={() => {
+              if (!introActive) shell.prefetch("hover");
+            }}
+            onFocus={() => {
+              if (!introActive) shell.prefetch("focus");
+            }}
+            onPointerDown={() => {
+              if (!introActive) shell.prefetch("press");
+            }}
             disabled={!avatarReady || status === "connecting"}
             aria-disabled={busy || undefined}
             className={`border border-term-cyan bg-term-cyan/10 px-8 py-3 text-sm text-term-cyan transition-colors hover:bg-term-cyan hover:text-term-bg disabled:opacity-50 ${

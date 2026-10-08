@@ -27,7 +27,7 @@ import type { PoseBlend } from "./poseBlend";
 import { cameraRelativeMove, createPlayerMotor, type MotorIntent, type MotorState, type PlayerMotor } from "./player";
 import type { GameHandle } from "./session";
 import { TIMING } from "./shell/transition";
-import { createYawTween, easeInCubic, easeOutCubic, lerp, shortestAngle, stepYawTween, yawTweenDone, type YawTween } from "./tween";
+import { createYawTween, easeInCubic, easeOutCubic, shortestAngle, stepEnvTween, stepYawTween, yawTweenDone, type EnvTween, type YawTween } from "./tween";
 import { buildColliders } from "./world/colliders";
 import { resolveLayout, surfaceHeightAt, type Layout } from "./world/layout";
 import { WorldView, type WorldHandle } from "./world/WorldView";
@@ -126,7 +126,7 @@ function ContextGuard({ onLost }: { onLost: () => void }) {
   return null;
 }
 
-type Tween = { from: number; to: number; delay: number; duration: number; elapsed: number; ease: (t: number) => number };
+type Tween = EnvTween;
 
 type Runtime = {
   motor: PlayerMotor;
@@ -431,11 +431,10 @@ function ActiveGame({
 
     // World look tween (fog, lights, ground reveal, canvas clear alpha).
     if (rt.env) {
-      rt.env.elapsed += dtc;
-      const k = rt.env.duration <= 0 ? 1 : (rt.env.elapsed - rt.env.delay) / rt.env.duration;
-      rt.envK = lerp(rt.env.from, rt.env.to, rt.env.ease(k));
+      const [value, done] = stepEnvTween(rt.env, dtc);
+      rt.envK = value;
       worldRef.current?.apply(rt.envK, rt.lightYaw);
-      if (k >= 1) rt.env = null;
+      if (done) rt.env = null;
     }
 
     // A hard landing without room (a wall within reach of the crouch) plays the soft landing instead.

@@ -26,7 +26,12 @@ function shouldPlay() {
   }
 }
 
-export const IntroVideo = () => {
+type Props = {
+  /** True while the cover is mounted (playing or fading), false once it is gone or never started. */
+  onActiveChange?: (active: boolean) => void;
+};
+
+export const IntroVideo = ({ onActiveChange }: Props) => {
   const [state, setState] = useState<"off" | "playing" | "fading">("off");
   const [src, setSrc] = useState<string>();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,6 +42,12 @@ export const IntroVideo = () => {
     setSrc(mobile && SRC_MOBILE ? SRC_MOBILE : SRC);
     setState("playing");
   }, []);
+
+  // Report the cover's presence so the hero controls beneath it can be made inert while it is up.
+  const active = state !== "off" && !!src;
+  useEffect(() => {
+    onActiveChange?.(active);
+  }, [active, onActiveChange]);
 
   const finish = () => {
     try {

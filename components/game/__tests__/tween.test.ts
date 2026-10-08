@@ -7,8 +7,11 @@ import {
   easeOutCubic,
   lerp,
   shortestAngle,
+  ENV_FIRST_STEP_S,
+  stepEnvTween,
   stepYawTween,
   yawTweenDone,
+  type EnvTween,
 } from "../tween";
 
 describe("easing", () => {
@@ -73,5 +76,45 @@ describe("yaw tween", () => {
     const t = createYawTween(0, 1, 0);
     expect(stepYawTween(t, 0)).toBeCloseTo(1, 12);
     expect(yawTweenDone(t)).toBe(true);
+  });
+});
+
+// F1 (TASK-002 final QA): the swap frame is a long frame; its time must not become the first step of the fade.
+describe("entry world reveal under a frame hitch", () => {
+  /** The visible opacity of the world, as resources.reveal(k) maps the tween value (straight line in time for an ease-out cubic). */
+  const opacity = (k: number) => 1 - Math.cbrt(1 - Math.min(1, Math.max(0, k)));
+  const run = (frames: number[]) => {
+    const t: EnvTween = { from: 0, to: 1, delay: 0, duration: 0.3, elapsed: 0, ease: easeOutCubic };
+    const steps: number[] = [];
+    let prev = opacity(0);
+    for (const dt of frames) {
+      const [v] = stepEnvTween(t, dt);
+      steps.push(opacity(v) - prev);
+      prev = opacity(v);
+    }
+    return steps;
+  };
+  const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+  // First game frame (dt 0), then the 47 ms swap hitch (measured), then 60 Hz frames.
+  const hitch = [0, 0.047, ...Array<number>(30).fill(1 / 60)];
+
+  it("the first visible step is within 1.25x the median step, with the hitch (uncapped it is 2.8x; the QA bound is 2.3x)", () => {
+    const steps = run(hitch).slice(1);
+    expect(steps[0]).toBeLessThanOrEqual(1.25 * median(steps));
+  });
+  it("is monotone and reaches 1", () => {
+    const steps = run(hitch);
+    for (const s of steps) expect(s).toBeGreaterThanOrEqual(0);
+    expect(steps.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 6);
+  });
+  it("only the first step is capped; a closing tween (exit) takes the whole frame", () => {
+    const open: EnvTween = { from: 0, to: 1, delay: 0, duration: 0.3, elapsed: 0, ease: easeOutCubic };
+    stepEnvTween(open, 0.047);
+    expect(open.elapsed).toBeCloseTo(ENV_FIRST_STEP_S, 9);
+    stepEnvTween(open, 0.047);
+    expect(open.elapsed).toBeCloseTo(ENV_FIRST_STEP_S + 0.047, 9);
+    const t: EnvTween = { from: 1, to: 0, delay: 0, duration: 0.3, elapsed: 0, ease: easeInCubic };
+    stepEnvTween(t, 0.1);
+    expect(t.elapsed).toBeCloseTo(0.1, 9);
   });
 });
