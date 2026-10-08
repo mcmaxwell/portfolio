@@ -92,3 +92,18 @@ Keep one concise section per verified module. Do not duplicate the generated gra
 - Key source files: public/avatar.glb, public/animations/wave.glb
 - Related tests: none
 - Status: verified
+
+## game (components/game/)
+
+- Responsibility: The playable third-person 3D portfolio world entered from the hero Play button: loading shell and transitions, the campus, locomotion, the collision-aware follow camera, interactions and panels, the energy-cell challenge, versioned local progress, and keyboard, mouse and touch controls.
+- Camera: the follow camera keeps CAMERA.minDistance whenever clear space allows.
+- Camera: in a sealed pocket under 0.45 m, which the campus does not contain, the camera stays within the clear distance and the near plane is raised so the avatar is clipped rather than the camera entering geometry.
+- Package root: components/game/
+- Entrypoints: GameScene.tsx, shell/gameLoader.ts (dynamic import after Play), world/WorldView.tsx, ui/GameInterface.tsx, ui/TouchControls.tsx, ui/PauseMenu.tsx, ui/panels.tsx, progress.ts, challenge.ts
+- Setup/development commands: npm run dev
+- Build/test/lint commands: npm run build (route / First Load JS 125 kB; game code is not in the initial bundle); npm run lint; npm test (repository-wide at 3b285ff: 30 files, 637 tests, including components/game/__tests__/)
+- Dependencies and external services: three and @react-three/fiber as for the hero; a Rapier physics engine (physics initialization can fail, and the portfolio stays usable); public/avatar.glb, public/animations/ and public/game/clips/ (see ASSETS.md). The voice session stays disconnected in the game: the lifecycle probe counted zero realtime-session fetches and zero microphone acquisitions.
+- Security and data boundaries: progress is stored only in the browser under localStorage key portfolio.game.progress (ADR-005) and falls back to memory when storage is blocked or throws. The game shares the hero's avatar model through the shared useGLTF cache. No secrets are used.
+- Key source files: components/game/GameScene.tsx, components/game/player.ts, components/game/followCamera.ts, components/game/challenge.ts, components/game/progress.ts, components/game/world/campus.ts
+- Related tests: components/game/__tests__/ (challenge, progress, followCamera, player.physics, input, session, gameLoader, shell, noWebgl, panels, TouchControls)
+- Status: verified

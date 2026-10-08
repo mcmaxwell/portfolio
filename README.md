@@ -24,10 +24,11 @@
 1. 🤖 [Introduction](#introduction)
 2. ⚙️ [Tech Stack](#tech-stack)
 3. 🔋 [Features](#features)
-4. 🤸 [Quick Start](#quick-start)
-5. 🕸️ [Code to Copy](#snippets)
-6. 🔗 [Assets](#links)
-7. 🚀 [More](#more)
+4. 🎮 [Playable 3D world](#playable-3d-world)
+5. 🤸 [Quick Start](#quick-start)
+6. 🕸️ [Code to Copy](#snippets)
+7. 🔗 [Assets](#links)
+8. 🚀 [More](#more)
 
 ## 🚨 Tutorial
 
@@ -69,6 +70,79 @@ If you're getting started and need assistance or face any bugs, join our active 
 👉 **Responsiveness**: Seamless adaptability across all devices, ensuring optimal viewing experience for every user.
 
 and many more, including code architecture and reusability 
+
+## <a name="playable-3d-world">🎮 Playable 3D world</a>
+
+The hero avatar can enter a third-person 3D campus.
+Press the Play button in the hero, labelled `[ play / explore ]`, to start.
+The campus has three destinations: Project Lab, Skills Workshop, and Contact Tower.
+Each destination shows only content that already exists in `data/index.ts` and `lib/persona.ts`.
+
+### Entering and exiting
+
+Play starts one continuous transition: the hero text and buttons fade out, the hero canvas grows to full screen, and the camera moves behind the avatar while it walks into the world.
+Loading progress, if any, appears as a small strip while the avatar idles.
+Cancel is available while the world loads, and Escape also cancels.
+Exit returns to the exact hero layout with focus on Play.
+With reduced motion enabled, the transition is a short crossfade.
+
+### Controls
+
+Keyboard and mouse:
+
+- W, A, S, and D, or the arrow keys, move relative to the camera.
+- Shift runs.
+- Space jumps.
+- Dragging on the canvas moves the camera.
+- E interacts with a nearby destination, energy cell, or the beacon.
+- Escape pauses and resumes.
+
+Touch, on mobile viewports:
+
+- The left joystick walks, and full deflection runs.
+- Dragging on the look area moves the camera while the joystick is held.
+- The Jump button jumps.
+- The Interact button performs the context action.
+- Pause and Exit buttons are available.
+
+Touch was verified with Chrome touch emulation at 390x844 and 844x390, not on a physical phone.
+
+### Energy cell challenge
+
+Three energy cells, one each for the Project Lab, Skills Workshop, and Contact Tower areas, are collected by walking near them.
+Before all three are collected, the beacon does not respond to E, and a hint shows how many cells are still needed.
+Collecting all three lights the plaza beacon with a celebration and opens a completion panel with actions to explore more, view projects, or contact.
+Restart in the pause menu clears challenge progress and keeps settings.
+
+### Progress and reset
+
+Progress is saved in the browser's localStorage under the key `portfolio.game.progress`, in a versioned format.
+To reset progress, use Restart in the pause menu, or remove the `portfolio.game.progress` key from the browser's storage.
+If storage is missing, blocked, or throws, progress is kept in memory for the current page visit and no error is shown.
+A stored record that is corrupt, has an unknown version, or is marked completed with fewer than three cells is ignored, and the challenge starts at 0 of 3.
+The next save overwrites the ignored record.
+
+### Failure behaviour
+
+If the game assets fail to download, the game code is blocked, physics initialization fails or hangs for 20 seconds, WebGL is unavailable, or the graphics context is lost, a dialog appears and the portfolio stays usable.
+The dialog offers `[ retry ]` and `[ back to portfolio ]`.
+Without WebGL, the hero renders no Canvas and no Play button, and the talk button stays.
+While the game is open, the page behind it is hidden from keyboard and assistive technology.
+
+Ordinary portfolio browsing downloads no game code or game assets.
+The first Play downloads about 945 kB in total.
+
+### Known limitations
+
+- There is no sound, no sound toggle or volume control, and no quality presets; these were deferred by user decision on 2026-10-07.
+- Touch controls were tested only with Chrome touch emulation; no iOS or Android device was tested.
+- Cold load improved by about 600 ms against a targeted 1.1 s, measured on a host that was not quiet.
+- The toes of the avatar can sit up to 6 cm inside a prop in plinth and wall corners, for up to 25 frames.
+- Faint streaks are visible on some interior walls.
+- The entry fade's largest brightness step at the world swap is a follow-up; it reads as a fade rather than a pop.
+- When jumping at the tower passage mouth, the avatar's head can be cropped at the top of the frame for about two frames, which is a framing follow-up.
+- Performance was measured in headless Chrome on an Apple M1 Pro: frame time p95 is 16.7 ms, which is the 60 Hz vsync cap, and render CPU time p95 is 0.8 ms.
+- Across 50 Play and Exit cycles, the post-GC JavaScript heap rose from 17.19 MB to 19.04 MB and was flattening out.
 
 ## <a name="quick-start">🤸 Quick Start</a>
 
