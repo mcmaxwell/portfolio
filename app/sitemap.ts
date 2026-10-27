@@ -15,5 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
+    { url: "https://liutsko.me/colophon", lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
   ];
 }

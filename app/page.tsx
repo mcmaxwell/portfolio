@@ -16,6 +16,7 @@ import { Experience } from "@/components/site/Experience";
 import { Services } from "@/components/site/Services";
 import { Contact, SiteFooter } from "@/components/site/Contact";
 import { AskMemory } from "@/components/site/AskMemory";
+import { EasterEgg } from "@/components/site/EasterEgg";
 import { HeroBoundary } from "@/components/avatar/LoadBoundary";
 import { MemoryFieldSlot } from "@/components/memory/MemoryFieldSlot";
 
@@ -41,6 +42,7 @@ export default function Home() {
         <SmoothScroll />
         <Cursor />
         <TabPresence />
+        <EasterEgg />
         <Nav />
         <MemoryFieldSlot />
 

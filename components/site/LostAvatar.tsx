@@ -9,8 +9,8 @@ import { RetryBoundary } from "@/components/avatar/LoadBoundary";
 import { HERO } from "@/components/game/shell/transition";
 import { isWebGLAvailable } from "@/components/game/shell/useExperienceShell";
 import type { GestureName } from "@/lib/gestures";
+import { avatarUrl, markMeshoptBroken, usesMeshopt } from "@/lib/avatarSource";
 
-const AVATAR_URL = process.env.NEXT_PUBLIC_AVATAR_URL || "/avatar.glb";
 // The 404 avatar only ever shrugs, so it fetches that one clip instead of all nine.
 const MOVES: readonly GestureName[] = ["defeated"];
 const SHRUG_EVERY_MS = 7000;
@@ -33,6 +33,14 @@ export function LostAvatar() {
   const volumeRef = useRef(0);
   const gestureRef = useRef<GestureTrigger>({ seq: 0, name: null });
   const gesturingRef = useRef(false);
+  const [src, setSrc] = useState(avatarUrl);
+  const clear = () => {
+    useGLTF.clear(src);
+    if (usesMeshopt(src)) {
+      markMeshoptBroken();
+      setSrc(avatarUrl());
+    }
+  };
 
   useEffect(() => {
     if (!webgl || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -49,10 +57,10 @@ export function LostAvatar() {
       <hemisphereLight args={[0xffffff, 0x2a2520, HERO.lights.hemisphere]} />
       <directionalLight position={[...HERO.lights.key.position]} intensity={HERO.lights.key.intensity} />
       <directionalLight position={[...HERO.lights.fill.position]} intensity={HERO.lights.fill.intensity} />
-      <RetryBoundary clear={() => useGLTF.clear(AVATAR_URL)} retryDelaysMs={[1500]}>
+      <RetryBoundary clear={clear} retryDelaysMs={[1500]}>
         <Suspense fallback={null}>
           <Avatar
-            url={AVATAR_URL}
+            url={src}
             volumeRef={volumeRef}
             gestureRef={gestureRef}
             gesturingRef={gesturingRef}

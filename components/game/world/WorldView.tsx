@@ -4,7 +4,6 @@
 // from world/resources.ts and outlive the mount (shared by every game session).
 import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { QualityPreset } from "../config";
 import { allCollected, type ProgressV1 } from "../progress";
@@ -15,6 +14,7 @@ import type { Layout } from "./layout";
 import { readWorldResources, warmId, warmPlan } from "./resources";
 import { warmGameState } from "./warm";
 import { SKY } from "./sky";
+import { useAvatarGLTF } from "@/lib/avatarSource";
 
 /** The world preset the entry tween ends on (k = 1); k = 0 is the hero look (HERO.lights). */
 const WORLD_LOOK = {
@@ -65,7 +65,7 @@ export function WorldView({
   challenge?: { progress: Store<ProgressV1>; reducedMotion: boolean };
 }) {
   const { scene, gl, camera } = useThree();
-  const avatar = useGLTF(avatarUrl, true, false).scene;
+  const avatar = useAvatarGLTF(avatarUrl).scene;
   const meshesRef = useRef<THREE.Group>(null);
   const lightsRef = useRef<THREE.Group>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);

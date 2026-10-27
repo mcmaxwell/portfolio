@@ -3,7 +3,6 @@
 // Avatar primitive plus animator wiring (design 2.6). Reuses the useGLTF-cached
 // avatar scene that the hero loaded; never disposes it.
 import { useEffect, useLayoutEffect, type MutableRefObject } from "react";
-import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { createCharacterAnimator, type CharacterAnimator } from "./animator";
 import { createBodyClearance, sampleLandPose, type BodyClearance, type ClearanceOptions, type Solid } from "./bodyClearance";
@@ -13,6 +12,7 @@ import { setGameHair } from "./hairMaterial";
 import type { MotorState } from "./player";
 import { captureBones, createPoseBlend, type PoseBlend } from "./poseBlend";
 import { TIMING } from "./shell/transition";
+import { useAvatarGLTF } from "@/lib/avatarSource";
 
 /** A standing, grounded motor state: primes the animator so frame zero is the idle pose. */
 const STANDING: MotorState = {
@@ -45,9 +45,7 @@ type Props = {
 };
 
 export function GameAvatar({ url, assets, groupRef, animatorRef, poseBlendRef, solids, clearanceRef, floorAt, blendPose, castShadow }: Props) {
-  // None of our GLBs use meshopt; the default decoder starts a WebAssembly instantiate nobody awaits,
-  // which logs an uncaught rejection when WebAssembly is blocked.
-  const { scene, animations } = useGLTF(url, true, false);
+  const { scene, animations } = useAvatarGLTF(url);
 
   const build = () => {
     const joints = jointNamesOf(scene);

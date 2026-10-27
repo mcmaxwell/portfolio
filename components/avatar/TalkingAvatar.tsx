@@ -10,17 +10,15 @@ import { IntroVideo, introAvailable, introWillPlay } from "./IntroVideo";
 import { RetryBoundary } from "./LoadBoundary";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
+import { avatarUrl, markMeshoptBroken, usesMeshopt } from "@/lib/avatarSource";
 import { LoadingStrip, FailureDialog } from "@/components/game/shell/LoadingOverlay";
 import { ReadySignal } from "@/components/game/shell/ReadySignal";
 import { CHROME, chromeTransition, chromeTranslate, EASE, HERO, TIMING, type ChromeItemId } from "@/components/game/shell/transition";
 import { isWebGLAvailable, useExperienceShell } from "@/components/game/shell/useExperienceShell";
 
-// Your local Avaturn model in /public. Override via NEXT_PUBLIC_AVATAR_URL.
-const AVATAR_URL = process.env.NEXT_PUBLIC_AVATAR_URL || "/avatar.glb";
 // A dropped or stalled connection on a phone must not leave the hero empty: the model is fetched again
 // after these delays before the hero gives up and offers a manual retry.
 const AVATAR_RETRY_MS = [1000, 3000, 8000] as const;
-const clearAvatar = () => useGLTF.clear(AVATAR_URL);
 
 // Single fixed framing: pulled back a bit so head + torso/arms are visible,
 // and it never moves (gestures play within this frame). Avatar group sits at
@@ -68,6 +66,14 @@ const TalkingAvatar = () => {
     useRealtimeChat(gestureRef);
 
   const active = status !== "idle" && status !== "error";
+  // The chat status on <html data-voice>, for what reacts to the voice (the hero name, lib/voice.ts).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.voice = status;
+    return () => {
+      delete root.dataset.voice;
+    };
+  }, [status]);
   // ?capture=1 shows the avatar alone, for screenshotting the intro video's
   // last frame (same camera and background as the live hero).
   const [capture] = useState(
@@ -83,6 +89,16 @@ const TalkingAvatar = () => {
   // Bumped by the manual retry, which remounts the retry boundary with a fresh set of attempts.
   const [avatarTry, setAvatarTry] = useState(0);
   const [avatarFailed, setAvatarFailed] = useState(false);
+  // The compressed model where it can be decoded (lib/avatarSource.ts); a failed load of it retries
+  // with the plain file, and so does everything after (the game, the next visit to the hero).
+  const [avatarSrc, setAvatarSrc] = useState(avatarUrl);
+  const clearAvatar = useCallback(() => {
+    useGLTF.clear(avatarSrc);
+    if (usesMeshopt(avatarSrc)) {
+      markMeshoptBroken();
+      setAvatarSrc(avatarUrl());
+    }
+  }, [avatarSrc]);
   const onAvatarGiveUp = useCallback((error: Error) => {
     console.error("avatar failed to load", error);
     setAvatarFailed(true);
@@ -192,6 +208,16 @@ const TalkingAvatar = () => {
   const gesture = (g: (typeof GESTURES)[number]) => () =>
     (gestureRef.current = { seq: gestureRef.current.seq + 1, name: g });
 
+  // Other parts of the page can ask for a move (the Konami code in components/site/EasterEgg.tsx).
+  useEffect(() => {
+    const on = (e: Event) => {
+      const name = (e as CustomEvent<string>).detail;
+      if ((GESTURES as readonly string[]).includes(name)) gestureRef.current = { seq: gestureRef.current.seq + 1, name };
+    };
+    window.addEventListener("avatar-gesture", on);
+    return () => window.removeEventListener("avatar-gesture", on);
+  }, []);
+
   return (
     <section
       ref={sectionRef}
@@ -234,7 +260,7 @@ const TalkingAvatar = () => {
           >
             {/* Avaturn full-body: feet at origin, so lift view to the head. */}
             <Avatar
-              url={AVATAR_URL}
+              url={avatarSrc}
               volumeRef={volumeRef}
               gestureRef={gestureRef}
               gesturingRef={gesturingRef}
@@ -250,7 +276,7 @@ const TalkingAvatar = () => {
               game={shell.game.handle}
               assets={shell.assets}
               active={inGame}
-              avatarUrl={AVATAR_URL}
+              avatarUrl={avatarSrc}
               layout={shell.layout}
               onPhysics={shell.reportPhysics}
               onExit={shell.exit}

@@ -6,6 +6,7 @@ import { RevealText, SectionLabel } from "./ui";
 import { Magnetic } from "./Cursor";
 import { LENS_PITCH } from "@/lib/memory/lenses";
 import { useLens } from "@/lib/memory/useLens";
+import { SoundToggle } from "./SoundToggle";
 
 /** Maksym's local time, ticking each minute. Empty until mounted so server and client agree. */
 function LocalTime() {
@@ -149,12 +150,18 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 text-xs text-term-muted">
         <span>© 2026 {owner.name}</span>
         <span className="flex items-center gap-1.5">
-          Designed and built in London, Ontario with Next.js and Three.js
+          Designed and built in London, Ontario.{" "}
+          <a href="/colophon" className="link-draw text-term-paper">
+            How it&apos;s made
+          </a>
           <span aria-hidden className="inline-block h-3 w-1.5 translate-y-px bg-term-accent animate-blink" />
         </span>
-        <a href="#top" className="link-draw text-term-paper">
-          Back to top ↑
-        </a>
+        <span className="flex items-center gap-6">
+          <SoundToggle />
+          <a href="#top" className="link-draw text-term-paper">
+            Back to top ↑
+          </a>
+        </span>
       </div>
     </footer>
   );

@@ -6,6 +6,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GESTURES, gestureUrl, type GestureName } from "@/lib/gestures";
 import { RetryBoundary } from "./LoadBoundary";
+import { useAvatarGLTF, usesMeshopt } from "@/lib/avatarSource";
 
 // If the model HAS facial blendshapes (Ready Player Me / ARKit), we move the
 // mouth directly. This Avaturn model has none, so we drive head motion.
@@ -103,9 +104,7 @@ export function Avatar({
 }: AvatarProps) {
   const gestureUrls = useMemo(() => gestures.map(gestureUrl), [gestures]);
   const clearGestures = useCallback(() => useGLTF.clear(gestureUrls), [gestureUrls]);
-  // None of our GLBs use meshopt; the default decoder starts a WebAssembly instantiate nobody awaits,
-  // which logs an uncaught rejection when WebAssembly is blocked.
-  const { scene, animations } = useGLTF(url, true, false);
+  const { scene, animations } = useAvatarGLTF(url);
 
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
   const gestureActionsRef = useRef<Record<string, THREE.AnimationAction>>({});
@@ -262,6 +261,6 @@ export function Avatar({
 }
 
 export function preloadAvatar(url: string) {
-  useGLTF.preload(url, true, false); // no meshopt decoder, see above
+  useGLTF.preload(url, true, usesMeshopt(url)); // the decoder only for the compressed file
   GESTURES.forEach((g) => useGLTF.preload(gestureUrl(g), true, false));
 }
