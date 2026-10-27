@@ -18,7 +18,7 @@ import { SKY } from "./sky";
 
 /** The world preset the entry tween ends on (k = 1); k = 0 is the hero look (HERO.lights). */
 const WORLD_LOOK = {
-  background: "#050807",
+  background: "#0c0c0b",
   fog: { near: 26, far: 100, color: SKY.horizon },
   fogHero: { near: 5.5, far: 7 },
   // Dusk: a low warm sun behind the spawn view, a cool sky fill from the opposite side.

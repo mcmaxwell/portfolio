@@ -1,42 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
+import { Magnetic } from "./Cursor";
 
 const items = [
-  { watch: "talk", href: "#top", label: "home" },
-  { watch: "about", href: "#about", label: "about" },
-  { watch: "projects", href: "#projects", label: "projects" },
-  { watch: "experience", href: "#experience", label: "experience" },
-  { watch: "contact", href: "#contact", label: "contact" },
+  { watch: "about", href: "#about", label: "About", index: "01" },
+  { watch: "projects", href: "#projects", label: "Work", index: "02" },
+  { watch: "experience", href: "#experience", label: "Career", index: "03" },
+  { watch: "contact", href: "#contact", label: "Contact", index: "04" },
 ];
 
+/**
+ * Fixed top header: wordmark, section links with scroll-spy, a scroll progress hairline and a
+ * full-screen menu on small screens. The play transition hides it through [data-site-header]
+ * (globals.css), the same way it hid the old side dots.
+ */
 export function Nav() {
-  const [active, setActive] = useState("talk");
+  const [active, setActive] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 200, damping: 40, restDelta: 0.001 });
 
-  // Scroll-spy: pick the last section whose top has crossed the 40% line.
-  // Re-queries elements on each scroll, so the dynamically-mounted hero
-  // (#talk) is found and "home" activates at the top.
+  // Scroll-spy: the last section whose top has crossed the 40% line. Measured at most once per
+  // frame, since scroll events can fire several times a frame and each measurement forces layout.
   useEffect(() => {
-    // Measured once per frame at most: scroll events can fire several times a frame, and each
-    // getBoundingClientRect forces a layout in the middle of scrolling.
     let frame = 0;
     const measure = () => {
       frame = 0;
       const line = window.innerHeight * 0.4;
-      let current = items[0].watch;
+      let current: string | null = null;
       for (const it of items) {
         const el = document.getElementById(it.watch);
         if (el && el.getBoundingClientRect().top <= line) current = it.watch;
       }
       setActive(current);
+      setScrolled(window.scrollY > 24);
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(measure);
     };
     measure();
     window.addEventListener("scroll", onScroll, { passive: true });
-    // Re-evaluate when layout changes (e.g. the dynamic hero mounts and grows
-    // the page), so "home" activates at the top.
     const ro = new ResizeObserver(onScroll);
     ro.observe(document.body);
     return () => {
@@ -46,33 +53,141 @@ export function Nav() {
     };
   }, []);
 
+  // The open menu: Escape closes it and returns focus, and the page behind does not scroll.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    const root = document.documentElement;
+    const prev = root.style.overflow;
+    root.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      root.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <nav className="fixed right-5 top-1/2 z-40 hidden -translate-y-1/2 flex-col items-end gap-4 md:flex">
-      {items.map((it) => {
-        const isActive = active === it.watch;
-        return (
-          <a
-            key={it.href}
-            href={it.href}
-            aria-label={it.label}
-            className="group relative flex items-center justify-end"
+    <header
+      data-site-header
+      className={`fixed inset-x-0 top-0 z-40 transition-[background-color,border-color] duration-300 ${
+        scrolled && !open
+          ? "border-b border-term-line/70 bg-term-bg/75 backdrop-blur-md"
+          : "border-b border-transparent"
+      }`}
+    >
+      <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-10">
+        <a
+          href="#top"
+          className="group relative z-10 flex items-center gap-3 text-sm text-term-paper"
+          onClick={() => setOpen(false)}
+        >
+          <span
+            aria-hidden
+            className="grid h-8 w-8 place-items-center rounded-full border border-term-accent/60 font-display text-xs font-bold text-term-accent transition-colors group-hover:bg-term-accent group-hover:text-term-bg"
           >
-            {/* info bubble */}
-            <span className="pointer-events-none absolute right-6 whitespace-nowrap border border-term-line bg-term-bg/90 px-2 py-1 text-xs text-term-fg opacity-0 backdrop-blur-sm transition-all duration-150 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100">
-              <span className="text-term-green">./</span>
-              {it.label}
-            </span>
-            {/* dot */}
+            ML
+          </span>
+          <span>
+            maksym<span className="text-term-accent">.</span>liutsko
+          </span>
+        </a>
+
+        <nav aria-label="Sections" className="hidden md:block">
+          <ul className="flex items-center gap-8 text-sm">
+            {items.map((it) => {
+              const isActive = active === it.watch;
+              return (
+                <li key={it.href}>
+                  <a
+                    href={it.href}
+                    aria-current={isActive ? "true" : undefined}
+                    className={`group flex items-baseline gap-1.5 transition-colors ${
+                      isActive ? "text-term-paper" : "text-term-muted hover:text-term-paper"
+                    }`}
+                  >
+                    <span className={`text-[10px] ${isActive ? "text-term-accent" : ""}`}>{it.index}</span>
+                    <span className="link-draw">{it.label}</span>
+                  </a>
+                </li>
+              );
+            })}
+            <li>
+              <Magnetic>
+                <a
+                  href="#contact"
+                  className="flex items-center gap-2 rounded-full border border-term-accent/50 px-4 py-1.5 text-term-accent-bright transition-colors hover:bg-term-accent hover:text-term-bg"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-term-accent opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-term-accent" />
+                  </span>
+                  Available
+                </a>
+              </Magnetic>
+            </li>
+          </ul>
+        </nav>
+
+        <button
+          ref={menuButton}
+          type="button"
+          className="relative z-10 flex h-10 items-center gap-3 text-sm text-term-paper md:hidden"
+          aria-expanded={open}
+          aria-controls="site-menu"
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? "Close" : "Menu"}
+          <span aria-hidden className="relative block h-3 w-6">
             <span
-              className={`h-2.5 w-2.5 rounded-full border transition-all duration-200 ${
-                isActive
-                  ? "border-term-green bg-term-green box-glow"
-                  : "border-term-muted bg-transparent group-hover:border-term-green group-hover:scale-125"
+              className={`absolute left-0 top-0 h-px w-6 bg-current transition-transform duration-300 ${
+                open ? "translate-y-1.5 rotate-45" : ""
               }`}
             />
-          </a>
-        );
-      })}
-    </nav>
+            <span
+              className={`absolute bottom-0 left-0 h-px w-6 bg-current transition-transform duration-300 ${
+                open ? "-translate-y-1.5 -rotate-45" : ""
+              }`}
+            />
+          </span>
+        </button>
+      </div>
+
+      {/* Scroll progress */}
+      <motion.div
+        aria-hidden
+        className="absolute bottom-0 left-0 h-px w-full origin-left bg-term-accent"
+        style={{ scaleX: progress }}
+      />
+
+      {/* Small-screen menu */}
+      <div
+        id="site-menu"
+        hidden={!open}
+        className="fixed inset-0 h-[100dvh] bg-term-bg px-5 pt-24 md:hidden"
+      >
+        <nav aria-label="Sections">
+          <ul className="space-y-2">
+            {items.map((it, i) => (
+              <li key={it.href} style={{ animationDelay: `${i * 60}ms` }} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500">
+                <a
+                  href={it.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-baseline gap-4 border-b border-term-line py-4 font-display text-5xl font-medium text-term-paper"
+                >
+                  <span className="font-mono text-xs text-term-accent">{it.index}</span>
+                  {it.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
   );
 }

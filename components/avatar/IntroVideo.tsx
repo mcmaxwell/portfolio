@@ -85,7 +85,7 @@ export const IntroVideo = ({ onActiveChange }: Props) => {
       />
       <button
         onClick={finish}
-        className="absolute bottom-6 right-6 border border-term-line bg-term-bg/70 px-3 py-1.5 text-xs text-term-muted backdrop-blur transition-colors hover:border-term-green hover:text-term-green"
+        className="absolute bottom-6 right-6 border border-term-line bg-term-bg/70 px-3 py-1.5 text-xs text-term-muted backdrop-blur transition-colors hover:border-term-accent hover:text-term-accent"
       >
         [ skip intro ]
       </button>

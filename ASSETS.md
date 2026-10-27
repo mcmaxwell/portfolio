@@ -117,6 +117,17 @@ The license file is `app/fonts/jetbrains-mono/OFL.txt` (SIL Open Font License 1.
 | `app/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2` | 700 | 21,908 bytes | `d0d4e818808f2a0ba39b2b09d1989366f63494e295f003c7ef436697378507e8` |
 | `app/fonts/jetbrains-mono/OFL.txt` | license | - | `403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b` |
 
+## Fonts (`app/fonts/space-grotesk`)
+
+Space Grotesk is the display face (headings, large type). It is self-hosted through `next/font/local` in `app/layout.tsx`, like JetBrains Mono, so the build needs no network.
+The file is copied unmodified from the npm package `@fontsource-variable/space-grotesk` at exactly version 5.3.0 (npm license field OFL-1.1). The package is not a dependency of this repo; it was fetched once with `npm pack` and only the files below were copied.
+Shipped: latin subset, one variable woff2 covering weights 300 to 700, normal style.
+
+| File | Weight | Size | sha256 |
+|---|---|---|---|
+| `app/fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2` | 300-700 (variable) | 22,288 bytes | `0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d` |
+| `app/fonts/space-grotesk/OFL.txt` | license | - | `18a4de52385f6b988782639d5d0cc1326e5a8c2de9a7f01d7b20d9aedcc60943` |
+
 ## World visuals (procedural, no files)
 
 The campus look (milestone 3 visual pass) ships no image, model or font file.

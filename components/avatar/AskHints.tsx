@@ -44,14 +44,13 @@ export function AskHints() {
   }, [text, deleting, index]);
 
   return (
-    <div className="pointer-events-none absolute right-5 top-20 z-20 hidden max-w-[280px] flex-col items-end border border-term-line bg-term-bg/70 px-3 py-2 text-right text-xs backdrop-blur sm:flex">
+    <div className="pointer-events-none absolute right-10 top-20 z-20 hidden max-w-[280px] flex-col items-end rounded-2xl border border-term-line bg-term-bg/70 px-3 py-2 text-right text-xs backdrop-blur sm:flex">
       <span className="mb-1 text-[10px] uppercase tracking-widest text-term-muted">
-        try asking
+        Try asking
       </span>
       <span className="text-term-fg">
-        <span className="text-term-green">&gt; </span>
         {text}
-        <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-term-green animate-blink" />
+        <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-term-accent animate-blink" />
       </span>
     </div>
   );

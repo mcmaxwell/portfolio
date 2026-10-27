@@ -69,7 +69,7 @@ describe("hero under the intro video", () => {
     expect(talk.closest("[inert]")).not.toBeNull();
     expect(play.closest("[inert]")).not.toBeNull();
     expect(gesture.closest("[inert]")).not.toBeNull();
-    for (const b of screen.getAllByText(/^> (wave|run)$/)) {
+    for (const b of screen.getAllByText(/^(wave|run)$/)) {
       expect(b.closest("[inert]")).not.toBeNull();
     }
     // The skip button belongs to the cover and stays live.

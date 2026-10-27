@@ -6,14 +6,14 @@
 export const owner = {
   name: "Maksym Liutsko",
   role: "AI Automation Engineer & Product Builder",
-  location: "London, Ontario, Canada — open to remote",
+  location: "London, Ontario, Canada. Open to remote",
   email: "maksym.liutsko@gmail.com",
   site: "liutsko.me",
   linkedin: "https://www.linkedin.com/in/mcmaxwelll/",
   phone: "+1 (226) 977-0412",
   about:
     "AI automation engineer and product builder. I design and ship AI-integrated " +
-    "products, autonomous agents and end-to-end automation — co-founder & CTO of " +
+    "products, autonomous agents and end-to-end automation. I'm co-founder & CTO of " +
     "XecSuite and co-founder of Apex Mind Automation. I architect agentic systems " +
     "(multi-agent orchestration, LLM assistants, automated content and data " +
     "pipelines) across OpenAI, Anthropic Claude, Google Gemini and self-hosted " +
@@ -63,7 +63,7 @@ export const experience = [
     company: "Overdose, Ukraine",
     period: "Dec 2020 – Apr 2022",
     detail:
-      "Led Magento 2 frontend and custom checkout as team lead — code reviews, estimations, mentoring. Notable work: Euromarc.",
+      "Led Magento 2 frontend and custom checkout as team lead: code reviews, estimations, mentoring. Notable work: Euromarc.",
   },
   {
     role: "Frontend Developer",
@@ -94,9 +94,9 @@ export const experience = [
 ];
 
 export const education = [
-  "Adobe Certified Expert — Adobe Commerce Front-End Developer (2022)",
-  "Meta — The Full Stack (2024)",
-  "Master's Degree in Technological Processes Automated Control — National Metallurgical Academy of Ukraine (2012)",
+  "Adobe Certified Expert, Adobe Commerce Front-End Developer (2022)",
+  "Meta, The Full Stack (2024)",
+  "Master's Degree in Technological Processes Automated Control, National Metallurgical Academy of Ukraine (2012)",
 ];
 
 /**

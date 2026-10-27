@@ -73,14 +73,14 @@ export function LoadingStrip({
       </p>
       <div className="h-0.5 w-56 bg-term-line" aria-hidden="true">
         <div
-          className="h-full bg-term-green"
+          className="h-full bg-term-accent"
           style={{ width: `${Math.round(progress * 100)}%`, transition: reduced ? "none" : "width 150ms linear" }}
         />
       </div>
       <button
         ref={cancelRef}
         onClick={onCancel}
-        className="border border-term-line bg-term-bg/80 px-5 py-2 text-xs text-term-muted transition-colors hover:border-term-green hover:text-term-green-bright"
+        className="border border-term-line bg-term-bg/80 px-5 py-2 text-xs text-term-muted transition-colors hover:border-term-accent hover:text-term-accent-bright"
       >
         [ cancel ]
       </button>
@@ -113,13 +113,13 @@ export function FailureDialog({
         <button
           ref={retryRef}
           onClick={onRetry}
-          className="border border-term-green bg-term-green/10 px-5 py-2 text-term-green-bright transition-colors hover:bg-term-green hover:text-term-bg"
+          className="border border-term-accent bg-term-accent/10 px-5 py-2 text-term-accent-bright transition-colors hover:bg-term-accent hover:text-term-bg"
         >
           [ retry ]
         </button>
         <button
           onClick={onBack}
-          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-green hover:text-term-green-bright"
+          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-accent hover:text-term-accent-bright"
         >
           [ back to portfolio ]
         </button>

@@ -45,14 +45,14 @@ export function HudButtons({
     >
       <button
         onClick={onPause}
-        className="min-h-[44px] border border-term-line bg-term-bg/80 px-4 py-2 text-term-muted backdrop-blur transition-colors hover:border-term-green hover:text-term-green-bright"
+        className="min-h-[44px] border border-term-line bg-term-bg/80 px-4 py-2 text-term-muted backdrop-blur transition-colors hover:border-term-accent hover:text-term-accent-bright"
         style={{ touchAction: "manipulation" }}
       >
         [ pause ]
       </button>
       <button
         onClick={onExit}
-        className="min-h-[44px] border border-term-green bg-term-bg/80 px-4 py-2 text-term-green-bright backdrop-blur transition-colors hover:bg-term-green hover:text-term-bg"
+        className="min-h-[44px] border border-term-accent bg-term-bg/80 px-4 py-2 text-term-accent-bright backdrop-blur transition-colors hover:bg-term-accent hover:text-term-bg"
         style={{ touchAction: "manipulation" }}
       >
         [ exit ]
@@ -105,9 +105,9 @@ export function InteractionPrompt({ item, touch, hint = null }: { item: Interact
       {item && (
         <div
           aria-hidden="true"
-          className="flex items-center gap-3 border border-term-green bg-term-bg/85 px-4 py-2 text-sm text-term-fg backdrop-blur box-glow"
+          className="flex items-center gap-3 border border-term-accent bg-term-bg/85 px-4 py-2 text-sm text-term-fg backdrop-blur box-glow"
         >
-          <kbd className="border border-term-green px-2 py-0.5 text-xs font-bold text-term-green-bright">{touch ? "Interact" : "E"}</kbd>
+          <kbd className="border border-term-accent px-2 py-0.5 text-xs font-bold text-term-accent-bright">{touch ? "Interact" : "E"}</kbd>
           <span>{text}</span>
         </div>
       )}
@@ -157,7 +157,7 @@ export function ChallengeHud({
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className={`flex min-h-[44px] items-center border bg-term-bg/85 px-4 py-2 text-xs backdrop-blur ${progress.completed ? "border-term-cyan text-term-cyan" : "border-term-green text-term-green-bright"}`}
+        className={`flex min-h-[44px] items-center border bg-term-bg/85 px-4 py-2 text-xs backdrop-blur ${progress.completed ? "border-term-sand text-term-sand" : "border-term-accent text-term-accent-bright"}`}
         data-energy-counter
       >
         {counterText(progress)}
@@ -166,7 +166,7 @@ export function ChallengeHud({
         // The sentence is announced by the game's own live region when the cup is collected; this chip only keeps it on screen.
         <div
           aria-hidden="true"
-          className="flex min-h-[44px] items-center border border-term-cyan bg-term-bg/85 px-4 py-2 text-xs text-term-cyan backdrop-blur"
+          className="flex min-h-[44px] items-center border border-term-sand bg-term-bg/85 px-4 py-2 text-xs text-term-sand backdrop-blur"
           data-trophy-chip
         >
           Trophy collected
@@ -175,7 +175,7 @@ export function ChallengeHud({
       <p
         role="status"
         aria-live="polite"
-        className={ready ? "border border-term-cyan bg-term-bg/85 px-4 py-2 text-xs leading-relaxed text-term-fg backdrop-blur box-glow" : "sr-only"}
+        className={ready ? "border border-term-sand bg-term-bg/85 px-4 py-2 text-xs leading-relaxed text-term-fg backdrop-blur box-glow" : "sr-only"}
         data-challenge-guidance
       >
         {ready ? (touch ? GUIDANCE_TOUCH : GUIDANCE) : ""}

@@ -18,8 +18,8 @@ import { Dialog } from "../shell/Dialog";
 
 const TITLE_ID = "game-panel-title";
 const BUTTON =
-  "min-h-[44px] border border-term-line px-4 py-2 text-xs text-term-muted transition-colors hover:border-term-green hover:text-term-green-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-term-green";
-const LINK = "break-all text-term-cyan underline underline-offset-2 hover:text-term-green-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-term-green";
+  "min-h-[44px] border border-term-line px-4 py-2 text-xs text-term-muted transition-colors hover:border-term-accent hover:text-term-accent-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-term-accent";
+const LINK = "break-all text-term-sand underline underline-offset-2 hover:text-term-accent-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-term-accent";
 
 /** One external link: a single new tab, opened only when activated. */
 function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
@@ -63,10 +63,10 @@ function ProjectBody({ project, headingId }: { project: GameProject; headingId?:
   return (
     <>
       <div className="mb-2 flex flex-wrap items-center gap-3">
-        <h2 id={headingId} className="text-base font-bold text-term-green-bright">
+        <h2 id={headingId} className="text-base font-bold text-term-accent-bright">
           {project.title}
         </h2>
-        {project.tag && <span className="border border-term-line px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-term-cyan">{project.tag}</span>}
+        {project.tag && <span className="border border-term-line px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-term-sand">{project.tag}</span>}
       </div>
       {project.image && (
         <div className="mb-4 overflow-hidden border border-term-line">
@@ -84,7 +84,7 @@ function ProjectBody({ project, headingId }: { project: GameProject; headingId?:
 function Header({ title, id, onClose, closeRef }: { title: string; id: string; onClose: () => void; closeRef: React.RefObject<HTMLButtonElement> }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-4 border-b border-term-line pb-3">
-      <h2 id={id} className="text-base font-bold text-term-green-bright">
+      <h2 id={id} className="text-base font-bold text-term-accent-bright">
         {title}
       </h2>
       <button ref={closeRef} type="button" onClick={onClose} className={BUTTON} aria-label="Close panel">
@@ -132,8 +132,8 @@ function AllProjectsPanel({ onClose }: { onClose: () => void }) {
       <ul className="space-y-6">
         {projects.map((p) => (
           <li key={p.id} className="border-b border-term-line pb-5 last:border-b-0">
-            <h3 className="mb-1 text-sm font-bold text-term-green-bright">{p.title}</h3>
-            {p.tag && <p className="mb-2 text-[10px] uppercase tracking-wider text-term-cyan">{p.tag}</p>}
+            <h3 className="mb-1 text-sm font-bold text-term-accent-bright">{p.title}</h3>
+            {p.tag && <p className="mb-2 text-[10px] uppercase tracking-wider text-term-sand">{p.tag}</p>}
             <p className="mb-3 leading-relaxed text-term-fg/90">{p.description}</p>
             <ProjectLink project={p} />
             {p.clients.length > 0 && (
@@ -161,11 +161,11 @@ function SkillsPanel({ onClose }: { onClose: () => void }) {
       <div className="space-y-6">
         {skillBuckets().map((b) => (
           <section key={b.title} aria-label={b.title}>
-            <h3 className="mb-2 text-sm font-bold text-term-green-bright">{b.title}</h3>
+            <h3 className="mb-2 text-sm font-bold text-term-accent-bright">{b.title}</h3>
             <dl className="space-y-2">
               {b.groups.map((g) => (
                 <div key={g.group}>
-                  <dt className="text-xs uppercase tracking-wider text-term-cyan">{g.group}</dt>
+                  <dt className="text-xs uppercase tracking-wider text-term-sand">{g.group}</dt>
                   <dd className="leading-relaxed text-term-fg/90">{g.items}</dd>
                 </div>
               ))}
@@ -183,7 +183,7 @@ function ExperiencePanel({ onClose }: { onClose: () => void }) {
       <ol className="space-y-5">
         {experienceEntries().map((e) => (
           <li key={`${e.company}-${e.period}`}>
-            <h3 className="text-sm font-bold text-term-green-bright">{e.role}</h3>
+            <h3 className="text-sm font-bold text-term-accent-bright">{e.role}</h3>
             <p className="mb-1 flex flex-wrap items-center gap-x-2 text-xs text-term-muted">
               <span>{e.company}</span>{" "}
               <span aria-hidden="true" className="inline-block h-3 w-px bg-term-line" />{" "}
@@ -193,7 +193,7 @@ function ExperiencePanel({ onClose }: { onClose: () => void }) {
           </li>
         ))}
       </ol>
-      <h3 className="mb-2 mt-6 text-sm font-bold text-term-green-bright">Education and certifications</h3>
+      <h3 className="mb-2 mt-6 text-sm font-bold text-term-accent-bright">Education and certifications</h3>
       <ul className="list-disc space-y-1 pl-5 text-term-fg/90">
         {educationEntries().map((e) => (
           <li key={e}>{e}</li>
@@ -237,12 +237,12 @@ function CompletionPanel({ onClose, onOpen }: { onClose: () => void; onOpen: (p:
   const exploreRef = useRef<HTMLButtonElement>(null);
   return (
     <Dialog labelledBy={TITLE_ID} onClose={onClose} initialFocusRef={exploreRef} wide>
-      <h2 id={TITLE_ID} className="mb-2 text-base font-bold text-term-green-bright">
+      <h2 id={TITLE_ID} className="mb-2 text-base font-bold text-term-accent-bright">
         Challenge complete
       </h2>
       <p className="mb-5 leading-relaxed text-term-fg/90">The beacon is lit: all three energy cells are collected. Keep exploring, or head straight to the work.</p>
       <div className="flex flex-wrap gap-3">
-        <button ref={exploreRef} type="button" onClick={onClose} className={`${BUTTON} border-term-green text-term-green-bright`}>
+        <button ref={exploreRef} type="button" onClick={onClose} className={`${BUTTON} border-term-accent text-term-accent-bright`}>
           [ explore more ]
         </button>
         <button type="button" onClick={() => onOpen({ kind: "all-projects" })} className={BUTTON}>
