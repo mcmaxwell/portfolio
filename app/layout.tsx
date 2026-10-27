@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 
 import "./globals.css";
 import { ThemeProvider } from "./provider";
-import { owner } from "@/lib/persona";
+import { education, owner } from "@/lib/persona";
 
 const GA_ID = "G-RW77DJRDV1";
 const SITE_URL = "https://liutsko.me";
@@ -30,6 +30,11 @@ const display = localFont({
   variable: "--font-display",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#0c0c0b",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -68,25 +73,74 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
   },
+  formatDetection: { telephone: false },
+  other: { "llms-txt": `${SITE_URL}/llms.txt` },
 };
 
+// Structured data for search engines and AI agents: one graph with the site, the profile page
+// (Google's ProfilePage rich result) and the person it is about.
+const PERSON_ID = `${SITE_URL}/#person`;
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "Person",
-  name: owner.name,
-  jobTitle: owner.role,
-  url: SITE_URL,
-  email: `mailto:${owner.email}`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "London",
-    addressRegion: "ON",
-    addressCountry: "CA",
-  },
-  sameAs: [owner.linkedin, "https://www.xecsuite.com", "https://apexmind.studio"],
-  worksFor: [
-    { "@type": "Organization", name: "XecSuite" },
-    { "@type": "Organization", name: "Apex Mind Automation" },
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: owner.name,
+      description: DESCRIPTION,
+      inLanguage: "en",
+      publisher: { "@id": PERSON_ID },
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": `${SITE_URL}/#profile`,
+      url: SITE_URL,
+      name: TITLE,
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      about: { "@id": PERSON_ID },
+      mainEntity: { "@id": PERSON_ID },
+      primaryImageOfPage: `${SITE_URL}/opengraph-image`,
+      inLanguage: "en",
+    },
+    {
+      "@type": "Person",
+      "@id": PERSON_ID,
+      name: owner.name,
+      alternateName: "Max Liutsko",
+      jobTitle: owner.role,
+      description: owner.about,
+      url: SITE_URL,
+      image: `${SITE_URL}/opengraph-image`,
+      email: `mailto:${owner.email}`,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "London",
+        addressRegion: "ON",
+        addressCountry: "CA",
+      },
+      sameAs: [owner.linkedin, "https://github.com/mcmaxwell"],
+      worksFor: [
+        { "@type": "Organization", name: "XecSuite", url: "https://www.xecsuite.com" },
+        { "@type": "Organization", name: "Apex Mind Automation", url: "https://apexmind.studio" },
+      ],
+      hasCredential: education
+        .filter((e) => e.startsWith("Adobe Certified"))
+        .map((name) => ({ "@type": "EducationalOccupationalCredential", name })),
+      alumniOf: { "@type": "CollegeOrUniversity", name: "National Metallurgical Academy of Ukraine" },
+      knowsAbout: [
+        "AI agents",
+        "Multi-agent orchestration",
+        "Large language models",
+        "Voice interfaces",
+        "Business process automation",
+        "React",
+        "TypeScript",
+        "Next.js",
+        "Adobe Commerce",
+        "Magento 2",
+      ],
+    },
   ],
 };
 

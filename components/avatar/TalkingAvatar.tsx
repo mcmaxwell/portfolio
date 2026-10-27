@@ -6,7 +6,7 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
-import { IntroVideo } from "./IntroVideo";
+import { IntroVideo, introWillPlay } from "./IntroVideo";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
 import { LoadingStrip, FailureDialog } from "@/components/game/shell/LoadingOverlay";
@@ -107,7 +107,11 @@ const TalkingAvatar = () => {
     const t = setTimeout(() => setAvatarWarm(true), 600);
     return () => clearTimeout(t);
   }, [avatarReady]);
-  const asleepUnderIntro = introCovering && avatarWarm;
+  // On a first visit the avatar itself is held back until the film cues it (IntroVideo, AVATAR_LEAD_S),
+  // and the empty canvas does not render until then either.
+  const [avatarCued, setAvatarCued] = useState(() => !introWillPlay());
+  const cueAvatar = useCallback(() => setAvatarCued(true), []);
+  const asleepUnderIntro = introCovering && (avatarWarm || !avatarCued);
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
   const GameInterface = shell.game?.module.GameInterface;
@@ -177,7 +181,7 @@ const TalkingAvatar = () => {
           <directionalLight position={[...HERO.lights.key.position]} intensity={HERO.lights.key.intensity} />
           <directionalLight position={[...HERO.lights.fill.position]} intensity={HERO.lights.fill.intensity} />
           <fog attach="fog" args={[HERO.fog.color, HERO.fog.near, HERO.fog.far]} />
-          <Suspense
+          {avatarCued && <Suspense
             fallback={
               <Html center className="whitespace-nowrap text-sm text-term-accent">
                 loading avatar…
@@ -193,7 +197,7 @@ const TalkingAvatar = () => {
               position={[0, HERO.feetY, 0]}
             />
             <ReadySignal onReady={onAvatarReady} />
-          </Suspense>
+          </Suspense>}
           <CameraRig />
           </>}
           {GameScene && shell.game && (
@@ -217,7 +221,7 @@ const TalkingAvatar = () => {
 
       {/* Cinematic intro (first visit per tab, ?intro to replay): a z-30 cover over the hero chrome that
           hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
-      <IntroVideo onActiveChange={setIntroActive} onCoveringChange={setIntroCovering} />
+      <IntroVideo onActiveChange={setIntroActive} onCoveringChange={setIntroCovering} onAvatarCue={cueAvatar} />
 
       {!capture && shell.chromeMounted && <>
       {/* Status line */}
@@ -309,7 +313,7 @@ const TalkingAvatar = () => {
           (so it doesn't cover the avatar on small screens) */}
       <div
         {...inert}
-        className="absolute left-10 top-[58%] z-20 hidden -translate-y-1/2 flex-col gap-1.5 md:flex"
+        className="absolute left-10 top-[58%] z-20 hidden -translate-y-1/2 flex-col md:flex"
       >
         <span
           data-xfade
@@ -323,7 +327,7 @@ const TalkingAvatar = () => {
             key={g}
             data-xfade
             onClick={gesture(g)}
-            className="text-left text-xs text-term-muted hover:text-term-accent"
+            className="min-h-6 py-1 text-left text-xs text-term-muted hover:text-term-accent"
             style={chrome("gestures", i + 1, COLORS)}
           >
             {g.replace("_", " ")}

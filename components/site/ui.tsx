@@ -1,8 +1,23 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion as useMotionPreference } from "framer-motion";
 
 export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
+
+/**
+ * framer-motion's useReducedMotion, but hydration-safe: false on the server render and the first
+ * client render, the real preference from the next one. Reading it straight away made the first
+ * client render differ from the server HTML, and React then threw the whole page away and rendered
+ * it again. The first frames for reduced-motion visitors are covered by <MotionConfig
+ * reducedMotion="user"> (app/page.tsx), which makes the entrance transforms instant.
+ */
+export function useReducedMotion() {
+  const preference = useMotionPreference();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? !!preference : false;
+}
 
 /** "01 / About" row with a hairline that draws across when it scrolls into view. */
 export function SectionLabel({ index, label }: { index: string; label: string }) {

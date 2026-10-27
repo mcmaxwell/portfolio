@@ -132,7 +132,11 @@ Shipped: latin subset, one variable woff2 covering weights 300 to 700, normal st
 | File | Weight | Size | sha256 |
 |---|---|---|---|
 | `app/fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2` | 300-700 (variable) | 22,288 bytes | `0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d` |
+| `app/fonts/space-grotesk/space-grotesk-latin-500-static.ttf` | 500 (static) | 31,932 bytes | `3afac7869d35987647aee9806828950595cfb32ca3091a1a176fdb905d2e5771` |
+| `app/fonts/space-grotesk/space-grotesk-latin-700-static.ttf` | 700 (static) | 31,880 bytes | `60d44c72b74a45df302a5f3717e7f2fb197457cf921a94d63c836a316c98ddfa` |
 | `app/fonts/space-grotesk/OFL.txt` | license | - | `18a4de52385f6b988782639d5d0cc1326e5a8c2de9a7f01d7b20d9aedcc60943` |
+
+The two static `.ttf` files are derived from the variable woff2 above (OFL-1.1 permits modified versions), only for the build-time share image (`app/opengraph-image.tsx`), whose renderer reads neither woff2 nor variable fonts. Made on 2026-10-27 with fontTools 4.55.3: `instantiateVariableFont(font, {"wght": 500 | 700})`, saved without woff2 compression. They are never sent to browsers.
 
 ## World visuals (procedural, no files)
 
@@ -150,5 +154,6 @@ Runtime memory: 12 tiling textures (512 x 512 and 256 x 256 with mipmaps) and 11
 | `intro-720.webm`, `intro-720.mp4` | the owner's AI-generated intro film (1920x1080, 24 fps, 49.7 s, 49 MB master, provided 2026-10-27) | 1280x720, cut at frame 1185 (the master ends on 0.25 s of black after the avatar shot). AV1 + Opus (SVT-AV1 CRF 44) and H.264 + AAC (x264 CRF 29, faststart) for Safari |
 | `intro-mobile.webm`, `intro-mobile.mp4` | same | centre 608x1080 crop scaled to 540x960, same cut and codecs (CRF 45 / 30) |
 | `intro-poster.webp`, `intro-poster-mobile.webp` | same | first frame of each cut |
+| `app/og-photo.jpg` (outside `public/intro`) | same | 720 x 720 crop (x 520 to 1240) of `intro-poster.webp`, resized to 630 x 630, JPEG quality 82; the photo in the build-time share image (`app/opengraph-image.tsx`) |
 
 The hand-off in `components/avatar/IntroVideo.tsx` relies on the last frame: the avatar spans 2.5% to 97.5% of the frame height, centred. A new film must end the same way, or those numbers (`FILM_AVATAR`) must be re-measured.

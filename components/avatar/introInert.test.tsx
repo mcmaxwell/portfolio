@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 // While the intro video covers the hero, the controls beneath it must be inert (no Tab stop, no
 // click) and the game prefetch must not start; once the intro ends, Play behaves as before.
-// With NEXT_PUBLIC_INTRO_VIDEO_URL set to an empty string (intro off) the hero is unchanged.
+// The avatar itself is held back while the film plays, until the film cues it (near its end, on
+// skip or on failure). With NEXT_PUBLIC_INTRO_VIDEO_URL set to an empty string (intro off) the hero
+// is unchanged.
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -36,7 +38,7 @@ async function mountHero(introUrl: string | undefined) {
   const { default: TalkingAvatar } = await import("@/components/avatar/TalkingAvatar");
   const view = render(<TalkingAvatar />);
   const play = (await screen.findByText(/play \/ explore/)) as HTMLButtonElement;
-  await waitFor(() => expect(play).toBeEnabled());
+  if (!introUrl) await waitFor(() => expect(play).toBeEnabled());
   return { ...view, play };
 }
 
@@ -56,7 +58,7 @@ afterEach(() => {
 });
 
 describe("hero under the intro video", () => {
-  it("makes the covered controls inert and defers the prefetch until the intro ends", async () => {
+  it("makes the covered controls inert and defers the avatar and the prefetch until the intro ends", async () => {
     const { container, play } = await mountHero("/intro-test.mp4");
     const video = await waitFor(() => {
       const v = container.querySelector("video");
@@ -75,6 +77,10 @@ describe("hero under the intro video", () => {
     // The skip button belongs to the cover and stays live.
     expect(screen.getByRole("button", { name: /skip intro/i }).closest("[inert]")).toBeNull();
 
+    // The avatar has not loaded under the film, so Play is not enabled yet.
+    await act(async () => {});
+    expect(play).toBeDisabled();
+
     // Programmatic focus, hover and press do not start the prefetch while the intro plays.
     fireEvent.focus(play);
     fireEvent.pointerEnter(play);
@@ -84,6 +90,7 @@ describe("hero under the intro video", () => {
     // The intro ends: after the fade the controls are live again and Play prefetches as before.
     fireEvent.ended(video);
     await waitFor(() => expect(container.querySelector("video")).toBeNull());
+    await waitFor(() => expect(play).toBeEnabled());
     expect(play.closest("[inert]")).toBeNull();
     expect(talk.closest("[inert]")).toBeNull();
     fireEvent.focus(play);

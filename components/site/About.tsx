@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { owner, skills } from "@/lib/persona";
-import { FadeIn, SectionLabel } from "./ui";
+import { FadeIn, SectionLabel, useReducedMotion } from "./ui";
 
 const STATEMENT =
   "I build AI products that do real work. Agents, voice interfaces and automation, sitting on twelve years of front-end craft.";
@@ -15,9 +15,12 @@ const STATS = [
   { value: 1, suffix: "", label: "Startup Weekend award" },
 ];
 
-/** One word of the statement: dim until the scroll position reaches its slice of the paragraph. */
+/**
+ * One word of the statement: dim until the scroll position reaches its slice of the paragraph. The
+ * dim floor still gives the large type 3:1 contrast on the ink background (WCAG 1.4.3).
+ */
 function Word({ word, progress, range }: { word: string; progress: MotionValue<number>; range: [number, number] }) {
-  const opacity = useTransform(progress, range, [0.16, 1]);
+  const opacity = useTransform(progress, range, [0.38, 1]);
   return (
     <motion.span style={{ opacity }} className="inline-block">
       {word}&nbsp;
