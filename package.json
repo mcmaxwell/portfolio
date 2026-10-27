@@ -14,7 +14,8 @@
     "deploy": "vercel --prod",
     "test": "vitest run",
     "test:watch": "vitest",
-    "strip-clips": "node scripts/strip-clips.mjs"
+    "strip-clips": "node scripts/strip-clips.mjs",
+    "optimize-glb": "node scripts/optimize-glb.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.105.4",
