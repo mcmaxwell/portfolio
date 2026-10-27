@@ -34,4 +34,9 @@ describe("hero without WebGL", () => {
     expect(screen.queryByText(/play \/ explore/)).toBeNull();
     expect(screen.getByText(/talk to me/)).toBeInTheDocument();
   });
+
+  it("keeps the still avatar in place of the 3D one", () => {
+    const { container } = render(<TalkingAvatar />);
+    expect(container.querySelector('#talk img[src="/avatar-poster.webp"]')).not.toBeNull();
+  });
 });

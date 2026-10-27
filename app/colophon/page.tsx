@@ -63,7 +63,7 @@ const SECTIONS: { title: string; entries: Entry[] }[] = [
       },
       {
         label: "Quality",
-        body: "Around 1,400 Vitest tests, from the particle choreography and the retrieval handler to the game's physics, plus Playwright screenshots at desktop and phone widths for every change. Budget: Lighthouse mobile 90+, no layout shift.",
+        body: "Around 1,400 Vitest tests, from the particle choreography and the retrieval handler to the game's physics, plus Playwright screenshots at desktop and phone widths for every change. The avatar is a still image in the first paint and the live one dissolves in over it; on a machine that draws WebGL without a GPU it wakes only when you reach for it, and then draws only when something changes.",
       },
       {
         label: "Access",

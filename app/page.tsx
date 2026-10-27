@@ -18,13 +18,21 @@ import { Contact, SiteFooter } from "@/components/site/Contact";
 import { AskMemory } from "@/components/site/AskMemory";
 import { EasterEgg } from "@/components/site/EasterEgg";
 import { HeroBoundary } from "@/components/avatar/LoadBoundary";
+import { AvatarPoster } from "@/components/avatar/AvatarPoster";
 import { MemoryFieldSlot } from "@/components/memory/MemoryFieldSlot";
 
 // Browser-only (WebRTC + Canvas), so disable SSR. The placeholder holds the hero's full height, so
-// nothing below it moves when the avatar mounts.
+// nothing below it moves when the avatar mounts, and shows the still avatar in the same place.
 const TalkingAvatar = dynamic(
   () => import("@/components/avatar/TalkingAvatar"),
-  { ssr: false, loading: () => <div aria-hidden className="h-screen" /> }
+  {
+    ssr: false,
+    loading: () => (
+      <div aria-hidden className="relative h-screen [overflow-x:clip]">
+        <AvatarPoster />
+      </div>
+    ),
+  }
 );
 
 export default function Home() {

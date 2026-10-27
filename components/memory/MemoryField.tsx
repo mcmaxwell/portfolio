@@ -6,6 +6,7 @@ import { HERO } from "@/components/game/shell/transition";
 import { AVATAR_CLOUD, bodyShape, decodeFrames, heroShape, projectFrame, type AvatarFrames } from "./avatarCloud";
 import { Choreographer, type AnchorKind } from "./choreography";
 import { Morph } from "./morph";
+import { isSoftwareGL } from "@/lib/gpu";
 import { fibonacciCore, textShape, type Shape } from "./shapes";
 
 /**
@@ -14,8 +15,9 @@ import { fibonacciCore, textShape, type Shape } from "./shapes";
  * each project's name over its screenshot as the card arrives, drift as dust in between, and at
  * Contact come back together as the avatar, which waves. One draw call of ~16k points; the shapes
  * are morphed on the GPU and the choreography (components/memory/choreography.ts) only reads a few
- * rects a frame. Not mounted with reduced motion, and it draws nothing while the hero is at rest
- * (the points wait there, formed on the avatar), so the hero's own canvas is the only one drawing.
+ * rects a frame. Not started with reduced motion or on CPU-drawn WebGL (lib/gpu.ts), and it draws
+ * nothing while the hero is at rest (the points wait there, formed on the avatar), so the hero's
+ * own canvas is the only one drawing.
  */
 
 const vertexShader = /* glsl */ `
@@ -299,7 +301,7 @@ export default function MemoryField() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches || isSoftwareGL()) return;
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });

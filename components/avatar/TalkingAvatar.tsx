@@ -11,6 +11,8 @@ import { RetryBoundary } from "./LoadBoundary";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
 import { avatarUrl, markMeshoptBroken, usesMeshopt } from "@/lib/avatarSource";
+import { isSoftwareGL } from "@/lib/gpu";
+import { AvatarPoster } from "./AvatarPoster";
 import { LoadingStrip, FailureDialog } from "@/components/game/shell/LoadingOverlay";
 import { ReadySignal } from "@/components/game/shell/ReadySignal";
 import { CHROME, chromeTransition, chromeTranslate, EASE, HERO, TIMING, type ChromeItemId } from "@/components/game/shell/transition";
@@ -28,6 +30,48 @@ const FRAME = {
   pos: new THREE.Vector3(...HERO.cameraPosition),
   target: new THREE.Vector3(...HERO.cameraTarget),
 };
+
+/**
+ * Frames for the on-demand hero: one per pointer move (at most ~20 a second), one on any press or
+ * key (a gesture may have been asked for), and every frame while a gesture plays or the camera is
+ * still settling.
+ */
+function DrawOnChange({ gesturingRef, ready }: { gesturingRef: React.MutableRefObject<boolean>; ready: boolean }) {
+  const { invalidate, camera } = useThree();
+  // The avatar arrives after the canvas: draw it a few times so the idle clip is applied, not the
+  // bind pose.
+  useEffect(() => {
+    if (!ready) return;
+    const timers = [0, 120, 400].map((ms) => window.setTimeout(() => invalidate(), ms));
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [ready, invalidate]);
+  useEffect(() => {
+    let last = 0;
+    const on = () => {
+      const now = performance.now();
+      if (now - last < 50) return;
+      last = now;
+      invalidate();
+    };
+    const now = () => invalidate();
+    window.addEventListener("pointermove", on, { passive: true });
+    window.addEventListener("pointerdown", now, { passive: true });
+    window.addEventListener("keydown", now);
+    window.addEventListener("avatar-gesture", now);
+    const settle = window.setTimeout(() => invalidate(), 100);
+    return () => {
+      window.removeEventListener("pointermove", on);
+      window.removeEventListener("pointerdown", now);
+      window.removeEventListener("keydown", now);
+      window.removeEventListener("avatar-gesture", now);
+      window.clearTimeout(settle);
+    };
+  }, [invalidate]);
+  useFrame(() => {
+    if (gesturingRef.current || camera.position.distanceToSquared(FRAME.pos) > 1e-6) invalidate();
+  });
+  return null;
+}
 
 function CameraRig() {
   const { camera } = useThree();
@@ -168,6 +212,41 @@ const TalkingAvatar = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [movesOpen]);
   const asleepUnderIntro = introCovering && (avatarWarm || !avatarCued);
+  // On CPU-drawn WebGL (lib/gpu.ts) the resting hero draws only when something changes; the game,
+  // a conversation and the transition still run every frame.
+  // Until the visitor first moves over the hero, presses or types, a still image of the avatar stands
+  // in for it, so the first 3D draw (seconds of CPU there) never lands during page load.
+  const [softwareGL] = useState(() => !capture && isSoftwareGL());
+  const onDemand = softwareGL && phase === "hero" && !active;
+  const [awake, setAwake] = useState(!softwareGL);
+  useEffect(() => {
+    if (awake) return;
+    const wake = () => setAwake(true);
+    const section = sectionRef.current;
+    section?.addEventListener("pointermove", wake, { passive: true });
+    window.addEventListener("pointerdown", wake, { passive: true });
+    window.addEventListener("keydown", wake);
+    window.addEventListener("avatar-gesture", wake);
+    return () => {
+      section?.removeEventListener("pointermove", wake);
+      window.removeEventListener("pointerdown", wake);
+      window.removeEventListener("keydown", wake);
+      window.removeEventListener("avatar-gesture", wake);
+    };
+  }, [awake]);
+  // The still avatar from the first paint (AvatarPoster) until the live one has drawn, then a dissolve.
+  const [posterState, setPosterState] = useState<"shown" | "fading" | "gone">(capture ? "gone" : "shown");
+  useEffect(() => {
+    if (!avatarReady) return;
+    const t = window.setTimeout(() => setPosterState((s) => (s === "shown" ? "fading" : s)), 150);
+    return () => window.clearTimeout(t);
+  }, [avatarReady]);
+  useEffect(() => {
+    if (posterState !== "fading") return;
+    const t = window.setTimeout(() => setPosterState("gone"), 650);
+    return () => window.clearTimeout(t);
+  }, [posterState]);
+  const poster = phase === "hero" ? posterState : "gone";
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
   const GameInterface = shell.game?.module.GameInterface;
@@ -232,12 +311,13 @@ const TalkingAvatar = () => {
       {/* Canvas wrapper: absolute in the hero, fixed from the click (the section keeps its h-screen
           place, so nothing below it shifts). The scanlines travel with the canvas. */}
       <div ref={canvasWrapRef} data-stage-canvas className={wrapClass} style={wrapStyle}>
+        {poster !== "gone" && <AvatarPoster fading={poster === "fading"} />}
         {/* Without WebGL the canvas cannot be created and would throw, blanking the whole page: skip it
             (the portfolio stays usable, without the 3D hero and without Play). */}
         {webgl && (
         <Canvas
           camera={{ position: [...HERO.cameraPosition], fov: HERO.fov }}
-          frameloop={shell.renderPaused || offscreen || asleepUnderIntro ? "never" : "always"}
+          frameloop={shell.renderPaused || offscreen || asleepUnderIntro ? "never" : onDemand ? "demand" : "always"}
           onCreated={shell.onCanvasCreated}
         >
           {!inGame && <>
@@ -246,16 +326,18 @@ const TalkingAvatar = () => {
           <directionalLight position={[...HERO.lights.key.position]} intensity={HERO.lights.key.intensity} />
           <directionalLight position={[...HERO.lights.fill.position]} intensity={HERO.lights.fill.intensity} />
           <fog attach="fog" args={[HERO.fog.color, HERO.fog.near, HERO.fog.far]} />
-          {avatarCued && <RetryBoundary
+          {avatarCued && awake && <RetryBoundary
             key={avatarTry}
             clear={clearAvatar}
             retryDelaysMs={AVATAR_RETRY_MS}
             onGiveUp={onAvatarGiveUp}
           ><Suspense
             fallback={
-              <Html center className="whitespace-nowrap text-sm text-term-accent">
-                loading avatar…
-              </Html>
+              poster === "shown" ? null : (
+                <Html center className="whitespace-nowrap text-sm text-term-accent">
+                  loading avatar…
+                </Html>
+              )
             }
           >
             {/* Avaturn full-body: feet at origin, so lift view to the head. */}
@@ -269,6 +351,7 @@ const TalkingAvatar = () => {
             <ReadySignal onReady={onAvatarReady} />
           </Suspense></RetryBoundary>}
           <CameraRig />
+          {onDemand && <DrawOnChange gesturingRef={gesturingRef} ready={avatarReady} />}
           </>}
           {GameScene && shell.game && (
             <GameScene

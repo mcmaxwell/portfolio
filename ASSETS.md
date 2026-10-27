@@ -53,6 +53,7 @@ To rebuild from scratch: run the clothing bake on the original, then the size pa
 
 - `public/avatar.meshopt.glb`: `public/avatar.glb` with geometry and morph targets compressed by meshoptimizer (`EXT_meshopt_compression`, level medium), 5.8 MB to 3.1 MB, written by `scripts/compress-avatar.mjs`. Quantisation gives each skinned mesh its own skin over the same joints; nodes, meshes, morph targets and the clip are unchanged, and a side-by-side render shows no visible difference. Loaded where WebAssembly runs (`lib/avatarSource.ts`), with `avatar.glb` as the fallback.
 - `public/memory/avatar.bin`: 16,000 surface samples of `public/avatar.glb` in four poses (idle, and three moments of `public/animations/wave.glb`), quantised to one byte per axis (192 KB), for the particle layer (`components/memory/avatarCloud.ts`). Baked once in a headless browser with three.js.
+- `public/avatar-poster.webp`: one idle frame of `public/avatar.glb`, rendered from the hero camera by `/?capture=1` at 900 × 1800 with a transparent background (20 KB). The still avatar in the first paint (`components/avatar/AvatarPoster.tsx`).
 
 ## Existing Mixamo gesture clips (hero)
 
