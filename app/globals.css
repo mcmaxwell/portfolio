@@ -179,7 +179,7 @@ html.lenis body {
   80% { transform: translate(3%, 3%); }
   100% { transform: translate(0, 0); }
 }
-html[data-experience] .grain {
+html[data-experience]:not([data-experience="hero"]) .grain {
   display: none;
 }
 
@@ -344,9 +344,13 @@ html.intro-seen .hero-letter {
   .hero-letter { transform: none; animation: none; }
 }
 
-/* ---------- Custom cursor (components/site/Cursor.tsx) ---------- */
+/* ---------- Custom cursor (components/site/Cursor.tsx) ----------
+   The shell leaves data-experience="hero" behind after an Exit, which is the page again, so the
+   custom cursor counts both "no attribute" and "hero" as the page owning the pointer. */
 html.has-cursor:not([data-experience]),
-html.has-cursor:not([data-experience]) * {
+html.has-cursor:not([data-experience]) *,
+html.has-cursor[data-experience="hero"],
+html.has-cursor[data-experience="hero"] * {
   cursor: none !important;
 }
-html[data-experience] .site-cursor { display: none; }
+html[data-experience]:not([data-experience="hero"]) .site-cursor { display: none; }
