@@ -97,6 +97,17 @@ const TalkingAvatar = () => {
   // IntroVideo keeps its own state and reports whether its cover is up (playing or fading). While it
   // is, the hero controls beneath it are inert, Play is ignored and the game prefetch waits.
   const [introActive, setIntroActive] = useState(false);
+  // While the film fully covers the hero, the avatar beneath it does not need to render: once it has
+  // loaded and drawn for a moment (shaders compiled), the loop sleeps until the hand-off starts. That
+  // leaves the GPU and main thread to the video for the length of the film.
+  const [introCovering, setIntroCovering] = useState(false);
+  const [avatarWarm, setAvatarWarm] = useState(false);
+  useEffect(() => {
+    if (!avatarReady) return;
+    const t = setTimeout(() => setAvatarWarm(true), 600);
+    return () => clearTimeout(t);
+  }, [avatarReady]);
+  const asleepUnderIntro = introCovering && avatarWarm;
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
   const GameInterface = shell.game?.module.GameInterface;
@@ -157,7 +168,7 @@ const TalkingAvatar = () => {
         {webgl && (
         <Canvas
           camera={{ position: [...HERO.cameraPosition], fov: HERO.fov }}
-          frameloop={shell.renderPaused || offscreen ? "never" : "always"}
+          frameloop={shell.renderPaused || offscreen || asleepUnderIntro ? "never" : "always"}
           onCreated={shell.onCanvasCreated}
         >
           {!inGame && <>
@@ -204,9 +215,9 @@ const TalkingAvatar = () => {
         )}
       </div>
 
-      {/* Cinematic intro (only when NEXT_PUBLIC_INTRO_VIDEO_URL is set): a z-30 cover over the hero chrome
-          that hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
-      <IntroVideo onActiveChange={setIntroActive} />
+      {/* Cinematic intro (first visit per tab, ?intro to replay): a z-30 cover over the hero chrome that
+          hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
+      <IntroVideo onActiveChange={setIntroActive} onCoveringChange={setIntroCovering} />
 
       {!capture && shell.chromeMounted && <>
       {/* Status line */}

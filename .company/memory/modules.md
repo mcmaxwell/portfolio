@@ -88,10 +88,10 @@ Keep one concise section per verified module. Do not duplicate the generated gra
 
 - Responsibility: Static served assets: the 3D avatar model, gesture animation clips, and portfolio SVG/PNG imagery and background.
 - Package root: public/
-- Entrypoints: public/avatar.glb (default AVATAR_URL), public/animations/*.glb (9 clips: wave, run, walk, dance, silly_dance, zombie, defeated, dodge, climb), public/*.svg and public/proj-*.png, public/bg.png
+- Entrypoints: public/avatar.glb (default AVATAR_URL), public/animations/*.glb (9 clips: wave, run, walk, dance, silly_dance, zombie, defeated, dodge, climb), public/*.svg and public/proj-*.webp, public/bg.png
 - Setup/development commands: n/a (served statically by Next)
 - Build/test/lint commands: n/a; tests: none
-- Dependencies and external services: Consumed by components/avatar (useGLTF loads /avatar.glb and /animations/<name>.glb via lib/gestures.GESTURE_URLS) and components/site (img src=/proj-*.png, /b1.svg, etc.).
+- Dependencies and external services: Consumed by components/avatar (useGLTF loads /avatar.glb and /animations/<name>.glb via lib/gestures.GESTURE_URLS) and components/site (img src=/proj-*.webp, /b1.svg, etc.).
 - Security and data boundaries: Public static files; CSP media-src/img-src/worker-src allow 'self' + blob (next.config.mjs:31-36). No secrets.
 - Key source files: public/avatar.glb, public/animations/wave.glb
 - Related tests: none

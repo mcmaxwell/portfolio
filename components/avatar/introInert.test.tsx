@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // While the intro video covers the hero, the controls beneath it must be inert (no Tab stop, no
 // click) and the game prefetch must not start; once the intro ends, Play behaves as before.
-// With NEXT_PUBLIC_INTRO_VIDEO_URL unset the hero is unchanged.
+// With NEXT_PUBLIC_INTRO_VIDEO_URL set to an empty string (intro off) the hero is unchanged.
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -73,7 +73,7 @@ describe("hero under the intro video", () => {
       expect(b.closest("[inert]")).not.toBeNull();
     }
     // The skip button belongs to the cover and stays live.
-    expect(screen.getByRole("button", { name: /skip intro/ }).closest("[inert]")).toBeNull();
+    expect(screen.getByRole("button", { name: /skip intro/i }).closest("[inert]")).toBeNull();
 
     // Programmatic focus, hover and press do not start the prefetch while the intro plays.
     fireEvent.focus(play);
@@ -93,7 +93,7 @@ describe("hero under the intro video", () => {
     expect(prefetchSpy).toHaveBeenCalledTimes(3);
   });
 
-  it("leaves the hero unchanged when the intro video URL is unset", async () => {
+  it("leaves the hero unchanged when the intro is turned off", async () => {
     const { container, play } = await mountHero(undefined);
     await act(async () => {});
     expect(container.querySelector("video")).toBeNull();

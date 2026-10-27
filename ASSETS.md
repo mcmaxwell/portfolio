@@ -44,9 +44,15 @@ node scripts/bake-avatar-look.mjs --original /path/to/avatar.original.glb
 The output is byte-identical on every run.
 Tool: `jpeg-js` 0.4.4 (dev dependency, pure JavaScript, so the bytes do not depend on the platform).
 
+### Size pass (2026-10-27)
+
+After the bake, `scripts/optimize-assets.mjs` shrank `public/avatar.glb` from 13.6 MB to 5.7 MB: morph-target deltas under 0.3 mm (normals 0.003) are zeroed and the morph targets stored as sparse accessors, and every texture is re-encoded as WebP (`EXT_texture_webp`, quality 88). Nodes, skin and joints are unchanged, and a side-by-side render of the hero shows no visible difference.
+To rebuild from scratch: run the clothing bake on the original, then the size pass on its output.
+
 ## Existing Mixamo gesture clips (hero)
 
 All nine files share: origin https://www.mixamo.com, provider Adobe Mixamo, terms per note 1 (date checked: not checked), downloaded by and when: unknown - to confirm by owner (added to the repo on 2026-07-02, commit a891bc4), exported with the Mixamo Beta mesh included (about 98% of each file is mesh data).
+On 2026-10-27 `scripts/optimize-assets.mjs` removed that mesh (and its skin and materials) and resampled the keys: the nine files went from 17 MB to under 1 MB together. The animation channels and target bones are unchanged.
 
 | File | Mixamo animation (as recorded by the M0 audit or the owner) | Derived outputs and modifications |
 |---|---|---|
@@ -136,3 +142,13 @@ The sky is a fragment shader (`components/game/world/sky.ts`); trees, lamps, bus
 Source and licence: written for this repository, same terms as the repository code; no third-party asset, no network fetch.
 Additional first-play bytes: 0 bytes of assets; about 11 KB gzip of game JavaScript (sum of per-chunk gzip, production build before and after: 1,291,564 to 1,302,567 bytes).
 Runtime memory: 12 tiling textures (512 x 512 and 256 x 256 with mipmaps) and 11 small canvases, roughly 10 MB of GPU memory.
+
+## Intro film (`public/intro`)
+
+| File | Source | Notes |
+| --- | --- | --- |
+| `intro-720.webm`, `intro-720.mp4` | the owner's AI-generated intro film (1920x1080, 24 fps, 49.7 s, 49 MB master, provided 2026-10-27) | 1280x720, cut at frame 1185 (the master ends on 0.25 s of black after the avatar shot). AV1 + Opus (SVT-AV1 CRF 44) and H.264 + AAC (x264 CRF 29, faststart) for Safari |
+| `intro-mobile.webm`, `intro-mobile.mp4` | same | centre 608x1080 crop scaled to 540x960, same cut and codecs (CRF 45 / 30) |
+| `intro-poster.webp`, `intro-poster-mobile.webp` | same | first frame of each cut |
+
+The hand-off in `components/avatar/IntroVideo.tsx` relies on the last frame: the avatar spans 2.5% to 97.5% of the frame height, centred. A new film must end the same way, or those numbers (`FILM_AVATAR`) must be re-measured.
