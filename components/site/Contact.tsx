@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { owner } from "@/lib/persona";
 import { RevealText, SectionLabel } from "./ui";
 import { Magnetic } from "./Cursor";
+import { LENS_PITCH } from "@/lib/memory/lenses";
+import { useLens } from "@/lib/memory/useLens";
 
 /** Maksym's local time, ticking each minute. Empty until mounted so server and client agree. */
 function LocalTime() {
@@ -51,6 +53,18 @@ function CopyEmail({ email }: { email: string }) {
   );
 }
 
+/** The line under the headline, in the words of whoever is reading (the "Who are you?" lens). */
+function Pitch() {
+  const { lens, chosen } = useLens();
+  return (
+    <p className="mt-10 max-w-xl text-base leading-relaxed text-term-fg/80 md:text-lg">
+      {chosen
+        ? LENS_PITCH[lens]
+        : "Tell me what your business needs: a website, an app, a voice agent, automated posts and ads, or something that doesn't have a name yet. I'm also open to AI and front-end roles. Send a line and I'll usually reply within a day."}
+    </p>
+  );
+}
+
 export function Contact() {
   return (
     <section id="contact" aria-label="Contact" className="relative overflow-hidden border-t border-term-line">
@@ -68,11 +82,7 @@ export function Contact() {
           className="font-display text-[15vw] font-medium leading-[0.9] tracking-[-0.05em] text-term-paper md:text-[10vw]"
         />
 
-        <p className="mt-10 max-w-xl text-base leading-relaxed text-term-fg/80 md:text-lg">
-          Tell me what your business needs: a website, an app, a voice agent, automated posts and ads, or something
-          that doesn&apos;t have a name yet. I&apos;m also open to AI and front-end roles. Send a line and I&apos;ll
-          usually reply within a day.
-        </p>
+        <Pitch />
 
         <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4">
         <a

@@ -15,6 +15,7 @@ import { Projects } from "@/components/site/Projects";
 import { Experience } from "@/components/site/Experience";
 import { Services } from "@/components/site/Services";
 import { Contact, SiteFooter } from "@/components/site/Contact";
+import { AskMemory } from "@/components/site/AskMemory";
 import { HeroBoundary } from "@/components/avatar/LoadBoundary";
 import { MemoryFieldSlot } from "@/components/memory/MemoryFieldSlot";
 
@@ -56,6 +57,7 @@ export default function Home() {
         <Projects />
         <Experience />
         <Services />
+        <AskMemory />
         <Contact />
         <SiteFooter />
         <div aria-hidden className="grain" />
