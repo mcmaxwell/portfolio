@@ -8,9 +8,9 @@ import { owner } from "@/lib/persona";
 
 const GA_ID = "G-RW77DJRDV1";
 const SITE_URL = "https://liutsko.me";
-const TITLE = `${owner.name} — ${owner.role}`;
+const TITLE = `${owner.name} | ${owner.role}`;
 const DESCRIPTION =
-  "Maksym Liutsko — AI Automation Engineer & Product Builder. Co-founder & CTO of XecSuite, co-founder of Apex Mind Automation. I build AI-integrated products, autonomous agents and end-to-end automation with React, TypeScript and LLMs.";
+  "Maksym Liutsko, AI Automation Engineer and Product Builder. Co-founder and CTO of XecSuite, co-founder of Apex Mind Automation. I build AI-integrated products, autonomous agents and end-to-end automation with React, TypeScript and LLMs.";
 
 // Self-hosted so the build needs no network. Weights 400 and 700 are the only
 // ones the site uses (default text and font-bold). Provenance: ASSETS.md.
@@ -23,11 +23,19 @@ const mono = localFont({
   display: "swap",
 });
 
+// Display face for headings and large type: one variable file, weights 300 to 700. Provenance: ASSETS.md.
+const display = localFont({
+  src: "./fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+  weight: "300 700",
+  variable: "--font-display",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: TITLE, template: `%s — ${owner.name}` },
+  title: { default: TITLE, template: `%s | ${owner.name}` },
   description: DESCRIPTION,
-  applicationName: `${owner.name} — Portfolio`,
+  applicationName: `${owner.name} Portfolio`,
   authors: [{ name: owner.name, url: SITE_URL }],
   creator: owner.name,
   keywords: [
@@ -89,7 +97,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${mono.variable} font-mono`} suppressHydrationWarning>
+      <body className={`${mono.variable} ${display.variable} font-display`} suppressHydrationWarning>
+        {/* Before first paint: skip the intro curtain on a repeat visit in this tab (Preloader.tsx). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(sessionStorage.getItem("ml-intro"))document.documentElement.classList.add("intro-seen")}catch(e){}`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

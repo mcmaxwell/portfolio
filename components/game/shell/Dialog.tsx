@@ -87,8 +87,8 @@ export function Dialog({
       <div
         className={
           wide
-            ? "max-h-[88vh] w-full max-w-2xl overflow-y-auto overscroll-contain border border-term-green bg-term-panel p-5 text-sm text-term-fg box-glow md:p-6"
-            : "w-full max-w-sm border border-term-green bg-term-panel p-6 text-sm text-term-fg box-glow"
+            ? "max-h-[88vh] w-full max-w-2xl overflow-y-auto overscroll-contain border border-term-accent bg-term-panel p-5 text-sm text-term-fg box-glow md:p-6"
+            : "w-full max-w-sm border border-term-accent bg-term-panel p-6 text-sm text-term-fg box-glow"
         }
       >
         {children}

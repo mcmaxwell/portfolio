@@ -70,10 +70,15 @@ export const gridItems = [
 ];
 
 // `link` starting with http is treated as an external (clickable) project;
-// otherwise it's marked "private". `tag` shows a small badge.
+// otherwise it's marked "private". `tag` shows a small badge. `role`, `summary` and
+// `stack` feed the site's work section; the game panels read `des` and `iconLists`.
 export const projects = [
   {
     id: 1,
+    role: "Co-founder & CTO",
+    summary:
+      "The AI operating layer for supply chain teams, run by an approval-gated agent workforce.",
+    stack: ["Next.js", "TypeScript", "Agents", "Hybrid model routing"],
     title: "XecSuite - AI Operating Layer for Supply Chain Teams",
     des: "The AI operating layer for supply chain teams in Canada and the United States. It connects your systems and company knowledge and puts them to work across freight, finance and customer operations. A tenant-private company-memory core plus connected modules - Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent and RFP - run by a governed, approval-gated agent workforce with hybrid model routing (private models for routine work, frontier models for high-stakes reasoning). Built and awarded at a Startup Weekend; now live.",
     img: "/proj-xecsuite.png",
@@ -83,8 +88,12 @@ export const projects = [
   },
   {
     id: 2,
-    title: "NewsStocks.live — Autonomous Financial-News Platform",
-    des: "A fully automated Next.js news platform. A cron pipeline pulls S&P 500 news, and GPT-4o-mini generates per-article summaries plus comprehensive market analysis (direction, confidence, key drivers, risk, sector outlooks, strategy). Images via a Pexels→DALL·E pipeline to Cloudinary, a Telegram bot broadcasts daily analysis, and the system auto-produces social posts and short-form videos for TikTok, YouTube, Instagram & Facebook. Admin dashboard, role-based auth, PIPEDA/CASL-compliant.",
+    role: "Built at Apex Mind",
+    summary:
+      "A news site that writes, illustrates and publishes itself, from S&P 500 headlines to short-form video.",
+    stack: ["Next.js", "GPT-4o-mini", "Cron pipelines", "Telegram"],
+    title: "NewsStocks.live - Autonomous Financial-News Platform",
+    des: "A fully automated Next.js news platform. A cron pipeline pulls S&P 500 news, and GPT-4o-mini generates per-article summaries plus comprehensive market analysis (direction, confidence, key drivers, risk, sector outlooks, strategy). Images via a Pexels to DALL·E pipeline to Cloudinary, a Telegram bot broadcasts daily analysis, and the system auto-produces social posts and short-form videos for TikTok, YouTube, Instagram and Facebook. Admin dashboard, role-based auth, PIPEDA/CASL-compliant.",
     img: "/proj-newsstocks.png",
     iconLists: ["/next.svg", "/ts.svg", "/tail.svg"],
     link: "https://newsstocks.live",
@@ -92,6 +101,10 @@ export const projects = [
   },
   {
     id: 3,
+    role: "Co-founder",
+    summary:
+      "An automation studio that takes the busywork out of small businesses in London, Ontario.",
+    stack: ["Automation", "LLMs", "GSAP", "Lenis"],
     title: "Apex Mind - AI Automation Studio",
     des: "Practical AI automation for 5-50 person businesses in London, ON: quoting, scheduling, invoicing, follow-ups, paperwork, phone calls and social posts. We map the week, build the automations into the tools you already run, and train your team to keep them going. Co-founded with Olha Liutsko; the marketing site is built with GSAP + Lenis.",
     img: "/proj-apexmind.png",
@@ -101,6 +114,10 @@ export const projects = [
   },
   {
     id: 9,
+    role: "Front-end developer and team lead",
+    summary:
+      "20+ online stores launched for retail brands in Canada, New Zealand and Australia.",
+    stack: ["Magento 2", "Knockout.js", "LESS/SASS", "Salesforce LWC"],
     title: "E-commerce - Magento / Adobe Commerce",
     des: "Successfully launched 20+ online stores. Six+ years building and supporting Magento 2 (Adobe Commerce) storefronts for retail brands across Canada, NZ and Australia: theme development, ongoing support, deep customization, custom checkout flows, and full from-scratch builds. Built with Knockout.js, jQuery, LESS/SASS and Gulp/Grunt pipelines, plus custom UI components and Figma-to-theme conversion.",
     img: "/proj-max.png",
@@ -118,6 +135,10 @@ export const projects = [
   },
   {
     id: 4,
+    role: "Built at Apex Mind",
+    summary:
+      "Recruiting on autopilot: answers candidates, books interviews and shortlists résumés.",
+    stack: ["Make.com", "n8n", "LLMs"],
     title: "AI HR Assistant",
     des: "End-to-end recruitment automation (Make.com / n8n + LLMs): answers candidate questions on social media, books interviews, parses and structures résumés, and shortlists candidates automatically.",
     iconLists: [],
@@ -125,6 +146,10 @@ export const projects = [
   },
   {
     id: 8,
+    role: "Designer & engineer",
+    summary:
+      "This site: a 3D avatar you can talk to, and a small world you can walk around.",
+    stack: ["React Three Fiber", "OpenAI Realtime", "WebRTC"],
     title: "AI Talking Avatar Portfolio",
     des: "This site: a real-time 3D avatar you can talk to. Built with React Three Fiber and the OpenAI Realtime API, with voice-driven navigation, gestures and live lip-sync.",
     iconLists: ["/re.svg", "/ts.svg", "/tail.svg", "/three.svg"],

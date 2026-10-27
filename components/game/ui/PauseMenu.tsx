@@ -20,7 +20,7 @@ export function PauseMenu({
   const resumeRef = useRef<HTMLButtonElement>(null);
   return (
     <Dialog labelledBy="pause-title" onClose={onResume} initialFocusRef={resumeRef}>
-      <h2 id="pause-title" className="mb-1 text-base font-bold text-term-green-bright">
+      <h2 id="pause-title" className="mb-1 text-base font-bold text-term-accent-bright">
         Paused
       </h2>
       <p className="mb-5 text-xs text-term-muted">
@@ -32,19 +32,19 @@ export function PauseMenu({
         <button
           ref={resumeRef}
           onClick={onResume}
-          className="border border-term-green bg-term-green/10 px-5 py-2 text-term-green-bright transition-colors hover:bg-term-green hover:text-term-bg"
+          className="border border-term-accent bg-term-accent/10 px-5 py-2 text-term-accent-bright transition-colors hover:bg-term-accent hover:text-term-bg"
         >
           [ resume ]
         </button>
         <button
           onClick={onRestart}
-          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-green hover:text-term-green-bright"
+          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-accent hover:text-term-accent-bright"
         >
           [ restart challenge ]
         </button>
         <button
           onClick={onExit}
-          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-green hover:text-term-green-bright"
+          className="border border-term-line px-5 py-2 text-term-muted transition-colors hover:border-term-accent hover:text-term-accent-bright"
         >
           [ exit to portfolio ]
         </button>

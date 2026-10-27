@@ -28,19 +28,23 @@ const config = {
     extend: {
       fontFamily: {
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        display: ["var(--font-display)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
+        // "Ink and ember": warm near-black, cream type, one ember-orange accent. (The `term` name
+        // is historical, from the old terminal theme; the game UI shares these tokens.)
         term: {
-          bg: "#050807",
-          panel: "#0a0f0d",
-          line: "#14241c",
-          green: "#4ade80",
-          "green-bright": "#7cffb0",
-          cyan: "#22d3ee",
-          amber: "#fbbf24",
-          fg: "#c7f5d9",
-          muted: "#5f8a72",
-          red: "#f87171",
+          bg: "#0c0c0b",
+          panel: "#151513",
+          line: "#2a2925",
+          accent: "#ff5b26",
+          "accent-bright": "#ff8a5c",
+          sand: "#d9cfc1",
+          amber: "#f2b544",
+          fg: "#d8d3ca",
+          muted: "#8c877e",
+          paper: "#f1ece3",
+          red: "#f06a5a",
         },
         black: {
           DEFAULT: "#000",

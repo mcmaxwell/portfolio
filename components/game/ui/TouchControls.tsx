@@ -124,7 +124,7 @@ export function TouchControls({
       />
       {/* joystick */}
       <div
-        className="pointer-events-auto absolute bottom-6 flex h-36 w-36 items-center justify-center rounded-full border border-term-green/60 bg-term-bg/50"
+        className="pointer-events-auto absolute bottom-6 flex h-36 w-36 items-center justify-center rounded-full border border-term-accent/60 bg-term-bg/50"
         style={{ left: "max(1rem, env(safe-area-inset-left))", marginBottom: "env(safe-area-inset-bottom)", touchAction: "none", ...fade }}
         data-joystick
         onPointerDown={(e) => {
@@ -143,14 +143,14 @@ export function TouchControls({
         <div
           aria-hidden="true"
           data-run-ring
-          className="pointer-events-none absolute rounded-full border border-dashed border-term-green/40"
+          className="pointer-events-none absolute rounded-full border border-dashed border-term-accent/40"
           style={{ width: RUN_RING * 2, height: RUN_RING * 2 }}
         />
-        <div ref={knobRef} className="h-14 w-14 rounded-full border border-term-green bg-term-green/20" />
+        <div ref={knobRef} className="h-14 w-14 rounded-full border border-term-accent bg-term-accent/20" />
       </div>
       {/* jump */}
       <button
-        className="pointer-events-auto absolute bottom-10 h-16 w-16 rounded-full border border-term-cyan bg-term-bg/50 text-xs text-term-cyan"
+        className="pointer-events-auto absolute bottom-10 h-16 w-16 rounded-full border border-term-sand bg-term-bg/50 text-xs text-term-sand"
         style={{ right: "max(1.5rem, env(safe-area-inset-right))", marginBottom: "env(safe-area-inset-bottom)", touchAction: "manipulation", ...fade }}
         aria-label="Jump"
         onPointerDown={(e) => {
@@ -164,7 +164,7 @@ export function TouchControls({
       {/* context interact: only while an interactable is in reach, at least 48 px */}
       {focused && (
         <button
-          className="pointer-events-auto absolute h-16 min-w-[4rem] rounded-full border border-term-green bg-term-bg/70 px-4 text-xs text-term-green-bright"
+          className="pointer-events-auto absolute h-16 min-w-[4rem] rounded-full border border-term-accent bg-term-bg/70 px-4 text-xs text-term-accent-bright"
           style={{
             right: "max(1.5rem, env(safe-area-inset-right))",
             bottom: "calc(7rem + env(safe-area-inset-bottom))",

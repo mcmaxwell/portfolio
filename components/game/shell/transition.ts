@@ -28,7 +28,7 @@ export const HERO = {
     fill: { position: [-3, 2, -2] as const, intensity: 0.5 },
   },
   /** Far fog in the hero scene: never visible, but keeps the shader programs equal to the game's. */
-  fog: { color: "#050807", near: 1000, far: 2000 },
+  fog: { color: "#0c0c0b", near: 1000, far: 2000 },
 } as const;
 
 export const TIMING = {

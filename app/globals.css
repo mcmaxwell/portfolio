@@ -68,7 +68,10 @@
 
 @layer base {
   * {
-    @apply border-border !scroll-smooth;
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
@@ -90,44 +93,34 @@
   touch-action: pan-y !important;
 }
 
-/* ---------- Terminal / cyber theme ---------- */
+/* ---------- Base theme ---------- */
 :root {
   color-scheme: dark;
 }
 
 body {
-  background-color: #050807;
-  color: #c7f5d9;
-  /* faint grid + radial glow for terminal atmosphere */
-  background-image:
-    radial-gradient(
-      ellipse 80% 60% at 50% -10%,
-      rgba(74, 222, 128, 0.08),
-      transparent 60%
-    ),
-    linear-gradient(rgba(74, 222, 128, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(74, 222, 128, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-color: #0c0c0b;
+  color: #d8d3ca;
 }
 
 ::selection {
-  background: #4ade80;
-  color: #050807;
+  background: #ff5b26;
+  color: #0c0c0b;
 }
 
-/* thin neon scrollbar */
+/* thin scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #050807;
+  background: #0c0c0b;
 }
 ::-webkit-scrollbar-thumb {
-  background: #14241c;
-  border: 2px solid #050807;
+  background: #2a2925;
+  border: 2px solid #0c0c0b;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a4a38;
+  background: #46443e;
 }
 
 /* scanline overlay — apply to a fixed full-screen element */
@@ -148,14 +141,65 @@ body {
 }
 
 .text-glow {
-  text-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
+  text-shadow: none;
 }
 
 /* a11y: visible keyboard focus */
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid #4ade80;
-  outline-offset: 2px;
+  outline: 2px solid #ff5b26;
+  outline-offset: 3px;
+}
+
+/* ---------- Smooth scroll (components/site/SmoothScroll.tsx, Lenis) ---------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* ---------- Editorial layer ---------- */
+/* Film grain over the page. Hidden while the 3D world is open, where it would only cost fill rate. */
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(6) infinite;
+}
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3%, 2%); }
+  40% { transform: translate(2%, -4%); }
+  60% { transform: translate(-4%, -1%); }
+  80% { transform: translate(3%, 3%); }
+  100% { transform: translate(0, 0); }
+}
+html[data-experience] .grain {
+  display: none;
+}
+
+/* Outlined display type */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(241, 236, 227, 0.4);
+}
+
+/* Underline that draws in on hover and focus */
+.link-draw {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-draw:hover,
+.link-draw:focus-visible {
+  background-size: 100% 1px;
 }
 
 /* a11y: honour reduced-motion (disables blinks, flicker, scanline animations) */
@@ -170,8 +214,7 @@ button:focus-visible {
   }
 }
 .box-glow {
-  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25),
-    0 0 18px -6px rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 0 1px rgba(255, 91, 38, 0.25);
 }
 
 /* ---------- Play transition (components/game/shell, play-transition.md) ---------- */
@@ -187,16 +230,20 @@ button:focus-visible {
 /* The side navigation lives outside the hero (app/page.tsx and Nav.tsx are untouched), so the
    shell drives it with html[data-experience]. Without these rules the game canvas (z-50) would
    cover it with a hard cut. */
-html[data-experience] nav {
+html[data-experience] nav,
+html[data-experience] [data-site-header] {
   transition: opacity 300ms cubic-bezier(0.4, 0, 1, 1), translate 300ms cubic-bezier(0.4, 0, 1, 1);
 }
 html[data-experience="leaving"] nav,
-html[data-experience="game"] nav {
+html[data-experience="game"] nav,
+html[data-experience="leaving"] [data-site-header],
+html[data-experience="game"] [data-site-header] {
   opacity: 0;
   translate: 24px 0;
   pointer-events: none;
 }
-html[data-experience="returning"] nav {
+html[data-experience="returning"] nav,
+html[data-experience="returning"] [data-site-header] {
   transition: opacity 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1);
 }
 /* The game owns touch gestures on the canvas; the hero keeps pan-y (rule above). */
@@ -208,6 +255,7 @@ html[data-experience="game"] #talk canvas {
    crossfade with no travel instead (play-transition.md 5). */
 @media (prefers-reduced-motion: reduce) {
   html[data-experience] nav,
+  html[data-experience] [data-site-header],
   [data-xfade] {
     transition-duration: 150ms !important;
     translate: none !important;
@@ -216,3 +264,89 @@ html[data-experience="game"] #talk canvas {
     transition-duration: 100ms !important;
   }
 }
+
+/* The top header leaves upward rather than sideways like the old side dots. */
+html[data-experience="leaving"] [data-site-header],
+html[data-experience="game"] [data-site-header] {
+  translate: 0 -24px;
+}
+
+/* The server-rendered hero name (components/site/HeroTitle.tsx) leaves with the hero chrome. */
+[data-hero-title] {
+  transition: opacity 300ms cubic-bezier(0, 0, 0.2, 1);
+}
+html[data-experience="leaving"] [data-hero-title],
+html[data-experience="game"] [data-hero-title] {
+  opacity: 0;
+  transition: opacity 300ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ---------- Intro preloader (components/site/Preloader.tsx) ----------
+   Pure CSS, so it runs from the first server-rendered paint and always clears itself, with or
+   without JavaScript. A tiny inline script in app/layout.tsx adds html.intro-seen on repeat visits
+   in the same tab session, and reduced motion skips it entirely. */
+@property --intro-n {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rem 1.25rem;
+  background: #0c0c0b;
+  color: #f1ece3;
+  clip-path: inset(0 0 0 0);
+  animation: preloader-out 1.1s cubic-bezier(0.76, 0, 0.24, 1) 1.55s forwards;
+}
+@media (min-width: 768px) {
+  .preloader { padding: 2.5rem; }
+}
+.preloader-count::after {
+  counter-reset: intro var(--intro-n);
+  content: counter(intro);
+  animation: intro-count 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.preloader-bar {
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: intro-bar 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.preloader-word {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: intro-word 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes intro-count { to { --intro-n: 100; } }
+@keyframes intro-bar { to { transform: scaleX(1); } }
+@keyframes intro-word { to { transform: translateY(0); } }
+@keyframes preloader-out {
+  to { clip-path: inset(0 0 100% 0); visibility: hidden; }
+}
+html.intro-seen .preloader { display: none; }
+
+/* Hero letters rise after the curtain lifts (or right away on a repeat visit). */
+.hero-letter {
+  display: inline-block;
+  transform: translateY(105%);
+  animation: intro-word 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(1.75s + var(--i) * 45ms);
+}
+html.intro-seen .hero-letter {
+  animation-delay: calc(0.1s + var(--i) * 45ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .preloader { display: none; }
+  .hero-letter { transform: none; animation: none; }
+}
+
+/* ---------- Custom cursor (components/site/Cursor.tsx) ---------- */
+html.has-cursor:not([data-experience]),
+html.has-cursor:not([data-experience]) * {
+  cursor: none !important;
+}
+html[data-experience] .site-cursor { display: none; }
