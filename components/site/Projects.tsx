@@ -187,7 +187,7 @@ function Featured({
         style={{ scale, top: stack ? `calc(-4vh + ${index * 28}px)` : undefined }}
         className="relative w-full origin-top rounded-[28px] border border-term-line bg-term-panel p-5 md:p-8 lg:p-10"
       >
-        <div className="grid items-center gap-8 md:grid-cols-12 md:gap-12">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-8 md:grid-cols-12 md:gap-12">
           <div className={`md:col-span-7 ${flip ? "md:order-2" : ""}`}>
             {external ? (
               <a href={p.link} target="_blank" rel="noopener noreferrer" tabIndex={-1} aria-hidden data-cursor="Visit">
@@ -204,7 +204,7 @@ function Featured({
                 <span className="h-px w-8 bg-term-line" />
                 <span>{p.role}</span>
               </div>
-              <h3 className="font-display text-5xl font-medium leading-none tracking-[-0.03em] text-term-paper md:text-6xl">{name}</h3>
+              <h3 className="font-display text-4xl font-medium leading-none tracking-[-0.03em] text-term-paper sm:text-5xl md:text-6xl">{name}</h3>
               {subtitle && <p className="mt-3 text-sm text-term-muted">{subtitle}</p>}
               <p className="mt-6 text-lg leading-snug text-term-paper/90 md:text-xl">{p.summary}</p>
               <p className="mt-4 text-sm leading-relaxed text-term-fg/70">{p.des}</p>
