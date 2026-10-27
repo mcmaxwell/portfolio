@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { MotionConfig } from "framer-motion";
 
 import { Nav } from "@/components/site/Nav";
 import { HeroTitle } from "@/components/site/HeroTitle";
@@ -22,26 +23,34 @@ const TalkingAvatar = dynamic(
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-term-bg text-term-fg">
-      <span id="top" className="absolute top-0" />
-      <Preloader />
-      <SmoothScroll />
-      <Cursor />
-      <Nav />
+    <MotionConfig reducedMotion="user">
+      <main className="relative min-h-screen bg-term-bg text-term-fg">
+        <span id="top" className="absolute top-0" />
+        <a
+          href="#about"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-full focus:bg-term-accent focus:px-5 focus:py-2.5 focus:text-sm focus:font-bold focus:text-term-bg"
+        >
+          Skip to content
+        </a>
+        <Preloader />
+        <SmoothScroll />
+        <Cursor />
+        <Nav />
 
-      {/* Hero: the server-rendered name sits behind the talking avatar's transparent canvas */}
-      <div className="relative">
-        <HeroTitle />
-        <TalkingAvatar />
-      </div>
+        {/* Hero: the server-rendered name sits behind the talking avatar's transparent canvas */}
+        <div className="relative">
+          <HeroTitle />
+          <TalkingAvatar />
+        </div>
 
-      <Marquee />
-      <About />
-      <Projects />
-      <Experience />
-      <Contact />
-      <SiteFooter />
-      <div aria-hidden className="grain" />
-    </main>
+        <Marquee />
+        <About />
+        <Projects />
+        <Experience />
+        <Contact />
+        <SiteFooter />
+        <div aria-hidden className="grain" />
+      </main>
+    </MotionConfig>
   );
 }

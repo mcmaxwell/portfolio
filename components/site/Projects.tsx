@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { animate, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { animate, motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { projects } from "@/data";
 import { Magnetic } from "./Cursor";
-import { EASE_OUT_EXPO, FadeIn, RevealText, SectionLabel } from "./ui";
+import { EASE_OUT_EXPO, FadeIn, RevealText, SectionLabel, useReducedMotion } from "./ui";
 
 type Project = {
   id: number;

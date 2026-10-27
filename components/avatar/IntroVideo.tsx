@@ -47,6 +47,9 @@ const MATCH_MS = 1100;
 const DISSOLVE_MS = 700;
 const SKIP_MS = 400;
 const EASE = "cubic-bezier(0.76, 0, 0.24, 1)";
+// The live avatar (a 4 MB model, then shader compiles) starts loading this many seconds before the
+// film ends, so the download and the main-thread work do not compete with the film's opening.
+const AVATAR_LEAD_S = 25;
 // The first-visit curtain (Preloader, globals.css) starts lifting 1.55 s after the first paint.
 const CURTAIN_LIFT_MS = 1550;
 
@@ -69,6 +72,11 @@ function shouldPlay() {
   } catch {
     return true;
   }
+}
+
+/** Whether the intro will play on this page load (the hero holds the avatar back until its cue). */
+export function introWillPlay() {
+  return shouldPlay() && pickCut() !== null;
 }
 
 // Time left until the curtain starts lifting, so the film's opening is not spent behind it.
@@ -104,9 +112,11 @@ type Props = {
   onActiveChange?: (active: boolean) => void;
   /** True only while the film fully covers the hero (before the hand-off starts). */
   onCoveringChange?: (covering: boolean) => void;
+  /** Called once, when the hero should start loading the live avatar for the hand-off. */
+  onAvatarCue?: () => void;
 };
 
-export const IntroVideo = ({ onActiveChange, onCoveringChange }: Props) => {
+export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Props) => {
   const [phase, setPhase] = useState<Phase>("off");
   const [cut, setCut] = useState<Cut | null>(null);
   const [muted, setMuted] = useState(true);
@@ -116,6 +126,14 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
+  const cueRef = useRef(onAvatarCue);
+  cueRef.current = onAvatarCue;
+  const cued = useRef(false);
+  const cueAvatar = useCallback(() => {
+    if (cued.current) return;
+    cued.current = true;
+    cueRef.current?.();
+  }, []);
 
   useEffect(() => {
     if (!shouldPlay()) return;
@@ -150,11 +168,12 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange }: Props) => {
   };
 
   const dissolve = useCallback((ms: number) => {
+    cueAvatar();
     markSeen();
     setFadeMs(ms);
     setPhase("dissolving");
     later(() => setPhase("off"), ms);
-  }, [later]);
+  }, [later, cueAvatar]);
 
   // The film ended on the avatar: glide the held frame onto the live avatar, then dissolve.
   const handOff = () => {
@@ -177,7 +196,7 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange }: Props) => {
     return () => clearTimeout(t);
   }, [phase, cut, dissolve]);
 
-  // A thin progress line, written straight to the DOM once per frame.
+  // A thin progress line, written straight to the DOM once per frame. The same tick cues the avatar.
   useEffect(() => {
     if (phase !== "playing") return;
     let raf = 0;
@@ -185,12 +204,13 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange }: Props) => {
       const v = videoRef.current;
       if (v && barRef.current && v.duration) {
         barRef.current.style.transform = `scaleX(${v.currentTime / v.duration})`;
+        if (v.duration - v.currentTime <= AVATAR_LEAD_S) cueAvatar();
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase]);
+  }, [phase, cueAvatar]);
 
   const toggleSound = () => {
     const v = videoRef.current;

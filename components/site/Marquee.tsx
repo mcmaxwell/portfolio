@@ -6,13 +6,13 @@ import {
   useAnimationFrame,
   useInView,
   useMotionValue,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
   useVelocity,
   wrap,
 } from "framer-motion";
+import { useReducedMotion } from "./ui";
 
 const CAPABILITIES = [
   "AI agents",
