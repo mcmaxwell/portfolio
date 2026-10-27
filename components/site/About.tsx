@@ -6,7 +6,7 @@ import { owner, skills } from "@/lib/persona";
 import { FadeIn, SectionLabel, useReducedMotion } from "./ui";
 
 const STATEMENT =
-  "I build AI products that do real work. Agents, voice interfaces and automation, sitting on twelve years of front-end craft.";
+  "I build what a business runs on. Websites, apps, AI agents and the automation between them, backed by twelve years of shipping.";
 
 const STATS = [
   { value: 12, suffix: "+", label: "years building for the web" },

@@ -8,7 +8,8 @@ const items = [
   { watch: "about", href: "#about", label: "About", index: "01" },
   { watch: "projects", href: "#projects", label: "Work", index: "02" },
   { watch: "experience", href: "#experience", label: "Career", index: "03" },
-  { watch: "contact", href: "#contact", label: "Contact", index: "04" },
+  { watch: "services", href: "#services", label: "Services", index: "04" },
+  { watch: "contact", href: "#contact", label: "Contact", index: "05" },
 ];
 
 /**

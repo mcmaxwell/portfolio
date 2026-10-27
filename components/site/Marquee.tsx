@@ -15,14 +15,14 @@ import {
 import { useReducedMotion } from "./ui";
 
 const CAPABILITIES = [
+  "Websites",
+  "Web & mobile apps",
+  "AI voice agents",
   "AI agents",
-  "Voice interfaces",
-  "Multi-agent orchestration",
+  "Social automation",
+  "Video ads",
   "Automation pipelines",
-  "React & Next.js",
-  "TypeScript",
   "Three.js",
-  "Adobe Commerce",
 ];
 
 /**

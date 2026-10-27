@@ -44,7 +44,7 @@ export async function GET() {
                 properties: {
                   section: {
                     type: "string",
-                    enum: ["top", "about", "projects", "experience", "contact"],
+                    enum: ["top", "about", "projects", "experience", "services", "contact"],
                     description: "Which section to scroll to.",
                   },
                 },
