@@ -31,15 +31,16 @@ export function Contact() {
         className="pointer-events-none absolute left-1/2 top-0 h-[60vh] w-[90vw] -translate-x-1/2 -translate-y-1/3 rounded-full bg-term-accent/10 blur-[120px]"
       />
       <div className="relative mx-auto w-full max-w-[1400px] px-5 py-24 md:px-10 md:py-40">
-        <SectionLabel index="04" label="Contact" />
+        <SectionLabel index="05" label="Contact" />
         <RevealText
           text="Let's build something."
           className="font-display text-[15vw] font-medium leading-[0.9] tracking-[-0.05em] text-term-paper md:text-[10vw]"
         />
 
         <p className="mt-10 max-w-xl text-base leading-relaxed text-term-fg/80 md:text-lg">
-          I&apos;m open to AI and front-end roles, product collaborations and automation projects. Send a line and
-          I&apos;ll usually reply within a day.
+          Tell me what your business needs: a website, an app, a voice agent, automated posts and ads, or something
+          that doesn&apos;t have a name yet. I&apos;m also open to AI and front-end roles. Send a line and I&apos;ll
+          usually reply within a day.
         </p>
 
         <a

@@ -17,7 +17,7 @@ export function HeroTitle() {
       <div className="absolute bottom-10 left-10 hidden max-w-[16rem] text-xs leading-relaxed text-term-muted md:block">
         <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-term-accent">Role</p>
         <p className="text-term-paper">AI Automation Engineer &amp; Product Builder</p>
-        <p>Co-founder &amp; CTO, XecSuite</p>
+        <p>Websites, apps, AI agents and automation</p>
       </div>
       <div className="absolute bottom-10 right-10 hidden text-right text-xs leading-relaxed text-term-muted md:block">
         <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-term-accent">Based in</p>

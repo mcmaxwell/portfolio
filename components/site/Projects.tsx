@@ -229,43 +229,9 @@ function Featured({
   );
 }
 
-/** A compact row for work without a screenshot. */
-function Row({ p, index }: { p: Project; index: number }) {
-  const [name] = splitTitle(p.title);
-  const external = isExternal(p);
-  const body = (
-    <>
-      <span className="text-xs text-term-accent md:col-span-1">{String(index + 1).padStart(2, "0")}</span>
-      <span className="font-display text-3xl font-medium tracking-tight text-term-paper transition-transform duration-500 group-hover:translate-x-2 md:col-span-4 md:text-4xl">
-        {name}
-      </span>
-      <span className="text-sm leading-relaxed text-term-fg/75 md:col-span-5">{p.summary}</span>
-      <span className="text-xs text-term-muted md:col-span-2 md:text-right">
-        {external ? (
-          <span className="text-term-paper transition-colors group-hover:text-term-accent">
-            Visit ↗<span className="sr-only"> (opens in a new tab)</span>
-          </span>
-        ) : (
-          "Private"
-        )}
-      </span>
-    </>
-  );
-  const cls =
-    "group grid items-baseline gap-3 border-t border-term-line py-8 transition-colors hover:bg-term-panel/60 md:grid-cols-12 md:gap-6 md:px-3";
-  return external ? (
-    <a href={p.link} target="_blank" rel="noopener noreferrer" className={cls} data-cursor="Visit">
-      {body}
-    </a>
-  ) : (
-    <div className={cls}>{body}</div>
-  );
-}
-
 export function Projects() {
   const all: readonly Project[] = projects;
   const featured = all.filter((p) => p.img);
-  const more = all.filter((p) => !p.img);
   const stackRef = useRef<HTMLDivElement>(null);
   const stack = useStackMode();
   const { scrollYProgress } = useScroll({ target: stackRef, offset: ["start start", "end end"] });
@@ -283,18 +249,6 @@ export function Projects() {
         ))}
       </div>
 
-      {more.length > 0 && (
-        <div className="mt-28 md:mt-48">
-          <FadeIn>
-            <h3 className="mb-8 font-display text-3xl font-medium tracking-tight text-term-paper md:text-5xl">Also built</h3>
-          </FadeIn>
-          <div className="border-b border-term-line">
-            {more.map((p, i) => (
-              <Row key={p.id} p={p} index={featured.length + i} />
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   );
 }

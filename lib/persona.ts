@@ -93,6 +93,69 @@ export const experience = [
   },
 ];
 
+/**
+ * What clients can hire Maksym to build. Shown in the Services section and fed to llms.txt, the
+ * structured data and the avatar. Every `proof` line points at work listed elsewhere on the site.
+ */
+export const services = [
+  {
+    id: "websites",
+    title: "Websites of any kind",
+    summary:
+      "Marketing sites, online stores, landing pages, booking flows and immersive 3D experiences. Fast, accessible, and easy for your team to update.",
+    proof: ["20+ online stores launched on Adobe Commerce", "Rebuilt slow sites from ~30s to ~3s loads"],
+    tags: ["Next.js", "Magento", "WordPress", "Three.js"],
+  },
+  {
+    id: "apps",
+    title: "Web and mobile apps",
+    summary:
+      "Products from first sketch to production: web apps, mobile apps, dashboards and the backend under them, with accounts, payments and data done properly.",
+    proof: ["OwnerSteps: Next.js web app plus Expo mobile app", "FrameForge AI: a full-stack film studio"],
+    tags: ["React", "Expo", "Node.js", "Supabase", "Stripe"],
+  },
+  {
+    id: "voice",
+    title: "AI voice agents",
+    summary:
+      "Assistants that talk with your customers in real time, answer questions, take bookings and hand off to a person when they should.",
+    proof: ["Realtime voice assistant in XecSuite", "OwnerSteps: voice-first assistant that confirms before any change"],
+    tags: ["OpenAI Realtime", "LiveKit", "WebRTC", "ElevenLabs"],
+  },
+  {
+    id: "agents",
+    title: "AI agents and automation",
+    summary:
+      "Agents and workflows that take the repetitive work off your team: quoting, scheduling, invoicing, follow-ups, support answers and paperwork.",
+    proof: ["XecSuite support agent on a self-hosted model", "A Claude Code multi-agent team used on real products"],
+    tags: ["Claude", "OpenAI", "n8n", "Make.com", "MCP"],
+  },
+  {
+    id: "social",
+    title: "Social media on autopilot",
+    summary:
+      "Posts that get written, designed and published on a schedule across Instagram, Facebook, TikTok, YouTube and LinkedIn, with you approving what goes out.",
+    proof: ["NewsStocks publishes to TikTok, YouTube, Instagram and Facebook", "OwnerSteps schedules posts to three networks"],
+    tags: ["Meta API", "TikTok", "YouTube", "Telegram"],
+  },
+  {
+    id: "ads",
+    title: "Ads, made and posted for you",
+    summary:
+      "Ad creatives generated from your products and offers, in every size and copy variant you need, then posted and refreshed without anyone babysitting it.",
+    proof: ["OwnerSteps marketing kit: flyers, cards and social posts", "Image pipelines with DALL·E and Cloudinary"],
+    tags: ["Image generation", "Copywriting", "Scheduling"],
+  },
+  {
+    id: "video",
+    title: "Video ads",
+    summary:
+      "Short video ads with AI voiceover, presenters and generated footage, cut to length and exported for every platform.",
+    proof: ["NewsStocks short videos with ElevenLabs, HeyGen and Kling", "FrameForge AI: spoken idea to finished MP4"],
+    tags: ["HeyGen", "Kling AI", "ElevenLabs", "FFmpeg"],
+  },
+] as const;
+
 export const education = [
   "Adobe Certified Expert, Adobe Commerce Front-End Developer (2022)",
   "Meta, The Full Stack (2024)",
@@ -124,6 +187,7 @@ export function buildInstructions(): string {
     .map((e) => `- ${e.role} @ ${e.company} (${e.period}): ${e.detail}`)
     .join("\n");
   const eduLines = education.map((e) => `- ${e}`).join("\n");
+  const serviceLines = services.map((s) => `- ${s.title}: ${s.summary}`).join("\n");
 
   return [
     `You are a friendly, concise 3D avatar embedded in ${owner.name}'s developer portfolio website. You speak ON BEHALF of ${owner.name}.`,
@@ -140,12 +204,15 @@ export function buildInstructions(): string {
     "",
     "Education & certifications:",
     eduLines,
+    "",
+    "What I build for clients (not only front end; I take on anything a business needs built in software):",
+    serviceLines,
     extraKnowledge.trim() ? `\nExtra info:\n${extraKnowledge.trim()}` : "",
     "",
     "Behaviour rules:",
     "- Keep replies short and conversational — this is spoken aloud, so 1-3 sentences.",
     "- Be warm, upbeat and professional; speak in the first person as Maksym.",
-    "- You can navigate the website: when the visitor asks to see a section (about, projects, experience, contact) or to go to the top, call the navigate_to_section tool, then briefly say what you're showing them.",
+    "- You can navigate the website: when the visitor asks to see a section (about, projects, experience, services, contact) or to go to the top, call the navigate_to_section tool, then briefly say what you're showing them.",
     "- You have a body and can perform gestures: when asked to wave, dance, run, walk, or do a move, call the play_gesture tool with the matching gesture, then react playfully.",
     "- For hiring or collaboration, invite them to reach out by email or LinkedIn.",
     "- Never invent facts, jobs, or projects that aren't listed above.",

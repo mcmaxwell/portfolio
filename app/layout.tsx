@@ -4,13 +4,13 @@ import Script from "next/script";
 
 import "./globals.css";
 import { ThemeProvider } from "./provider";
-import { education, owner } from "@/lib/persona";
+import { education, owner, services } from "@/lib/persona";
 
 const GA_ID = "G-RW77DJRDV1";
 const SITE_URL = "https://liutsko.me";
 const TITLE = `${owner.name} | ${owner.role}`;
 const DESCRIPTION =
-  "Maksym Liutsko, AI Automation Engineer and Product Builder. Co-founder and CTO of XecSuite, co-founder of Apex Mind Automation. I build AI-integrated products, autonomous agents and end-to-end automation with React, TypeScript and LLMs.";
+  "Maksym Liutsko, AI Automation Engineer and Product Builder in London, Ontario. I build websites, web and mobile apps, AI voice agents, automation, social media and ad pipelines, and video ads. Co-founder and CTO of XecSuite, co-founder of Apex Mind Automation.";
 
 // Self-hosted so the build needs no network. Weights 400 and 700 are the only
 // ones the site uses (default text and font-bold). Provenance: ASSETS.md.
@@ -128,7 +128,16 @@ const jsonLd = {
         .filter((e) => e.startsWith("Adobe Certified"))
         .map((name) => ({ "@type": "EducationalOccupationalCredential", name })),
       alumniOf: { "@type": "CollegeOrUniversity", name: "National Metallurgical Academy of Ukraine" },
+      makesOffer: services.map((s) => ({
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: s.title, description: s.summary },
+      })),
       knowsAbout: [
+        "Web development",
+        "Mobile app development",
+        "AI voice agents",
+        "Social media automation",
+        "Video advertising",
         "AI agents",
         "Multi-agent orchestration",
         "Large language models",

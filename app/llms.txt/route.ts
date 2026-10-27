@@ -1,5 +1,5 @@
 import { projects } from "@/data";
-import { education, experience, owner, skills } from "@/lib/persona";
+import { education, experience, owner, services, skills } from "@/lib/persona";
 
 export const dynamic = "force-static";
 
@@ -23,6 +23,12 @@ ${owner.about}
 - Email: ${owner.email}
 - LinkedIn: ${owner.linkedin}
 - GitHub: https://github.com/mcmaxwell
+
+## Services
+
+Not only front end: I build whatever a business needs in software.
+
+${services.map((s) => `- ${s.title}: ${s.summary} Proof: ${s.proof.join("; ")}.`).join("\n")}
 
 ## Selected work
 

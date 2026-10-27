@@ -12,6 +12,7 @@ import { Marquee } from "@/components/site/Marquee";
 import { About } from "@/components/site/About";
 import { Projects } from "@/components/site/Projects";
 import { Experience } from "@/components/site/Experience";
+import { Services } from "@/components/site/Services";
 import { Contact, SiteFooter } from "@/components/site/Contact";
 import { HeroBoundary } from "@/components/avatar/LoadBoundary";
 
@@ -50,6 +51,7 @@ export default function Home() {
         <About />
         <Projects />
         <Experience />
+        <Services />
         <Contact />
         <SiteFooter />
         <div aria-hidden className="grain" />
