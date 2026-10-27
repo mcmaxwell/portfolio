@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
-// Cinematic intro that plays over the avatar hero and hands off to the live 3D avatar. The film's
+// Cinematic film that plays over the avatar hero and hands off to the live 3D avatar. It no longer
+// starts by itself: the visitor opens it with the hero's "Watch the film" button (or ?intro). The film's
 // last shot is the avatar alone on a dark ground; when it ends, the held frame is scaled and moved
 // so that avatar lands exactly on the live one, then the cover dissolves into the canvas beneath.
 //
@@ -42,7 +43,6 @@ export const LIVE_AVATAR = { top: 0.124, bottom: 0.799 };
 // The film's own background, so the scaled-down frame has no visible edge on the cover.
 const FILM_BG = "#030404";
 
-const SEEN_KEY = "intro-video-seen";
 const MATCH_MS = 1100;
 const DISSOLVE_MS = 700;
 const SKIP_MS = 400;
@@ -60,23 +60,20 @@ function pickCut(): Cut | null {
   return mobile && window.innerHeight > window.innerWidth ? BUILT_IN.mobile : BUILT_IN.desktop;
 }
 
-function shouldPlay() {
+// Only ?intro starts the film on load (for replays and screenshots); otherwise it waits for a click.
+function shouldAutoplay() {
   const params = new URLSearchParams(window.location.search);
-  if (params.has("capture")) return false;
-  if (params.has("intro")) return true;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    return false;
-  }
-  try {
-    return !sessionStorage.getItem(SEEN_KEY);
-  } catch {
-    return true;
-  }
+  return params.has("intro") && !params.has("capture");
 }
 
-/** Whether the intro will play on this page load (the hero holds the avatar back until its cue). */
+/** Whether the film will play on this page load (the hero holds the avatar back until its cue). */
 export function introWillPlay() {
-  return shouldPlay() && pickCut() !== null;
+  return shouldAutoplay() && pickCut() !== null;
+}
+
+/** Whether there is a film to offer at all (NEXT_PUBLIC_INTRO_VIDEO_URL="" turns it off). */
+export function introAvailable() {
+  return pickCut() !== null;
 }
 
 // Time left until the curtain starts lifting, so the film's opening is not spent behind it.
@@ -114,9 +111,11 @@ type Props = {
   onCoveringChange?: (covering: boolean) => void;
   /** Called once, when the hero should start loading the live avatar for the hand-off. */
   onAvatarCue?: () => void;
+  /** Bumped by the hero's "Watch the film" button: each new value plays the film from the start. */
+  requestKey?: number;
 };
 
-export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Props) => {
+export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue, requestKey = 0 }: Props) => {
   const [phase, setPhase] = useState<Phase>("off");
   const [cut, setCut] = useState<Cut | null>(null);
   const [muted, setMuted] = useState(true);
@@ -135,13 +134,23 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Pr
     cueRef.current?.();
   }, []);
 
-  useEffect(() => {
-    if (!shouldPlay()) return;
+  const start = useCallback((withSound: boolean) => {
     const picked = pickCut();
     if (!picked) return;
     setCut(picked);
+    setMatch(null);
+    setMuted(!withSound);
     setPhase("playing");
   }, []);
+
+  useEffect(() => {
+    if (shouldAutoplay()) start(false);
+  }, [start]);
+
+  // A click is a user gesture, so the requested film may start with its sound on.
+  useEffect(() => {
+    if (requestKey > 0) start(true);
+  }, [requestKey, start]);
 
   // Report the cover's presence so the hero controls beneath it can be made inert while it is up.
   const active = phase !== "off" && !!cut;
@@ -161,15 +170,8 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Pr
     timers.current.push(window.setTimeout(fn, ms));
   }, []);
 
-  const markSeen = () => {
-    try {
-      sessionStorage.setItem(SEEN_KEY, "1");
-    } catch {}
-  };
-
   const dissolve = useCallback((ms: number) => {
     cueAvatar();
-    markSeen();
     setFadeMs(ms);
     setPhase("dissolving");
     later(() => setPhase("off"), ms);
@@ -181,7 +183,6 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Pr
     const box = coverRef.current?.getBoundingClientRect();
     const transform = video && box ? matchTransform(box, video) : null;
     if (!transform) return dissolve(SKIP_MS);
-    markSeen();
     setMatch(transform);
     setPhase("matching");
     later(() => dissolve(DISSOLVE_MS), MATCH_MS);
@@ -189,9 +190,17 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Pr
 
   useEffect(() => {
     if (phase !== "playing") return;
-    // Start as the curtain lifts. Autoplay can be blocked (low-power mode): skip to the avatar.
+    // Start as the curtain lifts. Playback with sound can be refused: retry muted, and if even that is
+    // blocked (low-power mode) go straight back to the avatar.
     const t = window.setTimeout(() => {
-      videoRef.current?.play().catch(() => dissolve(SKIP_MS));
+      const v = videoRef.current;
+      if (!v) return;
+      v.currentTime = 0;
+      v.play().catch(() => {
+        v.muted = true;
+        setMuted(true);
+        v.play().catch(() => dissolve(SKIP_MS));
+      });
     }, curtainDelay());
     return () => clearTimeout(t);
   }, [phase, cut, dissolve]);
@@ -280,7 +289,7 @@ export const IntroVideo = ({ onActiveChange, onCoveringChange, onAvatarCue }: Pr
           <span>{muted ? "Sound on" : "Sound off"}</span>
         </button>
         <button type="button" onClick={() => dissolve(SKIP_MS)} className={pill}>
-          Skip intro
+          Skip film
         </button>
       </div>
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-term-paper/10" style={{ opacity: controlsShown ? 1 : 0 }}>

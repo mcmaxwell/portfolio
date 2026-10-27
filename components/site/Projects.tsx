@@ -204,7 +204,7 @@ function Featured({
                 <span className="h-px w-8 bg-term-line" />
                 <span>{p.role}</span>
               </div>
-              <h3 className="font-display text-5xl font-medium leading-none tracking-[-0.03em] text-term-paper md:text-6xl">{name}</h3>
+              <h3 className="font-display text-[clamp(2.25rem,10vw,3rem)] font-medium leading-none [overflow-wrap:anywhere] tracking-[-0.03em] text-term-paper md:text-6xl">{name}</h3>
               {subtitle && <p className="mt-3 text-sm text-term-muted">{subtitle}</p>}
               <p className="mt-6 text-lg leading-snug text-term-paper/90 md:text-xl">{p.summary}</p>
               <p className="mt-4 text-sm leading-relaxed text-term-fg/70">{p.des}</p>

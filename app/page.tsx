@@ -8,6 +8,7 @@ import { HeroTitle } from "@/components/site/HeroTitle";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
 import { Preloader } from "@/components/site/Preloader";
 import { Cursor } from "@/components/site/Cursor";
+import { TabPresence } from "@/components/site/TabPresence";
 import { Marquee } from "@/components/site/Marquee";
 import { About } from "@/components/site/About";
 import { Projects } from "@/components/site/Projects";
@@ -26,7 +27,7 @@ const TalkingAvatar = dynamic(
 export default function Home() {
   return (
     <MotionConfig reducedMotion="user">
-      <main className="relative min-h-screen bg-term-bg text-term-fg">
+      <main className="relative min-h-screen bg-term-bg text-term-fg [overflow-x:clip]">
         <span id="top" className="absolute top-0" />
         <a
           href="#about"
@@ -37,6 +38,7 @@ export default function Home() {
         <Preloader />
         <SmoothScroll />
         <Cursor />
+        <TabPresence />
         <Nav />
 
         {/* Hero: the server-rendered name sits behind the talking avatar's transparent canvas */}

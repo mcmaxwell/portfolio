@@ -6,7 +6,7 @@ import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
-import { IntroVideo, introWillPlay } from "./IntroVideo";
+import { IntroVideo, introAvailable, introWillPlay } from "./IntroVideo";
 import { RetryBoundary } from "./LoadBoundary";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
@@ -41,7 +41,7 @@ function CameraRig() {
 }
 
 const statusLabel: Record<ChatStatus, string> = {
-  idle: "Voice chat is off",
+  idle: "",
   connecting: "Connecting…",
   listening: "Listening, just speak",
   speaking: "Speaking…",
@@ -49,6 +49,17 @@ const statusLabel: Record<ChatStatus, string> = {
 };
 
 const INERT = { inert: "", "aria-hidden": true } as Record<string, string | boolean>;
+
+const TOOL_PILL =
+  "flex items-center gap-2 rounded-full border border-term-line bg-term-bg/70 px-3.5 py-1.5 text-xs text-term-paper backdrop-blur transition-colors hover:border-term-accent hover:text-term-accent disabled:opacity-50";
+
+function PlayIcon() {
+  return (
+    <svg aria-hidden width="10" height="10" viewBox="0 0 10 10" className="fill-term-accent">
+      <path d="M2 1.2v7.6L8.6 5z" />
+    </svg>
+  );
+}
 
 const TalkingAvatar = () => {
   const gestureRef = useRef<GestureTrigger>({ seq: 0, name: null });
@@ -127,6 +138,19 @@ const TalkingAvatar = () => {
   // and the empty canvas does not render until then either.
   const [avatarCued, setAvatarCued] = useState(() => !introWillPlay());
   const cueAvatar = useCallback(() => setAvatarCued(true), []);
+  // The film and the gesture list stay behind two quiet buttons, so the hero itself shows only the
+  // name, the avatar and the two main actions.
+  const [film] = useState(introAvailable);
+  const [filmRequest, setFilmRequest] = useState(0);
+  const [movesOpen, setMovesOpen] = useState(false);
+  useEffect(() => {
+    if (!movesOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMovesOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [movesOpen]);
   const asleepUnderIntro = introCovering && (avatarWarm || !avatarCued);
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
@@ -144,7 +168,6 @@ const TalkingAvatar = () => {
     };
   };
   // Tailwind's transition-colors, kept for the buttons whose inline transition replaces it.
-  const COLORS = ", color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1)";
   const inert = leavingChrome || introActive ? INERT : {};
 
   // Loading progress never goes backwards.
@@ -242,37 +265,88 @@ const TalkingAvatar = () => {
 
       {/* Cinematic intro (first visit per tab, ?intro to replay): a z-30 cover over the hero chrome that
           hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
-      <IntroVideo onActiveChange={setIntroActive} onCoveringChange={setIntroCovering} onAvatarCue={cueAvatar} />
+      <IntroVideo
+        onActiveChange={setIntroActive}
+        onCoveringChange={setIntroCovering}
+        onAvatarCue={cueAvatar}
+        requestKey={filmRequest}
+      />
 
       {!capture && shell.chromeMounted && <>
-      {/* Status line */}
+      {/* Quiet toolbar: the film, the gesture list and, during a voice session, its status */}
       <div
         {...inert}
         data-xfade
-        className="absolute left-5 top-20 z-20 flex items-center gap-2 rounded-full border border-term-line bg-term-bg/70 px-3 py-1.5 text-xs backdrop-blur md:left-10"
+        className="absolute left-5 top-20 z-20 flex max-w-[calc(100%-2.5rem)] flex-col items-start gap-3 md:left-10"
         style={chrome("status")}
       >
-        <span
-          className={`h-2 w-2 rounded-full ${
-            status === "speaking"
-              ? "bg-term-accent animate-pulse"
-              : status === "listening"
-              ? "bg-term-sand animate-pulse"
-              : status === "connecting"
-              ? "bg-term-amber animate-pulse"
-              : status === "error"
-              ? "bg-term-red"
-              : "bg-term-muted"
-          }`}
-        />
-        <span className="text-term-fg">{statusLabel[status]}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          {film && (
+            <button
+              type="button"
+              onClick={() => {
+                setMovesOpen(false);
+                setFilmRequest((n) => n + 1);
+              }}
+              className={TOOL_PILL}
+            >
+              <PlayIcon />
+              Watch the film
+            </button>
+          )}
+          {webgl && (
+            <button
+              type="button"
+              aria-expanded={movesOpen}
+              aria-controls="avatar-moves"
+              disabled={!avatarReady}
+              onClick={() => setMovesOpen((o) => !o)}
+              className={`${TOOL_PILL} ${movesOpen ? "border-term-accent text-term-accent" : ""}`}
+            >
+              <span aria-hidden className={`text-term-accent transition-transform duration-300 ${movesOpen ? "rotate-45" : ""}`}>✦</span>
+              Make me move
+            </button>
+          )}
+          {status !== "idle" && (
+            <span role="status" className="flex items-center gap-2 rounded-full border border-term-line bg-term-bg/70 px-3 py-1.5 text-xs text-term-fg backdrop-blur">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  status === "speaking"
+                    ? "bg-term-accent animate-pulse"
+                    : status === "listening"
+                    ? "bg-term-sand animate-pulse"
+                    : status === "connecting"
+                    ? "bg-term-amber animate-pulse"
+                    : "bg-term-red"
+                }`}
+              />
+              {statusLabel[status]}
+            </span>
+          )}
+        </div>
+        {movesOpen && (
+          <ul id="avatar-moves" aria-label="Avatar moves" className="flex max-w-[19rem] flex-wrap gap-2">
+            {GESTURES.map((g, i) => (
+              <li key={g} className="animate-chip-in" style={{ animationDelay: `${i * 25}ms` }}>
+                <button
+                  type="button"
+                  onClick={gesture(g)}
+                  className="rounded-full border border-term-line bg-term-bg/70 px-3 py-1.5 text-xs text-term-muted backdrop-blur transition-colors hover:border-term-accent hover:text-term-accent active:border-term-accent active:text-term-accent"
+                >
+                  {g.replace("_", " ")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      {/* Example prompts (top-right, typewriter). The wrapper fills the section so the untouched
-          absolute-positioned component keeps its place while the wrapper animates. */}
-      <div {...inert} data-xfade className="pointer-events-none absolute inset-0 z-20" style={chrome("hints")}>
-        <AskHints />
-      </div>
+      {/* Example prompts (top-right, typewriter), only while a voice session can hear them. */}
+      {active && (
+        <div {...inert} data-xfade className="pointer-events-none absolute inset-0 z-20" style={chrome("hints")}>
+          <AskHints />
+        </div>
+      )}
 
       {errorMessage && (
         <p
@@ -340,48 +414,6 @@ const TalkingAvatar = () => {
           </button>
           )}
         </div>
-      </div>
-
-      {/* Gesture command list — vertical on desktop, compact chip row on mobile
-          (so it doesn't cover the avatar on small screens) */}
-      <div
-        {...inert}
-        className="absolute left-10 top-[58%] z-20 hidden -translate-y-1/2 flex-col md:flex"
-      >
-        <span
-          data-xfade
-          className="mb-1 text-[10px] uppercase tracking-widest text-term-muted"
-          style={chrome("gestures", 0)}
-        >
-          Try a gesture
-        </span>
-        {GESTURES.map((g, i) => (
-          <button
-            key={g}
-            data-xfade
-            onClick={gesture(g)}
-            className="min-h-6 py-1 text-left text-xs text-term-muted hover:text-term-accent"
-            style={chrome("gestures", i + 1, COLORS)}
-          >
-            {g.replace("_", " ")}
-          </button>
-        ))}
-      </div>
-      <div
-        {...inert}
-        className="absolute bottom-6 left-0 right-0 z-20 flex gap-2 overflow-x-auto px-5 pb-1 md:hidden [scrollbar-width:none]"
-      >
-        {GESTURES.map((g, i) => (
-          <button
-            key={g}
-            data-xfade
-            onClick={gesture(g)}
-            className="shrink-0 rounded-full border border-term-line bg-term-bg/70 px-3 py-1 text-xs text-term-muted backdrop-blur active:border-term-accent active:text-term-accent"
-            style={chrome("chips", i, COLORS)}
-          >
-            {g.replace("_", " ")}
-          </button>
-        ))}
       </div>
 
       </>}

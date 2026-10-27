@@ -101,6 +101,10 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        "chip-in": {
+          from: { opacity: "0", transform: "translateY(-6px) scale(0.96)" },
+          to: { opacity: "1", transform: "none" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -197,6 +201,7 @@ const config = {
         blink: "blink 1.1s steps(1) infinite",
         flicker: "flicker 6s linear infinite",
         "fade-up": "fade-up 0.6s ease-out both",
+        "chip-in": "chip-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },

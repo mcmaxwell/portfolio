@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { GESTURES, GESTURE_URLS } from "@/lib/gestures";
+import { GESTURES, gestureUrl, type GestureName } from "@/lib/gestures";
 import { RetryBoundary } from "./LoadBoundary";
 
 // If the model HAS facial blendshapes (Ready Player Me / ARKit), we move the
@@ -14,13 +14,16 @@ const MOUTH_MORPHS = ["jawOpen", "mouthOpen", "viseme_aa", "mouthFunnel"];
 // Resting downward tilt of the head (radians). Increase to look further down.
 const HEAD_DOWN_TILT = 0.18;
 
+// How far the eyes turn toward the pointer at the edge of the canvas (radians).
+const EYE_RANGE = { yaw: 0.26, pitch: 0.14 };
+
 // Reused scratch objects for composing the head-look offset (avoids per-frame
 // allocation and the gimbal-flip "spin" that Euler += can cause).
 const _euler = new THREE.Euler();
 const _quat = new THREE.Quaternion();
 
 const GESTURE_RETRY_MS = [2000, 6000] as const;
-const clearGestures = () => useGLTF.clear(GESTURE_URLS);
+
 
 export type GestureTrigger = { seq: number; name: string | null };
 
@@ -33,6 +36,8 @@ type AvatarProps = {
   gesturingRef?: React.MutableRefObject<boolean>;
   position?: [number, number, number];
   scale?: number;
+  /** The clips to load (all of them by default); a page that plays one move needs only that file. */
+  gestures?: readonly GestureName[];
 };
 
 // Mixamo clips use "mixamorig:" bone names; our avatar's bones aren't prefixed.
@@ -63,22 +68,26 @@ function retargetClip(clip: THREE.AnimationClip): THREE.AnimationClip {
 function GestureClips({
   mixer,
   actionsRef,
+  names,
+  urls,
 }: {
   mixer: THREE.AnimationMixer;
   actionsRef: React.MutableRefObject<Record<string, THREE.AnimationAction>>;
+  names: readonly GestureName[];
+  urls: string[];
 }) {
   // None of our GLBs use meshopt; the default decoder starts a WebAssembly instantiate nobody awaits,
   // which logs an uncaught rejection when WebAssembly is blocked.
-  const gestureGltfs = useGLTF(GESTURE_URLS, true, false);
+  const gestureGltfs = useGLTF(urls, true, false);
 
   useEffect(() => {
     const map: Record<string, THREE.AnimationAction> = {};
-    GESTURES.forEach((name, i) => {
+    names.forEach((name, i) => {
       const clip = gestureGltfs[i]?.animations?.[0];
       if (clip) map[name] = mixer.clipAction(retargetClip(clip));
     });
     actionsRef.current = map;
-  }, [mixer, gestureGltfs, actionsRef]);
+  }, [mixer, gestureGltfs, actionsRef, names]);
 
   return null;
 }
@@ -90,7 +99,10 @@ export function Avatar({
   gesturingRef,
   position = [0, 0, 0],
   scale = 1,
+  gestures = GESTURES,
 }: AvatarProps) {
+  const gestureUrls = useMemo(() => gestures.map(gestureUrl), [gestures]);
+  const clearGestures = useCallback(() => useGLTF.clear(gestureUrls), [gestureUrls]);
   // None of our GLBs use meshopt; the default decoder starts a WebAssembly instantiate nobody awaits,
   // which logs an uncaught rejection when WebAssembly is blocked.
   const { scene, animations } = useGLTF(url, true, false);
@@ -161,10 +173,13 @@ export function Avatar({
       });
       return b as THREE.Object3D | null;
     };
-    return { head: find("Head"), neck: find("Neck") };
+    const eyes = [find("LeftEye"), find("RightEye")].filter((e): e is THREE.Object3D => !!e);
+    // The clips do not animate the eyes, so nothing resets them each frame: the look offset is
+    // applied on top of this rest pose instead of the previous frame's (which would spin them).
+    return { head: find("Head"), neck: find("Neck"), eyes: eyes.map((eye) => ({ eye, rest: eye.quaternion.clone() })) };
   }, [scene]);
 
-  const off = useRef({ hx: 0, hy: 0, ny: 0 });
+  const off = useRef({ hx: 0, hy: 0, ny: 0, ex: 0, ey: 0 });
 
   useFrame((state, delta) => {
     // Trigger a gesture when the hook bumps the sequence number.
@@ -221,6 +236,15 @@ export function Avatar({
       _quat.setFromEuler(_euler.set(0, o.ny, 0, "XYZ"));
       bones.neck.quaternion.multiply(_quat);
     }
+
+    // The eyes lead the head: they reach the pointer quicker, which reads as attention rather than a
+    // turret. Kept on during gestures too, since the clips leave the eyes alone.
+    o.ey = THREE.MathUtils.lerp(o.ey, mx * EYE_RANGE.yaw, 0.25);
+    o.ex = THREE.MathUtils.lerp(o.ex, -my * EYE_RANGE.pitch, 0.25);
+    _quat.setFromEuler(_euler.set(o.ex, o.ey, 0, "XYZ"));
+    for (const { eye, rest } of bones.eyes) {
+      eye.quaternion.copy(rest).multiply(_quat);
+    }
   });
 
   return (
@@ -230,7 +254,7 @@ export function Avatar({
           retried; if it keeps failing the avatar simply has no gestures. */}
       <RetryBoundary clear={clearGestures} retryDelaysMs={GESTURE_RETRY_MS}>
         <Suspense fallback={null}>
-          <GestureClips mixer={mixer} actionsRef={gestureActionsRef} />
+          <GestureClips mixer={mixer} actionsRef={gestureActionsRef} names={gestures} urls={gestureUrls} />
         </Suspense>
       </RetryBoundary>
     </group>
@@ -239,5 +263,5 @@ export function Avatar({
 
 export function preloadAvatar(url: string) {
   useGLTF.preload(url, true, false); // no meshopt decoder, see above
-  GESTURE_URLS.forEach((u) => useGLTF.preload(u, true, false));
+  GESTURES.forEach((g) => useGLTF.preload(gestureUrl(g), true, false));
 }

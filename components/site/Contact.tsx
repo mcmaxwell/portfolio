@@ -23,6 +23,34 @@ function LocalTime() {
   return <span suppressHydrationWarning>{time || "--:--"}</span>;
 }
 
+/** Copies the address for visitors whose mail links open nothing (webmail, locked-down machines). */
+function CopyEmail({ email }: { email: string }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+    } catch {
+      // Clipboard refused: leave the address to be selected by hand.
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      data-cursor={copied ? "Copied" : "Copy"}
+      className="rounded-full border border-term-paper/25 px-5 py-2.5 text-sm text-term-paper transition-colors hover:border-term-accent hover:text-term-accent"
+    >
+      <span aria-live="polite">{copied ? "Copied ✓" : "Copy email"}</span>
+    </button>
+  );
+}
+
 export function Contact() {
   return (
     <section id="contact" aria-label="Contact" className="relative overflow-hidden border-t border-term-line">
@@ -43,10 +71,11 @@ export function Contact() {
           usually reply within a day.
         </p>
 
+        <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4">
         <a
           href={`mailto:${owner.email}`}
           data-cursor="Say hi"
-          className="group mt-12 inline-flex max-w-full items-center gap-4 break-all font-display text-2xl text-term-accent-bright sm:text-4xl md:text-5xl"
+          className="group inline-flex max-w-full items-center gap-4 break-all font-display text-[clamp(1.05rem,5.2vw,1.5rem)] text-term-accent-bright sm:text-4xl md:text-5xl"
         >
           <span className="link-draw">{owner.email}</span>
           <Magnetic strength={0.5}>
@@ -58,6 +87,8 @@ export function Contact() {
             </span>
           </Magnetic>
         </a>
+        <CopyEmail email={owner.email} />
+        </div>
 
         <div className="mt-20 grid gap-10 border-t border-term-line pt-10 text-sm sm:grid-cols-3">
           <div>
