@@ -354,3 +354,21 @@ html.has-cursor[data-experience="hero"] * {
   cursor: none !important;
 }
 html[data-experience]:not([data-experience="hero"]) .site-cursor { display: none; }
+
+/* ---------- Case pages (components/site/CaseStudy.tsx) ----------
+   A project card on the home page and its case page name the same elements, so a full navigation
+   between them morphs the card's picture and title into the page (browsers without cross-document
+   view transitions simply load the page). */
+@view-transition {
+  navigation: auto;
+}
+[style*="--vt"] {
+  view-transition-name: var(--vt);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

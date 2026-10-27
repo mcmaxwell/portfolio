@@ -22,6 +22,11 @@ export const owner = {
     "Tailwind) and Adobe Certified Expert–level Adobe Commerce experience. Shipped " +
     "so far: an autonomous financial-news platform and an AI HR assistant, " +
     "plus 20+ online stores successfully launched.",
+  // The version on the page: the long `about` stays for the avatar's prompt and the structured data.
+  aboutShort:
+    "Co-founder and CTO of XecSuite, co-founder of Apex Mind. I design and ship AI agents, voice " +
+    "interfaces and the automation between them, across OpenAI, Claude, Gemini and open-source models, " +
+    "on twelve years of front-end engineering and an Adobe Commerce certification.",
 };
 
 export const skills = [

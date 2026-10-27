@@ -89,7 +89,7 @@ export function About() {
 
       <div className="mt-20 grid gap-16 md:mt-32 md:grid-cols-12">
         <FadeIn className="md:col-span-6 lg:col-span-5">
-          <p className="text-base leading-relaxed text-term-fg/85 md:text-lg">{owner.about}</p>
+          <p className="text-base leading-relaxed text-term-fg/85 md:text-lg">{owner.aboutShort}</p>
           <p className="mt-6 text-sm text-term-muted">
             <span className="text-term-accent">●</span> {owner.location}
           </p>
