@@ -6,7 +6,7 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
-import { IntroVideo } from "./IntroVideo";
+import { IntroVideo, introWillPlay } from "./IntroVideo";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
 import { LoadingStrip, FailureDialog } from "@/components/game/shell/LoadingOverlay";
@@ -97,6 +97,18 @@ const TalkingAvatar = () => {
   // IntroVideo keeps its own state and reports whether its cover is up (playing or fading). While it
   // is, the hero controls beneath it are inert, Play is ignored and the game prefetch waits.
   const [introActive, setIntroActive] = useState(false);
+  // While the film fully covers the stage the canvas renders only on demand, so hidden frames do not
+  // compete with video decoding.
+  const [introCovering, setIntroCovering] = useState(false);
+  // Parsing the avatar and compiling its shaders is a few seconds of main-thread work on a phone. While
+  // the intro film hides the stage that work only makes the film stutter, so the avatar is built in its
+  // last seconds instead (IntroVideo onStageNeeded). The model file still downloads right away.
+  const [stageHeld, setStageHeld] = useState(introWillPlay);
+  const releaseStage = useCallback(() => setStageHeld(false), []);
+  useEffect(() => {
+    if (stageHeld) fetch(AVATAR_URL).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const leavingChrome = phase === "chrome-out";
   const GameScene = shell.game?.module.GameScene;
   const GameInterface = shell.game?.module.GameInterface;
@@ -157,10 +169,10 @@ const TalkingAvatar = () => {
         {webgl && (
         <Canvas
           camera={{ position: [...HERO.cameraPosition], fov: HERO.fov }}
-          frameloop={shell.renderPaused || offscreen ? "never" : "always"}
+          frameloop={shell.renderPaused || offscreen ? "never" : introCovering ? "demand" : "always"}
           onCreated={shell.onCanvasCreated}
         >
-          {!inGame && <>
+          {!inGame && !stageHeld && <>
           <ambientLight intensity={HERO.lights.ambient} />
           <hemisphereLight args={[0xffffff, 0x2a2520, HERO.lights.hemisphere]} />
           <directionalLight position={[...HERO.lights.key.position]} intensity={HERO.lights.key.intensity} />
@@ -204,9 +216,14 @@ const TalkingAvatar = () => {
         )}
       </div>
 
-      {/* Cinematic intro (only when NEXT_PUBLIC_INTRO_VIDEO_URL is set): a z-30 cover over the hero chrome
-          that hands off to the live avatar. While it is mounted it holds a <video>; Play is ignored then. */}
-      <IntroVideo onActiveChange={setIntroActive} />
+      {/* Cinematic intro (once per tab session): a z-30 cover over the hero chrome that lands on the live
+          avatar and dissolves into it. While it is mounted it holds a <video>; Play is ignored then. */}
+      <IntroVideo
+        avatarReady={avatarReady}
+        onActiveChange={setIntroActive}
+        onCoveringChange={setIntroCovering}
+        onStageNeeded={releaseStage}
+      />
 
       {!capture && shell.chromeMounted && <>
       {/* Status line */}
