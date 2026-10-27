@@ -117,12 +117,13 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
 
-        {/* Google Analytics (gtag.js) */}
+        {/* Google Analytics (gtag.js), loaded once the page is idle so its 180 KB never competes with the
+            hero (avatar model, intro film) for the network or the main thread. */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="gtag-init" strategy="afterInteractive">
+        <Script id="gtag-init" strategy="lazyOnload">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());

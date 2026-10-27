@@ -136,3 +136,17 @@ The sky is a fragment shader (`components/game/world/sky.ts`); trees, lamps, bus
 Source and licence: written for this repository, same terms as the repository code; no third-party asset, no network fetch.
 Additional first-play bytes: 0 bytes of assets; about 11 KB gzip of game JavaScript (sum of per-chunk gzip, production build before and after: 1,291,564 to 1,302,567 bytes).
 Runtime memory: 12 tiling textures (512 x 512 and 256 x 256 with mipmaps) and 11 small canvases, roughly 10 MB of GPU memory.
+
+## Intro film (`public/intro`)
+
+The hero's intro film, supplied by Maksym Liutsko for this site, same terms as the repository content.
+Encoded from the 1920x1080 24 fps master with ffmpeg: cut at 49.36 s so it ends on the avatar frame, blacks lifted to the site background (#0c0c0b) so the frame edges vanish during the hand-off, audio faded over the last 0.75 s.
+VP9/Opus WebM is served first and H.264/AAC MP4 is the fallback; the 720p pair is used below 768 px.
+
+| File | Video | Size | sha256 |
+|---|---|---|---|
+| `public/intro/intro-1080.mp4` | 1920x1080 H.264 1.5 Mbps 2-pass, AAC 112k | 9996505 bytes | `2b6320fc06a98e8decc0b657e1f58c325415ffbc884ec8eced0362f40d5b0629` |
+| `public/intro/intro-1080.webm` | 1920x1080 VP9 1.1 Mbps 2-pass, Opus 96k | 7425541 bytes | `f8fc0e13aabc218f02dfb809c4c6e043530e23d241621ae6b53f8c90605654f0` |
+| `public/intro/intro-720.mp4` | 1280x720 H.264 850 kbps 2-pass, AAC 96k | 5863417 bytes | `1a71518527f0bb5970678cf94c9483c7e9bc348158d45137741336072f4698a2` |
+| `public/intro/intro-720.webm` | 1280x720 VP9 600 kbps 2-pass, Opus 80k | 4245583 bytes | `289bba63ce454e3819484692f5ae990b21623fad280979fce4297a3810225467` |
+| `public/intro/intro-poster.jpg` | first frame, 1280x720 JPEG | 69170 bytes | `d9ddebcd0ff20a7040f9787a02e06366441c1a82a1c4d02e55cd9b4a3d224a95` |
