@@ -51,9 +51,21 @@ const securityHeaders = [
   },
 ];
 
+// The 3D models and the intro film are large and change rarely, but their names are not hashed:
+// cache them for a day and serve the cached copy while revalidating for a week after that, instead
+// of the default revalidate-on-every-visit.
+const mediaCache = [
+  { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+];
+
 const nextConfig = {
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/intro/:file*", headers: mediaCache },
+      { source: "/animations/:file*", headers: mediaCache },
+      { source: "/avatar.glb", headers: mediaCache },
+    ];
   },
 };
 

@@ -37,6 +37,7 @@
   "devDependencies": {
     "@dimforge/rapier3d-compat": "0.14.0",
     "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
     "@gltf-transform/functions": "4.5.1",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",
