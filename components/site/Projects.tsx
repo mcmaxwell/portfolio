@@ -123,7 +123,7 @@ function RippleImage({ src, alt, id }: { src: string; alt: string; id: string })
         decoding="async"
         onPointerEnter={play}
         style={playing ? { filter: `url(#${id})` } : undefined}
-        className="h-full w-full object-cover object-top transition-transform duration-1000 ease-out group-hover:scale-[1.06]"
+        className="h-full w-full object-cover object-left-top transition-transform duration-1000 ease-out group-hover:scale-[1.06]"
       />
     </>
   );
@@ -150,7 +150,7 @@ function Featured({
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["-6%", "6%"]);
+  const y = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["-5%", "5%"]);
   const targetScale = 1 - (total - 1 - index) * 0.05;
   const scale = useTransform(progress, [index / total, 1], [1, stack ? targetScale : 1]);
   const dim = useTransform(progress, [index / total, 1], [0, stack ? (total - 1 - index) * 0.18 : 0]);
@@ -167,13 +167,13 @@ function Featured({
       data-memory={study ? "word" : undefined}
       data-memory-id={study?.slug}
       data-memory-word={study?.mark ?? study?.name}
-      className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-term-bg md:aspect-[16/11]"
+      className="group relative aspect-[16/10] overflow-hidden rounded-2xl bg-term-bg"
       initial={reduced ? false : { clipPath: "inset(14% 14% 14% 14% round 16px)" }}
       whileInView={{ clipPath: "inset(0% 0% 0% 0% round 16px)" }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 1.4, ease: EASE_OUT_EXPO }}
     >
-      <motion.div style={{ y }} className="absolute inset-[-7%]">
+      <motion.div style={{ y }} className="absolute inset-x-0 -inset-y-[6%]">
         <RippleImage src={p.img!} alt={`Screenshot of ${name}`} id={`ripple-${p.id}`} />
       </motion.div>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-term-bg/40 via-transparent to-transparent" />
