@@ -2,11 +2,12 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { Avatar, type GestureTrigger } from "./Avatar";
 import { AskHints } from "./AskHints";
 import { IntroVideo, introWillPlay } from "./IntroVideo";
+import { RetryBoundary } from "./LoadBoundary";
 import { useRealtimeChat, type ChatStatus } from "./useRealtimeChat";
 import { GESTURES } from "@/lib/gestures";
 import { LoadingStrip, FailureDialog } from "@/components/game/shell/LoadingOverlay";
@@ -16,6 +17,10 @@ import { isWebGLAvailable, useExperienceShell } from "@/components/game/shell/us
 
 // Your local Avaturn model in /public. Override via NEXT_PUBLIC_AVATAR_URL.
 const AVATAR_URL = process.env.NEXT_PUBLIC_AVATAR_URL || "/avatar.glb";
+// A dropped or stalled connection on a phone must not leave the hero empty: the model is fetched again
+// after these delays before the hero gives up and offers a manual retry.
+const AVATAR_RETRY_MS = [1000, 3000, 8000] as const;
+const clearAvatar = () => useGLTF.clear(AVATAR_URL);
 
 // Single fixed framing: pulled back a bit so head + torso/arms are visible,
 // and it never moves (gestures play within this frame). Avatar group sits at
@@ -64,6 +69,17 @@ const TalkingAvatar = () => {
   const playRef = useRef<HTMLButtonElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const [avatarReady, setAvatarReady] = useState(false);
+  // Bumped by the manual retry, which remounts the retry boundary with a fresh set of attempts.
+  const [avatarTry, setAvatarTry] = useState(0);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const onAvatarGiveUp = useCallback((error: Error) => {
+    console.error("avatar failed to load", error);
+    setAvatarFailed(true);
+  }, []);
+  const retryAvatar = () => {
+    setAvatarFailed(false);
+    setAvatarTry((n) => n + 1);
+  };
 
   const [webgl] = useState(isWebGLAvailable);
   const shellRef = useRef<{ heroReady(): void } | null>(null);
@@ -181,7 +197,12 @@ const TalkingAvatar = () => {
           <directionalLight position={[...HERO.lights.key.position]} intensity={HERO.lights.key.intensity} />
           <directionalLight position={[...HERO.lights.fill.position]} intensity={HERO.lights.fill.intensity} />
           <fog attach="fog" args={[HERO.fog.color, HERO.fog.near, HERO.fog.far]} />
-          {avatarCued && <Suspense
+          {avatarCued && <RetryBoundary
+            key={avatarTry}
+            clear={clearAvatar}
+            retryDelaysMs={AVATAR_RETRY_MS}
+            onGiveUp={onAvatarGiveUp}
+          ><Suspense
             fallback={
               <Html center className="whitespace-nowrap text-sm text-term-accent">
                 loading avatar…
@@ -197,7 +218,7 @@ const TalkingAvatar = () => {
               position={[0, HERO.feetY, 0]}
             />
             <ReadySignal onReady={onAvatarReady} />
-          </Suspense>}
+          </Suspense></RetryBoundary>}
           <CameraRig />
           </>}
           {GameScene && shell.game && (
@@ -262,6 +283,18 @@ const TalkingAvatar = () => {
         >
           ! {errorMessage}
         </p>
+      )}
+
+      {avatarFailed && webgl && (
+        <div {...inert} className="absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 justify-center px-5">
+          <button
+            type="button"
+            onClick={retryAvatar}
+            className="rounded-full border border-term-paper/30 bg-term-bg/60 px-5 py-2.5 text-sm text-term-paper backdrop-blur transition-colors hover:border-term-accent hover:text-term-accent"
+          >
+            The 3D avatar did not load. Try again ↻
+          </button>
+        </div>
       )}
 
       {/* Talk and Play buttons (the name and role are the server-rendered HeroTitle behind the canvas) */}

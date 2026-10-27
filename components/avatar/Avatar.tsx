@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GESTURES, GESTURE_URLS } from "@/lib/gestures";
+import { RetryBoundary } from "./LoadBoundary";
 
 // If the model HAS facial blendshapes (Ready Player Me / ARKit), we move the
 // mouth directly. This Avaturn model has none, so we drive head motion.
@@ -17,6 +18,9 @@ const HEAD_DOWN_TILT = 0.18;
 // allocation and the gimbal-flip "spin" that Euler += can cause).
 const _euler = new THREE.Euler();
 const _quat = new THREE.Quaternion();
+
+const GESTURE_RETRY_MS = [2000, 6000] as const;
+const clearGestures = () => useGLTF.clear(GESTURE_URLS);
 
 export type GestureTrigger = { seq: number; name: string | null };
 
@@ -222,10 +226,13 @@ export function Avatar({
   return (
     <group position={position} scale={scale}>
       <primitive object={scene} />
-      {/* Gesture clips stream in independently — no fallback needed. */}
-      <Suspense fallback={null}>
-        <GestureClips mixer={mixer} actionsRef={gestureActionsRef} />
-      </Suspense>
+      {/* Gesture clips stream in independently — no fallback needed. A clip that fails to download is
+          retried; if it keeps failing the avatar simply has no gestures. */}
+      <RetryBoundary clear={clearGestures} retryDelaysMs={GESTURE_RETRY_MS}>
+        <Suspense fallback={null}>
+          <GestureClips mixer={mixer} actionsRef={gestureActionsRef} />
+        </Suspense>
+      </RetryBoundary>
     </group>
   );
 }
