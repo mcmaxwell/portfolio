@@ -36,6 +36,7 @@ function Statement() {
   return (
     <h2
       ref={ref}
+      data-memory="statement"
       className="max-w-[18ch] font-display text-[2.6rem] font-medium leading-[1.02] tracking-[-0.03em] text-term-paper sm:max-w-[20ch] md:text-7xl lg:text-[5.5rem]"
     >
       <span className="sr-only">{STATEMENT}</span>

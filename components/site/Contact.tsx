@@ -59,6 +59,9 @@ export function Contact() {
         className="pointer-events-none absolute left-1/2 top-0 h-[60vh] w-[90vw] -translate-x-1/2 -translate-y-1/3 rounded-full bg-term-accent/10 blur-[120px]"
       />
       <div className="relative mx-auto w-full max-w-[1400px] px-5 py-24 md:px-10 md:py-40">
+        {/* Where the memory layer's particles come back together as the avatar (components/memory):
+            beside the text on wide screens, in a strip of its own below the email on narrow ones. */}
+        <div aria-hidden data-memory="wave" className="pointer-events-none absolute right-10 top-1/2 hidden h-[64vh] w-[26vw] -translate-y-1/2 lg:block" />
         <SectionLabel index="05" label="Contact" />
         <RevealText
           text="Let's build something."
@@ -89,6 +92,7 @@ export function Contact() {
         </a>
         <CopyEmail email={owner.email} />
         </div>
+        <div aria-hidden data-memory="wave" className="mt-6 h-[42vh] lg:hidden" />
 
         <div className="mt-20 grid gap-10 border-t border-term-line pt-10 text-sm sm:grid-cols-3">
           <div>

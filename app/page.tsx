@@ -16,6 +16,7 @@ import { Experience } from "@/components/site/Experience";
 import { Services } from "@/components/site/Services";
 import { Contact, SiteFooter } from "@/components/site/Contact";
 import { HeroBoundary } from "@/components/avatar/LoadBoundary";
+import { MemoryFieldSlot } from "@/components/memory/MemoryFieldSlot";
 
 // Browser-only (WebRTC + Canvas), so disable SSR. The placeholder holds the hero's full height, so
 // nothing below it moves when the avatar mounts.
@@ -40,6 +41,7 @@ export default function Home() {
         <Cursor />
         <TabPresence />
         <Nav />
+        <MemoryFieldSlot />
 
         {/* Hero: the server-rendered name sits behind the talking avatar's transparent canvas */}
         <div className="relative">

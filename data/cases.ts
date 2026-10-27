@@ -13,6 +13,8 @@ export type CaseStudy = {
   /** `id` of the matching entry in `projects` (data/index.ts). */
   projectId: number;
   name: string;
+  /** What the memory layer spells over the card when the name is too long (defaults to `name`). */
+  mark?: string;
   tagline: string;
   eyebrow: string;
   /** The one sentence the card and the page open with. */
@@ -70,6 +72,7 @@ export const cases: readonly CaseStudy[] = [
     slug: "newsstocks",
     projectId: 2,
     name: "NewsStocks.live",
+    mark: "NewsStocks",
     tagline: "A financial news site that writes, illustrates, films and publishes itself",
     eyebrow: "Built solo at Apex Mind",
     hook: "A newsroom with nobody in it: 30 to 50 articles a day, a video every day, analysis every day, week and month.",

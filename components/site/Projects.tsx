@@ -163,6 +163,10 @@ function Featured({
   const image = (
     <motion.div
       style={study ? vt(`case-media-${study.slug}`) : undefined}
+      // The memory layer spells the project's name over the screenshot as the card arrives.
+      data-memory={study ? "word" : undefined}
+      data-memory-id={study?.slug}
+      data-memory-word={study?.mark ?? study?.name}
       className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-term-bg md:aspect-[16/11]"
       initial={reduced ? false : { clipPath: "inset(14% 14% 14% 14% round 16px)" }}
       whileInView={{ clipPath: "inset(0% 0% 0% 0% round 16px)" }}
