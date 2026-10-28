@@ -178,8 +178,8 @@ function groundBlocks(): Block[] {
   for (const [i, x] of [[0, 12.4], [1, 16], [2, 19.6]] as const) {
     out.push(blk(`stone-${i}`, "prop", [x, -0.5, -22], [2.4, 1, 2.4], "path", { route: "optional" }));
   }
-  // The raised terrace: three platforms, each 0.8 m above the last (one jump each).
-  for (const [i, x, top] of [[0, -24, 0.8], [1, -20.5, 1.6], [2, -17, 2.4]] as const) {
+  // The raised terrace: five platforms, each 0.8 m above the last (one jump each), up to 4 m.
+  for (const [i, x, top] of [[0, -27.5, 0.8], [1, -24, 1.6], [2, -20.5, 2.4], [3, -17, 3.2], [4, -13.5, 4.0]] as const) {
     out.push(blk(`terrace-${i}`, "prop", [x, top / 2, -14], [3, top, 3], "stone", { route: "optional" }));
   }
   // Scenery boundary: hedge walls at the edge of the 60 x 60 m campus. The collider is HEDGE_STANDOFF
@@ -242,8 +242,8 @@ export function buildCampus(): Layout {
     { id: "cell-workshop", kind: "cell", cellId: "workshop", position: at(WORKSHOP, [0, WORKSHOP_FLOOR, 2.6]), radius: CELL_RADIUS, prompt: "Energy cell" },
     { id: "cell-tower", kind: "cell", cellId: "tower", position: at(TOWER, [0, TOWER_FLOOR, 2.0]), radius: CELL_RADIUS, prompt: "Energy cell" },
   ];
-  // The trophy cup stands in the middle of the top of the highest terrace platform (terrace-2).
-  const top = blocks.find((b) => b.id === "terrace-2")!;
+  // The trophy cup stands in the middle of the top of the highest terrace platform (terrace-4).
+  const top = blocks.find((b) => b.id === "terrace-4")!;
   const trophy: Interactable = {
     id: "trophy",
     kind: "trophy",

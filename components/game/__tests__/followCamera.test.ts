@@ -492,11 +492,11 @@ describe("camera on the campus (M3)", () => {
     }
   });
 
-  it("stepping off the 2.4 m terrace beside a wall of platforms", () => {
-    const top = getBlock(CAMPUS, "terrace-2");
+  it("stepping off the 4 m terrace beside a wall of platforms", () => {
+    const top = getBlock(CAMPUS, "terrace-4");
     for (const yaw of [0, Math.PI / 2, -Math.PI / 2, Math.PI]) {
       const legs: Leg[] = [[(f) => f.x > top.center.x + 2.2, 1, 0], [(f) => f.y < 0.1, 1, 0], [(f) => f.x > top.center.x + 6, 1, 0]];
-      expectClean(drive(start(top.center.x, 2.4, top.center.z), legs, yaw, true, true, opts), `terrace yaw ${yaw}`);
+      expectClean(drive(start(top.center.x, 4.0, top.center.z), legs, yaw, true, true, opts), `terrace yaw ${yaw}`);
     }
   });
 });

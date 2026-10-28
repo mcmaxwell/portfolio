@@ -9,7 +9,7 @@ import { createGame, type GameHandle } from "../session";
 import { CAMPUS, getBlock, surfaceHeightAt, TEST_ARENA } from "../world/layout";
 
 const trophy = CAMPUS.challenge.trophy!;
-const terraces = [0, 1, 2].map((i) => getBlock(CAMPUS, `terrace-${i}`));
+const terraces = [0, 1, 2, 3, 4].map((i) => getBlock(CAMPUS, `terrace-${i}`));
 const top = (b: (typeof terraces)[number]) => b.center.y + b.size.y / 2;
 const feet = (over: Partial<Vec3> = {}): Vec3 => ({ ...trophy.position, ...over });
 
@@ -24,17 +24,17 @@ function setup(storage: Storage | null = null) {
 describe("placement", () => {
   it("the cup is on the highest terrace platform, centred on its top", () => {
     const highest = terraces.reduce((a, b) => (top(b) > top(a) ? b : a));
-    expect(highest.id).toBe("terrace-2");
+    expect(highest.id).toBe("terrace-4");
     expect(trophy).toMatchObject({ id: "trophy", kind: "trophy" });
     expect(trophy.position.x).toBeCloseTo(highest.center.x, 6);
     expect(trophy.position.z).toBeCloseTo(highest.center.z, 6);
     expect(trophy.position.y).toBeCloseTo(top(highest), 6);
-    expect(top(highest)).toBeCloseTo(2.4, 6);
-    expect(surfaceHeightAt(CAMPUS, trophy.position.x, trophy.position.z, { maxY: trophy.position.y + 0.05 })).toBeCloseTo(2.4, 3);
+    expect(top(highest)).toBeCloseTo(4.0, 6);
+    expect(surfaceHeightAt(CAMPUS, trophy.position.x, trophy.position.z, { maxY: trophy.position.y + 0.05 })).toBeCloseTo(4.0, 3);
   });
 
   it("the reach covers the platform's middle but stays on the platform", () => {
-    const half = terraces[2].size.x / 2;
+    const half = terraces[4].size.x / 2;
     expect(trophy.radius).toBe(TROPHY.radius);
     expect(trophy.radius).toBeLessThan(half);
   });
@@ -79,9 +79,9 @@ describe("collection", () => {
     expect(game.progress.getState().trophy).toBe(true);
   });
 
-  it("the middle of the platform below it (terrace-1, 0.8 m lower) is too far to the side to collect it", () => {
+  it("the middle of the platform below it (terrace-3, 0.8 m lower) is too far to the side to collect it", () => {
     const { game, challenge } = setup();
-    const t1 = terraces[1];
+    const t1 = terraces[3];
     challenge.update({ x: t1.center.x, y: top(t1), z: t1.center.z });
     expect(game.progress.getState().trophy).toBe(false);
   });

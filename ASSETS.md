@@ -175,3 +175,4 @@ Source: the owner's own screen recordings and full-page screenshots of his live 
 | `*.webp` with a video's name | same | first frame of that clip, the poster |
 | `xecsuite-lanes.webp`, `xecsuite-council.webp` | full-page screenshot of xecsuite | crops (y 2180, height 620; y 2795, height 730) scaled to 1280 wide |
 | `client-westcoastkids.webp`, `client-bkproducts.webp` | full-page screenshots of the two storefronts | top 1920 x 1000, scaled to 1280 x 667 |
+| `public/proj-newsstocks.webp` (the project card) | full-page screenshot of newsstocks.live (2026-10-27) | crop x 320 to 1600, y 0 to 800 (1280 x 800, 16:10, the card's shape), WebP quality 82 |

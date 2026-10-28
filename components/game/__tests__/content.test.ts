@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 // The tests import the placeholder testimonials only to prove that none of their text reaches the game.
 // eslint-disable-next-line no-restricted-imports
 import { projects, testimonials } from "@/data";
-import { education, experience, owner, skills } from "@/lib/persona";
+import { education, experience, owner, services, skills } from "@/lib/persona";
 import {
   FEATURED_PROJECT_IDS,
   allProjects,
@@ -18,6 +18,7 @@ import {
   projectById,
   promptTarget,
   shortTitle,
+  serviceTitles,
   skillBuckets,
   skillGroups,
   WORKSHOP_BUCKETS,
@@ -94,6 +95,11 @@ describe("skills, experience, education, contact", () => {
     for (const b of buckets) expect(b.groups.length).toBeGreaterThan(0);
   });
 
+  it("leads the Skills Workshop with the site's services, AI first, as the site does", () => {
+    expect(serviceTitles()).toEqual(services.map((s) => s.title));
+    expect(skillBuckets()[0].title).toBe("AI systems");
+  });
+
   it("experience and education are the persona entries, unchanged", () => {
     expect(experienceEntries()).toEqual(experience.map((e) => ({ role: e.role, company: e.company, period: e.period, detail: e.detail })));
     expect(educationEntries()).toEqual(education);
@@ -141,9 +147,9 @@ describe("no testimonial text or invented claim anywhere", () => {
   });
 
   it("every string an adapter returns comes from data/index.ts or lib/persona.ts", () => {
-    const source = JSON.stringify([projects, skills, experience, education, owner]);
+    const source = JSON.stringify([projects, skills, experience, education, owner, services]);
     const own = new Set(["mailto:", "https://", ...WORKSHOP_BUCKETS.map((b) => b.title), "More"]);
-    for (const s of strings([featuredProjects(), allProjects(), skillBuckets(), experienceEntries(), educationEntries(), contactLinks()])) {
+    for (const s of strings([featuredProjects(), allProjects(), skillBuckets(), serviceTitles(), experienceEntries(), educationEntries(), contactLinks()])) {
       if (own.has(s)) continue;
       // JSON escapes quotes and non-ASCII the same way in both, so a substring of the JSON is a substring of the data.
       const needle = JSON.stringify(s).slice(1, -1);

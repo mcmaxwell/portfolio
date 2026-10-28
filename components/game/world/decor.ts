@@ -284,7 +284,7 @@ function lamps(out: Parts) {
 
 function rocks(out: Parts) {
   const r = mulberry(7);
-  for (const [x, z] of [[-27, -12], [26, -9], [-26, 26], [27, 27], [-18, 26.5], [18, 27], [-12, -26], [-27, 10], [27, 12]] as const) {
+  for (const [x, z] of [[-27, -7], [26, -9], [-26, 26], [27, 27], [-18, 26.5], [18, 27], [-12, -26], [-27, 10], [27, 12]] as const) {
     for (let k = 0; k < 3; k++) {
       const s = 0.5 + r() * 0.9;
       out.add("orb", "rock", x + (r() - 0.5) * 2, s * 0.22, z + (r() - 0.5) * 2, s * 1.4, s * 0.7, s * 1.1, r() * 360, r());

@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // The tests import the placeholder testimonials only to prove that none of their text reaches the game.
 // eslint-disable-next-line no-restricted-imports
 import { projects, testimonials } from "@/data";
-import { education, experience, owner, skills } from "@/lib/persona";
+import { education, experience, owner, services, skills } from "@/lib/persona";
 import type { Interactable, PanelId } from "../config";
 import { createGame, type GameHandle } from "../session";
 import { GameInterface } from "../ui/GameInterface";
@@ -87,10 +87,13 @@ describe("all projects, skills, experience and contact", () => {
     return hrefs.indexOf(href);
   }
 
-  it("skills: three readable groups holding every persona skill line unchanged", () => {
+  it("skills: what I build, then three readable groups holding every persona skill line unchanged", () => {
     panel({ kind: "skills" });
     const dialog = screen.getByRole("dialog", { name: "Skills" });
-    expect(within(dialog).getAllByRole("region").length).toBe(3);
+    const regions = within(dialog).getAllByRole("region");
+    expect(regions.length).toBe(4);
+    expect(regions[0]).toHaveAccessibleName("What I build");
+    for (const s of services) expect(within(regions[0]).getByText(s.title)).toBeInTheDocument();
     for (const line of skills) {
       const i = line.indexOf(": ");
       expect(within(dialog).getByText(line.slice(0, i))).toBeInTheDocument();

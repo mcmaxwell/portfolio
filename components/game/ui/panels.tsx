@@ -11,6 +11,7 @@ import {
   educationEntries,
   experienceEntries,
   featuredProjects,
+  serviceTitles,
   skillBuckets,
   type GameProject,
 } from "../content";
@@ -159,6 +160,16 @@ function SkillsPanel({ onClose }: { onClose: () => void }) {
   return (
     <Frame title="Skills" onClose={onClose}>
       <div className="space-y-6">
+        <section aria-label="What I build">
+          <h3 className="mb-2 text-sm font-bold text-term-accent-bright">What I build</h3>
+          <ul className="flex flex-wrap gap-2">
+            {serviceTitles().map((t) => (
+              <li key={t} className="border border-term-line px-2 py-1 text-xs text-term-fg/90">
+                {t}
+              </li>
+            ))}
+          </ul>
+        </section>
         {skillBuckets().map((b) => (
           <section key={b.title} aria-label={b.title}>
             <h3 className="mb-2 text-sm font-bold text-term-accent-bright">{b.title}</h3>

@@ -374,7 +374,10 @@ export function createMaterials(textures: Record<TexName, THREE.Texture>): Mater
     screens[id] = reg(`screen:${id}`, new THREE.MeshStandardMaterial({ color: "#2a3430", map: t, emissive: "#ffffff", emissiveMap: t, emissiveIntensity: 0.85, roughness: 0.3, ...REVEALABLE }));
   }
 
-  // Light pools and rings: additive, unlit, never write depth.
+  // Light pools and rings: additive, unlit, never write depth. Each lies a centimetre or more above
+  // the surface under it, so no polygon offset: a slope-scaled offset grows at grazing angles and
+  // pulled a pool through whatever it crosses (the Lab's floor strip, the Workshop ramp), so it
+  // blinked in and out as the camera moved.
   const soft = tex(gradientCanvas("soft"), false);
   const ring = tex(gradientCanvas("ring"), false);
   const additive = (key: string, t: THREE.Texture, color: string, opacity: number) =>
@@ -388,9 +391,6 @@ export function createMaterials(textures: Record<TexName, THREE.Texture>): Mater
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         fog: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2,
       }),
       opacity
     );
