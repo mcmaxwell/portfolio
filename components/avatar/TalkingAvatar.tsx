@@ -184,6 +184,16 @@ const TalkingAvatar = () => {
   // IntroVideo keeps its own state and reports whether its cover is up (playing or fading). While it
   // is, the hero controls beneath it are inert, Play is ignored and the game prefetch waits.
   const [introActive, setIntroActive] = useState(false);
+  // On <html data-intro-film> too: the memory particles (components/memory) stay off while the film
+  // is up, so a scroll during it does not draw them over the video.
+  useEffect(() => {
+    if (!introActive) return;
+    const root = document.documentElement;
+    root.dataset.introFilm = "";
+    return () => {
+      delete root.dataset.introFilm;
+    };
+  }, [introActive]);
   // While the film fully covers the hero, the avatar beneath it does not need to render: once it has
   // loaded and drawn for a moment (shaders compiled), the loop sleeps until the hand-off starts. That
   // leaves the GPU and main thread to the video for the length of the film.

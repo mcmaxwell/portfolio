@@ -184,8 +184,13 @@ function start(renderer: THREE.WebGLRenderer) {
   };
 
   const root = document.documentElement;
-  // Hidden tab, or the 3D world owns the page (the canvas is display:none then too).
-  const paused = () => document.hidden || (root.dataset.experience !== undefined && root.dataset.experience !== "hero");
+  // Hidden tab, the 3D world owns the page, the intro film is up or the phone menu is open (the
+  // canvas is display:none in the last three, see globals.css).
+  const paused = () =>
+    document.hidden ||
+    (root.dataset.experience !== undefined && root.dataset.experience !== "hero") ||
+    root.dataset.introFilm !== undefined ||
+    root.dataset.menu !== undefined;
   const onPointer = (e: PointerEvent) => {
     pointerSet = true;
     uniforms.uPointer.value.set(e.clientX, e.clientY);
