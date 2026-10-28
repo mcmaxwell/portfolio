@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import type { PanelId } from "../config";
 import type { GameHandle } from "../session";
 import { TIMING } from "../shell/transition";
-import { restartChallenge } from "../progress";
-import { ChallengeHud, ControlsHint, beaconHintText, HudButtons, InteractionPrompt } from "./Hud";
+import { restartChallenge, trophyCount } from "../progress";
+import { ChallengeHud, ControlsHint, beaconHintText, HudButtons, InteractionPrompt, trophyText } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
 import { PortfolioPanel } from "./panels";
 import { TouchControls } from "./TouchControls";
@@ -77,12 +77,13 @@ export function GameInterface({ game, onExit }: { game: GameHandle; onExit: () =
     }
   }, [state.mode]);
 
-  // The trophy: announced once when it is collected during this visit (a restored one stays quiet).
-  const trophyRef = useRef(progress.trophy);
+  // A cup: announced once when it is collected during this visit (a restored one stays quiet).
+  const cups = trophyCount(progress);
+  const cupsRef = useRef(cups);
   useEffect(() => {
-    if (progress.trophy && !trophyRef.current) setAnnounce("Trophy collected");
-    trophyRef.current = progress.trophy;
-  }, [progress.trophy]);
+    if (cups > cupsRef.current) setAnnounce(trophyText(cups));
+    cupsRef.current = cups;
+  }, [cups]);
 
   const pause = useCallback(() => session.dispatch({ type: "PAUSE", reason: "user" }), [session]);
   const resume = useCallback(() => session.dispatch({ type: "RESUME" }), [session]);

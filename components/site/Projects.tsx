@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { projects } from "@/data";
+import { caseForProject } from "@/data/cases";
+import { vt } from "./CaseStudy";
 import { Magnetic } from "./Cursor";
 import { EASE_OUT_EXPO, FadeIn, RevealText, SectionLabel, useReducedMotion } from "./ui";
+import { TransitionLink } from "@/components/site/TransitionLink";
 
 type Project = {
   id: number;
@@ -121,7 +124,7 @@ function RippleImage({ src, alt, id }: { src: string; alt: string; id: string })
         decoding="async"
         onPointerEnter={play}
         style={playing ? { filter: `url(#${id})` } : undefined}
-        className="h-full w-full object-cover object-top transition-transform duration-1000 ease-out group-hover:scale-[1.06]"
+        className="h-full w-full object-cover object-left-top transition-transform duration-1000 ease-out group-hover:scale-[1.06]"
       />
     </>
   );
@@ -148,24 +151,30 @@ function Featured({
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["-6%", "6%"]);
+  const y = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["-5%", "5%"]);
   const targetScale = 1 - (total - 1 - index) * 0.05;
   const scale = useTransform(progress, [index / total, 1], [1, stack ? targetScale : 1]);
   const dim = useTransform(progress, [index / total, 1], [0, stack ? (total - 1 - index) * 0.18 : 0]);
   const [name, subtitle] = splitTitle(p.title);
   const flip = index % 2 === 1;
   const num = String(index + 1).padStart(2, "0");
-  const external = isExternal(p);
+  const study = caseForProject(p.id);
+  const caseHref = study ? `/work/${study.slug}` : null;
 
   const image = (
     <motion.div
-      className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-term-bg md:aspect-[16/11]"
+      style={study ? vt(`case-media-${study.slug}`) : undefined}
+      // The memory layer spells the project's name over the screenshot as the card arrives.
+      data-memory={study ? "word" : undefined}
+      data-memory-id={study?.slug}
+      data-memory-word={study?.mark ?? study?.name}
+      className="group relative aspect-[16/10] overflow-hidden rounded-2xl bg-term-bg"
       initial={reduced ? false : { clipPath: "inset(14% 14% 14% 14% round 16px)" }}
       whileInView={{ clipPath: "inset(0% 0% 0% 0% round 16px)" }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 1.4, ease: EASE_OUT_EXPO }}
     >
-      <motion.div style={{ y }} className="absolute inset-[-7%]">
+      <motion.div style={{ y }} className="absolute inset-x-0 -inset-y-[6%]">
         <RippleImage src={p.img!} alt={`Screenshot of ${name}`} id={`ripple-${p.id}`} />
       </motion.div>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-term-bg/40 via-transparent to-transparent" />
@@ -189,10 +198,12 @@ function Featured({
       >
         <div className="grid items-center gap-8 md:grid-cols-12 md:gap-12">
           <div className={`md:col-span-7 ${flip ? "md:order-2" : ""}`}>
-            {external ? (
-              <a href={p.link} target="_blank" rel="noopener noreferrer" tabIndex={-1} aria-hidden data-cursor="Visit">
+            {/* A plain anchor, not <Link>: the case page is a full navigation so the browser can run the
+                view transition from this card. */}
+            {caseHref ? (
+              <TransitionLink href={caseHref} tabIndex={-1} aria-hidden data-cursor="Read">
                 {image}
-              </a>
+              </TransitionLink>
             ) : (
               image
             )}
@@ -204,10 +215,24 @@ function Featured({
                 <span className="h-px w-8 bg-term-line" />
                 <span>{p.role}</span>
               </div>
-              <h3 className="font-display text-5xl font-medium leading-none tracking-[-0.03em] text-term-paper md:text-6xl">{name}</h3>
+              <h3
+                style={study ? vt(`case-title-${study.slug}`) : undefined}
+                className="font-display text-[clamp(2.25rem,10vw,3rem)] font-medium leading-none [overflow-wrap:anywhere] tracking-[-0.03em] text-term-paper md:text-6xl"
+              >
+                {name}
+              </h3>
               {subtitle && <p className="mt-3 text-sm text-term-muted">{subtitle}</p>}
-              <p className="mt-6 text-lg leading-snug text-term-paper/90 md:text-xl">{p.summary}</p>
-              <p className="mt-4 text-sm leading-relaxed text-term-fg/70">{p.des}</p>
+              <p className="mt-6 text-lg leading-snug text-term-paper/90 md:text-xl">{study?.hook ?? p.summary}</p>
+              {study && (
+                <dl className="mt-6 grid grid-cols-3 gap-3 border-t border-term-line pt-4">
+                  {study.facts.map((f) => (
+                    <div key={f.label}>
+                      <dd className="font-display text-2xl font-medium tracking-tight text-term-paper md:text-3xl">{f.value}</dd>
+                      <dt className="mt-0.5 text-[11px] leading-snug text-term-muted">{f.label}</dt>
+                    </div>
+                  ))}
+                </dl>
+              )}
               <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-term-muted" aria-label="Stack">
                 {p.stack.map((s) => (
                   <li key={s}>
@@ -215,8 +240,19 @@ function Featured({
                   </li>
                 ))}
               </ul>
-              <Clients p={p} />
-              <div className="mt-8">
+              {!study?.clients && <Clients p={p} />}
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                {caseHref && (
+                  <Magnetic>
+                    <TransitionLink
+                      href={caseHref}
+                      className="group/case inline-flex items-center gap-3 rounded-full bg-term-accent px-5 py-2.5 text-sm font-bold text-term-bg transition-colors hover:bg-term-accent-bright"
+                    >
+                      Read the case
+                      <span aria-hidden className="transition-transform duration-300 group-hover/case:translate-x-1">→</span>
+                    </TransitionLink>
+                  </Magnetic>
+                )}
                 <VisitLink p={p} name={name} />
               </div>
             </FadeIn>

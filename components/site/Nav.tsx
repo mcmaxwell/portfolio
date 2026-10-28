@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { Magnetic } from "./Cursor";
+import { SoundToggle } from "./SoundToggle";
 
 const items = [
   { watch: "about", href: "#about", label: "About", index: "01" },
@@ -118,6 +119,9 @@ export function Nav() {
                 </li>
               );
             })}
+            <li>
+              <SoundToggle />
+            </li>
             <li>
               <Magnetic>
                 <a

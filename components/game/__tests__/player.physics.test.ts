@@ -431,16 +431,54 @@ describe("campus (M3)", () => {
     expect(feetY(r2.motor)).toBeCloseTo(0.5, 1);
   });
 
-  it("falling into the ravine respawns the player at the plaza spawn", () => {
-    const r = campusRig({ x: 8, y: 0, z: -22 });
+  it("falling into the pit respawns the player at the plaza spawn", () => {
+    const r = campusRig({ x: 10.4, y: 0, z: -22 }); // on the rim, inside the maze
     settle(r);
     expect(r.motor.state.grounded).toBe(true);
-    const w = walkTo(r, 16, -20, 0.2, 12, true); // out onto the void between the first two stones
+    const w = walkTo(r, 16, -20.5, 0.2, 12, true); // out onto the void, without a jump
     expect(w.respawns).toBeGreaterThanOrEqual(1);
     settle(r);
     const f = feetOf(r.motor);
     expect(Math.hypot(f.x - CAMPUS.spawn.x, f.z - CAMPUS.spawn.z)).toBeLessThan(0.5);
     expect(r.motor.state.grounded).toBe(true);
+  });
+
+  it("the hedge maze leads from its entrance to the rim of the pit, and its hedges block the straight line", () => {
+    const r = campusRig({ x: 8.5, y: 0, z: -10.5 });
+    settle(r);
+    // In at the north-west gap, east along the north corridor, south down the east one, west through the gap onto the rim.
+    for (const [x, z] of [[8.5, -14.2], [23.75, -14.2], [23.75, -28.3], [16, -28.3]] as const) {
+      const w = walkTo(r, x, z, 0.35, 30);
+      expect(w.reached, `${x},${z}`).toBe(true);
+      expect(w.respawns).toBe(0);
+    }
+    const straight = campusRig({ x: 8.5, y: 0, z: -10.5 });
+    settle(straight);
+    expect(walkTo(straight, 16, -16.5, 0.35, 15).reached).toBe(false);
+  });
+
+  it("two running jumps from the rim land on the middle stone, where the cup is in reach", () => {
+    const r = campusRig({ x: 16, y: 0, z: -28.4 });
+    settle(r);
+    const cup = CAMPUS.challenge.mazeTrophy!;
+    let respawns = 0;
+    let jumps = 0;
+    // Run north and jump just before each edge: the rim (z -27), then the first stone (z -24.1).
+    for (let t = 0; t < 6; t += DT) {
+      const z = r.motor.state.position.z;
+      const jump = (z > -27.4 && z < -27) || (z > -24.5 && z < -24.1);
+      const s = r.motor.step(DT, { moveWorld: { x: 0, z: 1 }, run: true, jump });
+      r.world.step();
+      r.motor.capture();
+      if (s.jumpedThisStep) jumps++;
+      if (s.respawnedThisStep) respawns++;
+      if (s.grounded && z > -22.6) break;
+    }
+    expect(respawns).toBe(0);
+    expect(jumps).toBe(2);
+    const f = feetOf(r.motor);
+    expect(f.y).toBeCloseTo(0, 1);
+    expect(Math.hypot(f.x - cup.position.x, f.z - cup.position.z)).toBeLessThanOrEqual(cup.radius);
   });
 
   it("is blocked by the boundary hedges and the building walls", () => {

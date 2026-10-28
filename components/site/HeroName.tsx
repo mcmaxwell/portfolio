@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useReducedMotion } from "./ui";
+import { voice } from "@/lib/voice";
 
 const LINES = [
   { text: "Maksym", className: "text-term-paper" },
@@ -17,8 +18,9 @@ const RADIUS = 260;
 /**
  * The giant hero name. Server-rendered letters rise in after the intro (CSS, .hero-letter), then
  * each one thickens as the pointer comes near, and the whole name drifts up and opens its
- * tracking as the page scrolls away. Pointer and scroll effects are off with reduced motion and
- * on touch screens.
+ * tracking as the page scrolls away. While the avatar speaks, a wave of weight runs through the
+ * letters with its voice. Pointer and scroll effects are off with reduced motion and on touch
+ * screens; the voice wave is off with reduced motion.
  */
 export function HeroName() {
   const ref = useRef<HTMLHeadingElement>(null);
@@ -27,6 +29,45 @@ export function HeroName() {
   const y = useTransform(scrollY, [0, 900], [0, reduced ? 0 : -160]);
   const opacity = useTransform(scrollY, [0, 700], [1, reduced ? 1 : 0.1]);
   const tracking = useTransform(scrollY, [0, 900], ["-0.04em", reduced ? "-0.04em" : "0.02em"]);
+
+  // The voice wave: runs only while <html data-voice="speaking">, one frame loop, no React state.
+  useEffect(() => {
+    const root = ref.current;
+    if (!root || reduced) return;
+    const letters = Array.from(root.querySelectorAll<HTMLElement>("[data-letter]"));
+    const html = document.documentElement;
+    let raf = 0;
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop);
+      const t = now / 1000;
+      letters.forEach((el, i) => {
+        const wave = 0.5 + 0.5 * Math.sin(t * 7 - i * 0.55);
+        const w = BASE_WEIGHT + (PEAK_WEIGHT - BASE_WEIGHT) * Math.min(1, voice.level * 1.6) * wave;
+        el.style.fontVariationSettings = `"wght" ${Math.round(w)}`;
+      });
+    };
+    const sync = () => {
+      const speaking = html.dataset.voice === "speaking";
+      if (speaking && !raf) {
+        letters.forEach((el) => (el.style.transitionDuration = "80ms"));
+        raf = requestAnimationFrame(loop);
+      } else if (!speaking && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        letters.forEach((el) => {
+          el.style.transitionDuration = "";
+          el.style.fontVariationSettings = `"wght" ${BASE_WEIGHT}`;
+        });
+      }
+    };
+    const mo = new MutationObserver(sync);
+    mo.observe(html, { attributes: true, attributeFilter: ["data-voice"] });
+    sync();
+    return () => {
+      mo.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [reduced]);
 
   useEffect(() => {
     const root = ref.current;
@@ -48,7 +89,8 @@ export function HeroName() {
     const onMove = (e: PointerEvent) => {
       px = e.clientX;
       py = e.clientY;
-      if (!frame && window.scrollY < window.innerHeight) frame = requestAnimationFrame(paint);
+      if (!frame && window.scrollY < window.innerHeight && document.documentElement.dataset.voice !== "speaking")
+        frame = requestAnimationFrame(paint);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => {

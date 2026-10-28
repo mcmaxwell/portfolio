@@ -3,7 +3,7 @@
 // Restart in the pause menu (settings kept) and the completion panel actions.
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { collectCell, collectTrophy, restartChallenge } from "../progress";
+import { collectCell, collectMazeTrophy, collectTrophy, restartChallenge } from "../progress";
 import { createGame, type GameHandle } from "../session";
 import { GameInterface } from "../ui/GameInterface";
 
@@ -160,5 +160,14 @@ describe("trophy restored from a saved record", () => {
     act(() => game.session.dispatch({ type: "ENTRY_DONE" }));
     expect(document.querySelector("[data-trophy-chip]")).not.toBeNull();
     expect(document.querySelector("[data-game-announce]")).not.toHaveTextContent("Trophy collected");
+  });
+});
+
+describe("two cups", () => {
+  it("the second cup announces and shows '2 trophies collected'", () => {
+    act(() => game.progress.update(collectTrophy));
+    act(() => game.progress.update(collectMazeTrophy));
+    expect(document.querySelector("[data-game-announce]")).toHaveTextContent("2 trophies collected");
+    expect(document.querySelector("[data-trophy-chip]")).toHaveTextContent("2 trophies collected");
   });
 });

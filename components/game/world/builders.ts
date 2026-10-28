@@ -92,12 +92,16 @@ export function placePoint(origin: { x: number; z: number }, yawDeg: number, p: 
   return v(origin.x + r.x, p[1], origin.z + r.z);
 }
 
-/** A flat, collision-free strip on the ground between two points (a path). */
+/**
+ * A flat, collision-free strip on the ground between two points (a path). Its top is 6 mm under the
+ * plaza paving's, so where a path runs onto the plaza the paving covers it: at the same height the
+ * two textures fought for the same pixels and blinked as the camera moved.
+ */
 export function pathStrip(id: string, a: { x: number; z: number }, b: { x: number; z: number }, width: number, material: Material = "path"): Block {
   const dx = b.x - a.x;
   const dz = b.z - a.z;
   const len = Math.hypot(dx, dz);
-  return blk(id, "prop", [(a.x + b.x) / 2, 0.012, (a.z + b.z) / 2], [width, 0.024, len], material, {
+  return blk(id, "prop", [(a.x + b.x) / 2, 0.009, (a.z + b.z) / 2], [width, 0.018, len], material, {
     collide: false,
     yaw: Math.atan2(dx, dz) / RAD,
   });

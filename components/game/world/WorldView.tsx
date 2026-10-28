@@ -4,7 +4,6 @@
 // from world/resources.ts and outlive the mount (shared by every game session).
 import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { QualityPreset } from "../config";
 import { allCollected, type ProgressV1 } from "../progress";
@@ -15,6 +14,7 @@ import type { Layout } from "./layout";
 import { readWorldResources, warmId, warmPlan } from "./resources";
 import { warmGameState } from "./warm";
 import { SKY } from "./sky";
+import { useAvatarGLTF } from "@/lib/avatarSource";
 
 /** The world preset the entry tween ends on (k = 1); k = 0 is the hero look (HERO.lights). */
 const WORLD_LOOK = {
@@ -65,7 +65,7 @@ export function WorldView({
   challenge?: { progress: Store<ProgressV1>; reducedMotion: boolean };
 }) {
   const { scene, gl, camera } = useThree();
-  const avatar = useGLTF(avatarUrl, true, false).scene;
+  const avatar = useAvatarGLTF(avatarUrl).scene;
   const meshesRef = useRef<THREE.Group>(null);
   const lightsRef = useRef<THREE.Group>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);
@@ -103,12 +103,13 @@ export function WorldView({
 
   // Challenge visuals: set to the current progress on mount, then follow it each frame.
   const celebRef = useRef(0);
-  const challengeCache = useRef<{ progress: ProgressV1 | null; collected: Set<string>; all: boolean; completed: boolean; trophy: boolean }>({
+  const challengeCache = useRef<{ progress: ProgressV1 | null; collected: Set<string>; all: boolean; completed: boolean; trophy: boolean; mazeTrophy: boolean }>({
     progress: null,
     collected: new Set(),
     all: false,
     completed: false,
     trophy: false,
+    mazeTrophy: false,
   });
   const frameOf = (time: number, dt: number) => {
     const p = challenge?.progress.getState();
@@ -119,10 +120,11 @@ export function WorldView({
       c.all = allCollected(p);
       c.completed = p.completed;
       c.trophy = p.trophy;
+      c.mazeTrophy = p.mazeTrophy;
     }
     // The beam shows from the third cell until the beacon is lit, and stays through the celebration.
     const beam = c.all && (!c.completed || celebRef.current > 0);
-    return { time, dt, collected: c.collected, trophy: c.trophy, beam, glow: celebRef.current, reduced: challenge?.reducedMotion ?? false };
+    return { time, dt, collected: c.collected, trophy: c.trophy, mazeTrophy: c.mazeTrophy, beam, glow: celebRef.current, reduced: challenge?.reducedMotion ?? false };
   };
   useLayoutEffect(() => {
     resources.challenge?.snap(frameOf(0, 0));

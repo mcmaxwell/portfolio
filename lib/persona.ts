@@ -22,14 +22,20 @@ export const owner = {
     "Tailwind) and Adobe Certified Expert–level Adobe Commerce experience. Shipped " +
     "so far: an autonomous financial-news platform and an AI HR assistant, " +
     "plus 20+ online stores successfully launched.",
+  // The version on the page: the long `about` stays for the avatar's prompt and the structured data.
+  aboutShort:
+    "Co-founder and CTO of XecSuite, co-founder of Apex Mind. I design and ship AI agents, voice " +
+    "interfaces and the automation between them, across OpenAI, Claude, Gemini and open-source models, " +
+    "on twelve years of front-end engineering and an Adobe Commerce certification.",
 };
 
 export const skills = [
   "Languages & frameworks: React, Next.js, Vue.js, TypeScript, JavaScript, Node.js (back-end), KnockoutJS, jQuery, PHP",
-  "AI & agents: multi-agent orchestration, RAG, prompt engineering, voice assistants, real-time lip-sync",
+  "AI & agents: multi-agent orchestration, RAG, MCP, prompt engineering, real-time voice agents (OpenAI Realtime, LiveKit, WebRTC), real-time lip-sync",
   "Models: OpenAI, Anthropic Claude (Claude Code), Google Gemini, self-hosted open-source LLMs",
-  "AI media: ElevenLabs (voice/TTS), HeyGen (AI video avatars), Kling AI (video generation), DALL·E",
-  "Automation: Make.com, n8n, Telegram bots, cron pipelines, social/video auto-publishing, end-to-end workflow automation",
+  "AI media: ElevenLabs (voice/TTS), HeyGen (AI video avatars), Kling AI and Seedance (video generation), DALL·E",
+  "Automation: Make.com, n8n, Telegram bots, cron pipelines, social/video auto-publishing (Instagram, Facebook, TikTok, YouTube, LinkedIn, X), end-to-end workflow automation",
+  "Apps & back end: Expo (React Native mobile apps), Node.js APIs, Supabase, Stripe payments, dashboards",
   "UI/UX: TailwindCSS, Styled Components, Figma-to-React, custom animations, accessibility (A11y)",
   "State & data: Redux, Context API, REST, Cloudinary, databases",
   "E-commerce: Adobe Certified Expert (Adobe Commerce / Magento 2), custom checkout, Knockout.js, LESS/SASS, Salesforce LWC, WordPress",
@@ -102,7 +108,7 @@ export const services = [
     id: "websites",
     title: "Websites of any kind",
     summary:
-      "Marketing sites, online stores, landing pages, booking flows and immersive 3D experiences. Fast, accessible, and easy for your team to update.",
+      "Marketing sites, online stores, landing pages, booking flows and immersive 3D experiences, built on Next.js. Fast, accessible, and easy for your team to update.",
     proof: ["20+ online stores launched on Adobe Commerce", "Rebuilt slow sites from ~30s to ~3s loads"],
     tags: ["Next.js", "Magento", "WordPress", "Three.js"],
   },
@@ -134,9 +140,9 @@ export const services = [
     id: "social",
     title: "Social media on autopilot",
     summary:
-      "Posts that get written, designed and published on a schedule across Instagram, Facebook, TikTok, YouTube and LinkedIn, with you approving what goes out.",
+      "Posts that get written, designed and published on a schedule across Instagram, Facebook, TikTok, YouTube, LinkedIn and X, with you approving what goes out.",
     proof: ["NewsStocks publishes to TikTok, YouTube, Instagram and Facebook", "OwnerSteps schedules posts to three networks"],
-    tags: ["Meta API", "TikTok", "YouTube", "Telegram"],
+    tags: ["Meta API", "TikTok", "YouTube", "LinkedIn", "X", "Telegram"],
   },
   {
     id: "ads",
@@ -152,7 +158,7 @@ export const services = [
     summary:
       "Short video ads with AI voiceover, presenters and generated footage, cut to length and exported for every platform.",
     proof: ["NewsStocks short videos with ElevenLabs, HeyGen and Kling", "FrameForge AI: spoken idea to finished MP4"],
-    tags: ["HeyGen", "Kling AI", "ElevenLabs", "FFmpeg"],
+    tags: ["Seedance", "HeyGen", "Kling AI", "ElevenLabs", "FFmpeg"],
   },
 ] as const;
 

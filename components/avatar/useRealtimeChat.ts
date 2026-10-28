@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { voice } from "@/lib/voice";
 
 // Executes a voice command on the page. Add more actions here as you add tools.
 function runSiteAction(
@@ -76,6 +77,7 @@ export function useRealtimeChat(
       audioElRef.current.srcObject = null;
     }
     volumeRef.current = 0;
+    voice.level = 0;
   }, []);
 
   // Continuously measure loudness of the model's voice for lip-sync.
@@ -95,6 +97,7 @@ export function useRealtimeChat(
       const rms = Math.sqrt(sum / data.length);
       // Smooth a little so the jaw doesn't jitter.
       volumeRef.current = volumeRef.current * 0.6 + Math.min(1, rms * 2.2) * 0.4;
+      voice.level = volumeRef.current;
       rafRef.current = requestAnimationFrame(tick);
     };
     tick();

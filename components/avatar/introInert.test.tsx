@@ -67,15 +67,12 @@ describe("hero under the intro video", () => {
     });
     // Every covered control sits inside an inert subtree, so none can take a Tab stop.
     const talk = screen.getByText(/talk to me/);
-    const gesture = container.querySelector("[data-xfade]") as HTMLElement;
     expect(talk.closest("[inert]")).not.toBeNull();
     expect(play.closest("[inert]")).not.toBeNull();
-    expect(gesture.closest("[inert]")).not.toBeNull();
-    for (const b of screen.getAllByText(/^(wave|run)$/)) {
-      expect(b.closest("[inert]")).not.toBeNull();
-    }
+    expect(screen.getByText(/make me move/i).closest("[inert]")).not.toBeNull();
+    expect(screen.getByText(/watch the film/i).closest("[inert]")).not.toBeNull();
     // The skip button belongs to the cover and stays live.
-    expect(screen.getByRole("button", { name: /skip intro/i }).closest("[inert]")).toBeNull();
+    expect(screen.getByRole("button", { name: /skip film/i }).closest("[inert]")).toBeNull();
 
     // The avatar has not loaded under the film, so Play is not enabled yet.
     await act(async () => {});
@@ -100,11 +97,47 @@ describe("hero under the intro video", () => {
     expect(prefetchSpy).toHaveBeenCalledTimes(3);
   });
 
+  it("waits for the Watch the film button instead of playing on load", async () => {
+    window.history.pushState({}, "", "/");
+    const { container, play } = await mountHero("/intro-test.mp4");
+    // No film on load: the avatar loads straight away and the hero is live.
+    expect(container.querySelector("video")).toBeNull();
+    await waitFor(() => expect(play).toBeEnabled());
+    expect(container.querySelector("[inert]")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /watch the film/i }));
+    const video = await waitFor(() => {
+      const v = container.querySelector("video");
+      expect(v).not.toBeNull();
+      return v!;
+    });
+    // Opened by a click, so it starts with sound, and the controls beneath are inert while it plays.
+    expect(video.muted).toBe(false);
+    expect(play.closest("[inert]")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /skip film/i }));
+    await waitFor(() => expect(container.querySelector("video")).toBeNull());
+    expect(play.closest("[inert]")).toBeNull();
+  });
+
+  it("keeps the moves behind Make me move", async () => {
+    window.history.pushState({}, "", "/");
+    await mountHero(undefined);
+    expect(screen.queryByText(/^wave$/)).toBeNull();
+    const toggle = screen.getByRole("button", { name: /make me move/i });
+    await waitFor(() => expect(toggle).toBeEnabled());
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /^wave$/ })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByText(/^wave$/)).toBeNull();
+  });
+
   it("leaves the hero unchanged when the intro is turned off", async () => {
     const { container, play } = await mountHero(undefined);
     await act(async () => {});
     expect(container.querySelector("video")).toBeNull();
     expect(container.querySelector("[inert]")).toBeNull();
+    expect(screen.queryByText(/watch the film/i)).toBeNull();
     fireEvent.focus(play);
     expect(prefetchSpy).toHaveBeenCalledTimes(1);
   });

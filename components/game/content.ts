@@ -2,7 +2,7 @@
 // panels can show nothing but what the portfolio already says. Strings pass through untouched.
 // Importing `testimonials` is a lint error anywhere under components/game (they are placeholders).
 import { projects } from "@/data";
-import { education, experience, owner, skills } from "@/lib/persona";
+import { education, experience, owner, services, skills } from "@/lib/persona";
 
 export const FEATURED_PROJECT_IDS = [1, 2, 3] as const;
 
@@ -81,10 +81,15 @@ export function skillGroups(): SkillGroup[] {
  * kept in a final "More" bucket, so nothing from lib/persona.ts is ever dropped.
  */
 export const WORKSHOP_BUCKETS: readonly { title: string; groups: readonly string[] }[] = [
-  { title: "Front-end and e-commerce", groups: ["Languages & frameworks", "UI/UX", "State & data", "E-commerce"] },
   { title: "AI systems", groups: ["AI & agents", "Models", "AI media"] },
   { title: "Automation and tooling", groups: ["Automation", "Tooling & practices"] },
+  { title: "Web, apps and e-commerce", groups: ["Languages & frameworks", "Apps & back end", "UI/UX", "State & data", "E-commerce"] },
 ];
+
+/** What the site offers (its Services section), shown first in the Skills Workshop: the titles, unchanged. */
+export function serviceTitles(): string[] {
+  return services.map((s) => s.title);
+}
 
 export function skillBuckets(): { title: string; groups: SkillGroup[] }[] {
   const all = skillGroups();

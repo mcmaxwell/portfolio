@@ -12,6 +12,6 @@ export default defineConfig({
     // many times oversubscribed: a 1 s physics case then still has a minute, not the default 5 s.
     testTimeout: 60_000,
     hookTimeout: 60_000,
-    include: ["scripts/__tests__/**/*.test.{ts,mjs}", "components/game/**/*.test.{ts,tsx}", "components/avatar/**/*.test.{ts,tsx}"],
+    include: ["scripts/__tests__/**/*.test.{ts,mjs}", "components/game/**/*.test.{ts,tsx}", "components/avatar/**/*.test.{ts,tsx}", "components/site/**/*.test.{ts,tsx}", "components/memory/**/*.test.{ts,tsx}", "lib/**/*.test.{ts,tsx}"],
   },
 });

@@ -36,6 +36,7 @@ function Statement() {
   return (
     <h2
       ref={ref}
+      data-memory="statement"
       className="max-w-[18ch] font-display text-[2.6rem] font-medium leading-[1.02] tracking-[-0.03em] text-term-paper sm:max-w-[20ch] md:text-7xl lg:text-[5.5rem]"
     >
       <span className="sr-only">{STATEMENT}</span>
@@ -89,7 +90,7 @@ export function About() {
 
       <div className="mt-20 grid gap-16 md:mt-32 md:grid-cols-12">
         <FadeIn className="md:col-span-6 lg:col-span-5">
-          <p className="text-base leading-relaxed text-term-fg/85 md:text-lg">{owner.about}</p>
+          <p className="text-base leading-relaxed text-term-fg/85 md:text-lg">{owner.aboutShort}</p>
           <p className="mt-6 text-sm text-term-muted">
             <span className="text-term-accent">●</span> {owner.location}
           </p>

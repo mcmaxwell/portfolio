@@ -183,6 +183,25 @@ html[data-experience]:not([data-experience="hero"]) .grain {
   display: none;
 }
 
+/* The memory layer (components/memory): the real avatar fades as the particles take its surface
+   apart on the way out of the hero, and the layer stays out of the 3D world's way. */
+html:not([data-experience]) [data-stage-canvas],
+html[data-experience="hero"] [data-stage-canvas] {
+  opacity: calc(1 - var(--memory-dissolve, 0));
+}
+html[data-experience]:not([data-experience="hero"]) .memory-field {
+  display: none;
+}
+[data-memory="word"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: #0c0c0b;
+  opacity: calc(var(--memory-veil, 0) * 0.78);
+}
+
 /* Outlined display type */
 .text-outline {
   color: transparent;
@@ -354,3 +373,21 @@ html.has-cursor[data-experience="hero"] * {
   cursor: none !important;
 }
 html[data-experience]:not([data-experience="hero"]) .site-cursor { display: none; }
+
+/* ---------- Case pages (components/site/CaseStudy.tsx) ----------
+   A project card on the home page and its case page name the same elements, so the move between
+   them morphs the card's picture and title into the page: a same-document transition around the
+   client-side navigation (TransitionLink.tsx), or a cross-document one on a full load. */
+@view-transition {
+  navigation: auto;
+}
+[style*="--vt"] {
+  view-transition-name: var(--vt);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
