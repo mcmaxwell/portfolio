@@ -163,3 +163,15 @@ Runtime memory: 12 tiling textures (512 x 512 and 256 x 256 with mipmaps) and 11
 | `app/og-photo.jpg` (outside `public/intro`) | same | 720 x 720 crop (x 520 to 1240) of `intro-poster.webp`, resized to 630 x 630, JPEG quality 82; the photo in the build-time share image (`app/opengraph-image.tsx`) |
 
 The hand-off in `components/avatar/IntroVideo.tsx` relies on the last frame: the avatar spans 2.5% to 97.5% of the frame height, centred. A new film must end the same way, or those numbers (`FILM_AVATAR`) must be re-measured.
+
+## Case screens (`public/cases`)
+
+Source: the owner's own screen recordings and full-page screenshots of his live products, made on 2026-10-27 (provided in his `portfolio-assets` folder, with `metrics.md` recording where and when each number on the case pages was read). Same terms as the repository code.
+
+| File | Source | Notes |
+| --- | --- | --- |
+| `xecsuite-site.mp4`, `apexmind-site.mp4`, `newsstocks-home.mp4`, `newsstocks-analysis.mp4`, `newsstocks-article.mp4`, `newsstocks-extras.mp4` | desktop recordings | scaled to 1280 wide, H.264 (x264 CRF 27 or 28, faststart), audio removed |
+| `newsstocks-home-mobile.mp4`, `xecsuite-site-mobile.mp4` | phone recordings | scaled to 480 x 1038, same codec, audio removed |
+| `*.webp` with a video's name | same | first frame of that clip, the poster |
+| `xecsuite-lanes.webp`, `xecsuite-council.webp` | full-page screenshot of xecsuite | crops (y 2180, height 620; y 2795, height 730) scaled to 1280 wide |
+| `client-westcoastkids.webp`, `client-bkproducts.webp` | full-page screenshots of the two storefronts | top 1920 x 1000, scaled to 1280 x 667 |

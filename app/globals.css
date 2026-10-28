@@ -375,9 +375,9 @@ html.has-cursor[data-experience="hero"] * {
 html[data-experience]:not([data-experience="hero"]) .site-cursor { display: none; }
 
 /* ---------- Case pages (components/site/CaseStudy.tsx) ----------
-   A project card on the home page and its case page name the same elements, so a full navigation
-   between them morphs the card's picture and title into the page (browsers without cross-document
-   view transitions simply load the page). */
+   A project card on the home page and its case page name the same elements, so the move between
+   them morphs the card's picture and title into the page: a same-document transition around the
+   client-side navigation (TransitionLink.tsx), or a cross-document one on a full load. */
 @view-transition {
   navigation: auto;
 }

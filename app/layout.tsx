@@ -4,6 +4,7 @@ import Script from "next/script";
 
 import "./globals.css";
 import { ThemeProvider } from "./provider";
+import { RouteSettled } from "@/components/site/TransitionLink";
 import { education, owner, services } from "@/lib/persona";
 
 const GA_ID = "G-RW77DJRDV1";
@@ -179,6 +180,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <RouteSettled />
 
         {/* Google Analytics (gtag.js) */}
         <Script

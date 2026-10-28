@@ -7,6 +7,7 @@ import { caseForProject } from "@/data/cases";
 import { vt } from "./CaseStudy";
 import { Magnetic } from "./Cursor";
 import { EASE_OUT_EXPO, FadeIn, RevealText, SectionLabel, useReducedMotion } from "./ui";
+import { TransitionLink } from "@/components/site/TransitionLink";
 
 type Project = {
   id: number;
@@ -200,9 +201,9 @@ function Featured({
             {/* A plain anchor, not <Link>: the case page is a full navigation so the browser can run the
                 view transition from this card. */}
             {caseHref ? (
-              <a href={caseHref} tabIndex={-1} aria-hidden data-cursor="Read">
+              <TransitionLink href={caseHref} tabIndex={-1} aria-hidden data-cursor="Read">
                 {image}
-              </a>
+              </TransitionLink>
             ) : (
               image
             )}
@@ -243,13 +244,13 @@ function Featured({
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 {caseHref && (
                   <Magnetic>
-                    <a
+                    <TransitionLink
                       href={caseHref}
                       className="group/case inline-flex items-center gap-3 rounded-full bg-term-accent px-5 py-2.5 text-sm font-bold text-term-bg transition-colors hover:bg-term-accent-bright"
                     >
                       Read the case
                       <span aria-hidden className="transition-transform duration-300 group-hover/case:translate-x-1">→</span>
-                    </a>
+                    </TransitionLink>
                   </Magnetic>
                 )}
                 <VisitLink p={p} name={name} />

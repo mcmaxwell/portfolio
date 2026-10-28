@@ -14,6 +14,8 @@ export function Preloader() {
     } catch {
       // Storage blocked: the intro simply plays again next time.
     }
+    // Leaving the home page without a reload and coming back must not run the curtain again.
+    return () => document.documentElement.classList.add("intro-seen");
   }, []);
   return (
     <div aria-hidden className="preloader">

@@ -2,10 +2,16 @@
 // Every featured project card has a case page behind it, and each page renders its story with the
 // links the reader needs: the live product, the next case and the way back.
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CaseStudy } from "@/components/site/CaseStudy";
 import { caseBySlug, caseForProject, cases, nextCase } from "@/data/cases";
 import { projects } from "@/data";
+
+// The case links navigate client-side (TransitionLink), which needs the app router.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/" }));
+
+// Reduced motion, so the case videos stay on their posters (jsdom has no media playback).
+window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
 
 afterEach(cleanup);
 

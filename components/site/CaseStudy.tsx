@@ -1,10 +1,11 @@
 import type { CSSProperties } from "react";
 import { nextCase, type CaseStudy as Case } from "@/data/cases";
 import { owner } from "@/lib/persona";
-import { CaseMedia } from "./CaseMedia";
+import { CaseMedia, CaseScreens } from "./CaseMedia";
 import { SiteFooter } from "./Contact";
+import { TransitionLink } from "@/components/site/TransitionLink";
 
-/** Names the element for the cross-document view transition from the card on the home page. */
+/** Names the element for the view transition from the card on the home page (TransitionLink.tsx). */
 export const vt = (name: string) => ({ "--vt": name }) as CSSProperties;
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
@@ -26,19 +27,19 @@ export function CaseStudy({ c }: { c: Case }) {
   return (
     <main className="min-h-screen bg-term-bg text-term-fg [overflow-x:clip]">
       <header className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between px-5 text-sm md:px-10">
-        <a href="/" className="flex items-center gap-3 text-term-paper">
+        <TransitionLink href="/" className="flex items-center gap-3 text-term-paper">
           <span className="grid h-8 w-8 place-items-center rounded-full border border-term-accent/60 font-mono text-[10px] font-bold text-term-accent">
             ML
           </span>
           <span className="hidden sm:inline">maksym.liutsko</span>
-        </a>
+        </TransitionLink>
         <nav aria-label="Case navigation" className="flex items-center gap-5 text-term-muted">
-          <a href="/#projects" className="link-draw hover:text-term-paper">
+          <TransitionLink href="/#projects" className="link-draw hover:text-term-paper">
             ← All work
-          </a>
-          <a href={`/work/${next.slug}`} className="link-draw hover:text-term-paper">
+          </TransitionLink>
+          <TransitionLink href={`/work/${next.slug}`} className="link-draw hover:text-term-paper">
             Next: {next.name} →
-          </a>
+          </TransitionLink>
         </nav>
       </header>
 
@@ -61,7 +62,7 @@ export function CaseStudy({ c }: { c: Case }) {
           <dl className="grid grid-cols-3 gap-4 md:col-span-5 md:col-start-8">
             {c.facts.map((f) => (
               <div key={f.label} className="border-t border-term-line pt-4">
-                <dd className="font-display text-3xl font-medium tracking-tight text-term-paper md:text-5xl">{f.value}</dd>
+                <dd className="font-display text-3xl font-medium tracking-tight text-term-paper md:text-4xl xl:text-5xl">{f.value}</dd>
                 <dt className="mt-1 text-xs leading-snug text-term-muted">{f.label}</dt>
               </div>
             ))}
@@ -70,7 +71,7 @@ export function CaseStudy({ c }: { c: Case }) {
 
         <div
           style={vt(`case-media-${c.slug}`)}
-          className="relative mt-14 aspect-[4/3] overflow-hidden rounded-2xl border border-term-line bg-term-panel md:mt-20 md:aspect-[16/8]"
+          className="relative mt-14 aspect-video overflow-hidden rounded-2xl border border-term-line bg-term-panel md:mt-20"
         >
           <CaseMedia media={c.media} name={c.name} />
         </div>
@@ -92,6 +93,12 @@ export function CaseStudy({ c }: { c: Case }) {
           <Section label="How it works">
             <p>{c.how}</p>
           </Section>
+          {c.screens && (
+            <div className="border-t border-term-line py-10 md:py-14">
+              <h2 className="mb-8 font-mono text-xs uppercase tracking-[0.2em] text-term-accent">{c.screensLabel ?? "Screens"}</h2>
+              <CaseScreens screens={c.screens} />
+            </div>
+          )}
           <Section label="Results">
             <p className="text-term-paper">{c.results}</p>
           </Section>
@@ -139,17 +146,17 @@ export function CaseStudy({ c }: { c: Case }) {
               {c.linkLabel ?? "Visit"} ↗<span className="sr-only"> (opens in a new tab)</span>
             </a>
           )}
-          <a
+          <TransitionLink
             href="/#contact"
             className="rounded-full border border-term-paper/30 px-7 py-3.5 text-sm text-term-paper transition-colors hover:border-term-paper hover:bg-term-paper hover:text-term-bg"
           >
             Build something like this with me
-          </a>
+          </TransitionLink>
           <span className="ml-auto text-sm text-term-muted">{owner.location}</span>
         </div>
       </article>
 
-      <a
+      <TransitionLink
         href={`/work/${next.slug}`}
         className="group block border-t border-term-line bg-term-panel/40 transition-colors hover:bg-term-panel"
       >
@@ -165,7 +172,7 @@ export function CaseStudy({ c }: { c: Case }) {
             →
           </span>
         </div>
-      </a>
+      </TransitionLink>
       <SiteFooter />
     </main>
   );

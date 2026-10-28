@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site/Contact";
 import { owner } from "@/lib/persona";
+import { TransitionLink } from "@/components/site/TransitionLink";
 
 export const metadata: Metadata = {
   title: "How it's made",
@@ -59,7 +60,7 @@ const SECTIONS: { title: string; entries: Entry[] }[] = [
       },
       {
         label: "Pages",
-        body: "Case studies are static pages. A plain link and a shared view-transition name let the card's title and screenshot morph into the case page across a full navigation.",
+        body: "Case studies are static pages, and moving to one never reloads the site: a client-side navigation inside a view transition morphs the card's title and screenshot into the page, and the way back keeps the home page's 3D in memory.",
       },
       {
         label: "Quality",
@@ -85,15 +86,15 @@ export default function Colophon() {
   return (
     <main className="min-h-screen bg-term-bg text-term-fg [overflow-x:clip]">
       <header className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between px-5 text-sm md:px-10">
-        <a href="/" className="flex items-center gap-3 text-term-paper">
+        <TransitionLink href="/" className="flex items-center gap-3 text-term-paper">
           <span className="grid h-8 w-8 place-items-center rounded-full border border-term-accent/60 font-mono text-[10px] font-bold text-term-accent">
             ML
           </span>
           <span className="hidden sm:inline">maksym.liutsko</span>
-        </a>
-        <a href="/" className="link-draw text-term-muted hover:text-term-paper">
+        </TransitionLink>
+        <TransitionLink href="/" className="link-draw text-term-muted hover:text-term-paper">
           ← Back to the site
-        </a>
+        </TransitionLink>
       </header>
 
       <article className="mx-auto w-full max-w-[1400px] px-5 pb-24 pt-10 md:px-10 md:pt-20">
@@ -123,12 +124,12 @@ export default function Colophon() {
         ))}
 
         <div className="mt-20 flex flex-wrap items-center gap-3 border-t border-term-line pt-12">
-          <a
+          <TransitionLink
             href="/#memory"
             className="rounded-full bg-term-accent px-7 py-3.5 text-sm font-bold text-term-bg transition-colors hover:bg-term-accent-bright"
           >
             Ask my memory
-          </a>
+          </TransitionLink>
           <a
             href={`mailto:${owner.email}`}
             className="rounded-full border border-term-paper/30 px-7 py-3.5 text-sm text-term-paper transition-colors hover:border-term-paper hover:bg-term-paper hover:text-term-bg"

@@ -7,6 +7,7 @@ import { Magnetic } from "./Cursor";
 import { LENS_PITCH } from "@/lib/memory/lenses";
 import { useLens } from "@/lib/memory/useLens";
 import { SoundToggle } from "./SoundToggle";
+import { TransitionLink } from "@/components/site/TransitionLink";
 
 /** Maksym's local time, ticking each minute. Empty until mounted so server and client agree. */
 function LocalTime() {
@@ -151,9 +152,9 @@ export function SiteFooter() {
         <span>© 2026 {owner.name}</span>
         <span className="flex items-center gap-1.5">
           Designed and built in London, Ontario.{" "}
-          <a href="/colophon" className="link-draw text-term-paper">
+          <TransitionLink href="/colophon" className="link-draw text-term-paper">
             How it&apos;s made
-          </a>
+          </TransitionLink>
           <span aria-hidden className="inline-block h-3 w-1.5 translate-y-px bg-term-accent animate-blink" />
         </span>
         <span className="flex items-center gap-6">

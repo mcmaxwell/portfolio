@@ -8,6 +8,21 @@ export type CaseFact = { value: string; label: string };
 
 export type CaseClient = { name: string; url: string; work: string };
 
+/**
+ * One more screen of the product, below the story: a silent loop or a still. `wide` takes two thirds
+ * of the row, `half` half, `full` all of it, `phone` a third over two rows (portrait recordings).
+ */
+export type CaseScreen = {
+  kind: "video" | "image";
+  src: string;
+  /** Still shown before a loop plays, and instead of it with reduced motion. */
+  poster?: string;
+  caption: string;
+  layout: "wide" | "half" | "full" | "phone";
+  width: number;
+  height: number;
+};
+
 export type CaseStudy = {
   slug: string;
   /** `id` of the matching entry in `projects` (data/index.ts). */
@@ -29,6 +44,10 @@ export type CaseStudy = {
   link?: string;
   linkLabel?: string;
   clients?: readonly CaseClient[];
+  /** Recordings and stills of the product, from public/cases (ASSETS.md). */
+  screens?: readonly CaseScreen[];
+  /** Heading of the screens section (default "Screens"). */
+  screensLabel?: string;
   media: {
     image: string;
     alt: string;
@@ -47,7 +66,7 @@ export const cases: readonly CaseStudy[] = [
     hook: "A governed workforce of AI agents that runs the back office of a logistics company, with a human approving what matters.",
     facts: [
       { value: "6", label: "connected modules" },
-      { value: "5", label: "kinds of agents" },
+      { value: "8", label: "agent roles" },
       { value: "2", label: "countries, Canada and the US" },
     ],
     problem:
@@ -66,7 +85,16 @@ export const cases: readonly CaseStudy[] = [
     stack: ["Next.js", "TypeScript", "Agents", "Hybrid model routing", "Voice"],
     link: "https://www.xecsuite.com",
     linkLabel: "Visit XecSuite",
-    media: { image: "/proj-xecsuite.webp", alt: "XecSuite: the AI operating layer for your supply chain" },
+    screens: [
+      { kind: "image", src: "/cases/xecsuite-lanes.webp", caption: "A lane, not a shipment: quote requests checked against the lane's history.", layout: "wide", width: 1280, height: 413 },
+      { kind: "video", src: "/cases/xecsuite-site-mobile.mp4", poster: "/cases/xecsuite-site-mobile.webp", caption: "The same site on a phone.", layout: "phone", width: 480, height: 1038 },
+      { kind: "image", src: "/cases/xecsuite-council.webp", caption: "One question, every system: freight, finance, customer and operations evidence side by side.", layout: "wide", width: 1280, height: 487 },
+    ],
+    media: {
+      image: "/proj-xecsuite.webp",
+      alt: "XecSuite: the AI operating layer for your supply chain",
+      video: { mp4: "/cases/xecsuite-site.mp4", poster: "/cases/xecsuite-site.webp" },
+    },
   },
   {
     slug: "newsstocks",
@@ -75,29 +103,39 @@ export const cases: readonly CaseStudy[] = [
     mark: "NewsStocks",
     tagline: "A financial news site that writes, illustrates, films and publishes itself",
     eyebrow: "Built solo at Apex Mind",
-    hook: "A newsroom with nobody in it: 30 to 50 articles a day, a video every day, analysis every day, week and month.",
+    hook: "A newsroom with nobody in it: over a hundred articles a day, market analysis every day, week and month, and short videos for the social channels.",
     facts: [
-      { value: "30–50", label: "articles a day" },
-      { value: "1", label: "video every day" },
-      { value: "4", label: "channels: TikTok, Instagram, Facebook, Telegram" },
+      { value: "100+", label: "articles a day" },
+      { value: "27.9K", label: "articles published since February 2026" },
+      { value: "20", label: "kinds of content, from briefs to market games" },
     ],
     problem:
       "A news product normally needs a newsroom: writers, an editor, a designer, a social team. I wanted to see how far one engineer and a pipeline could go instead.",
     built: [
       "A cron pipeline that pulls S&P 500 news and writes per-article summaries plus a daily market analysis: direction, confidence, drivers, risks, sector outlooks, strategy.",
       "Illustrations through a Pexels to DALL·E pipeline into Cloudinary.",
-      "Short-form videos produced and posted every day to TikTok, Instagram and Facebook, a daily brief on Telegram, and automatic replies in some channels.",
+      "Short-form videos for TikTok, Instagram, Facebook and YouTube, about 30 posts a day on Telegram, and automatic replies in some channels.",
       "Around the news: market games, quizzes, weekly and monthly analytics.",
       "Admin dashboard, role-based auth, PIPEDA and CASL compliance.",
     ],
     how:
       "Next.js front end with structured data, sitemaps and fast pages, so search engines treat it as a real publication. GPT-4o-mini writes, cron pipelines schedule, Cloudinary serves media, a Telegram bot broadcasts. New videos now include short animated pieces.",
-    results: "Live and growing: several deploys a month with new or improved features, and a high Google PageSpeed score.",
+    results: "Live since February 2026 and still growing: several deploys a month with new or improved features, and a desktop PageSpeed score of 92.",
     role: "Everything: product, design, code, pipelines and operations.",
     stack: ["Next.js", "GPT-4o-mini", "Cron pipelines", "Cloudinary", "Telegram", "ElevenLabs", "HeyGen", "Kling AI"],
     link: "https://newsstocks.live",
     linkLabel: "Visit NewsStocks.live",
-    media: { image: "/proj-newsstocks.webp", alt: "NewsStocks.live home page with AI market analysis" },
+    screens: [
+      { kind: "video", src: "/cases/newsstocks-analysis.mp4", poster: "/cases/newsstocks-analysis.webp", caption: "The daily market analysis: direction, drivers, risks and sector outlooks.", layout: "wide", width: 1280, height: 720 },
+      { kind: "video", src: "/cases/newsstocks-home-mobile.mp4", poster: "/cases/newsstocks-home-mobile.webp", caption: "The home page on a phone.", layout: "phone", width: 480, height: 1038 },
+      { kind: "video", src: "/cases/newsstocks-article.mp4", poster: "/cases/newsstocks-article.webp", caption: "An article: summary, our take, key numbers and related news.", layout: "wide", width: 1280, height: 720 },
+      { kind: "video", src: "/cases/newsstocks-extras.mp4", poster: "/cases/newsstocks-extras.webp", caption: "The S&P 500 heatmap, one of the extras around the news.", layout: "full", width: 1280, height: 720 },
+    ],
+    media: {
+      image: "/proj-newsstocks.webp",
+      alt: "NewsStocks.live home page with AI market analysis",
+      video: { mp4: "/cases/newsstocks-home.mp4", poster: "/cases/newsstocks-home.webp" },
+    },
   },
   {
     slug: "apexmind",
@@ -125,7 +163,11 @@ export const cases: readonly CaseStudy[] = [
     stack: ["Make.com", "n8n", "LLMs", "Voice agents", "Next.js", "GSAP"],
     link: "https://apexmind.studio",
     linkLabel: "Visit Apex Mind",
-    media: { image: "/proj-apexmind.webp", alt: "Apex Mind studio site" },
+    media: {
+      image: "/proj-apexmind.webp",
+      alt: "Apex Mind studio site",
+      video: { mp4: "/cases/apexmind-site.mp4", poster: "/cases/apexmind-site.webp" },
+    },
   },
   {
     slug: "ecommerce",
@@ -159,6 +201,11 @@ export const cases: readonly CaseStudy[] = [
       { name: "Coco Republic", url: "https://www.cocorepublic.com.au", work: "Design update, front end, small back-end pieces" },
       { name: "Max", url: "https://www.max.co.nz", work: "Design update, front end" },
       { name: "West Coast Kids", url: "https://www.westcoastkids.ca", work: "Front end rebuilt on a new storefront stack, custom features" },
+    ],
+    screensLabel: "Storefronts today",
+    screens: [
+      { kind: "image", src: "/cases/client-westcoastkids.webp", caption: "West Coast Kids, live on Magento 2.", layout: "half", width: 1280, height: 667 },
+      { kind: "image", src: "/cases/client-bkproducts.webp", caption: "BK Products, live on Magento 2.", layout: "half", width: 1280, height: 667 },
     ],
     media: { image: "/proj-max.webp", alt: "Max storefront, one of the Magento 2 builds" },
   },
