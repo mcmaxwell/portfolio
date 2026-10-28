@@ -67,9 +67,12 @@ export function Nav() {
     const root = document.documentElement;
     const prev = root.style.overflow;
     root.style.overflow = "hidden";
+    // Hides the memory particles, which would otherwise draw over the menu (globals.css).
+    root.dataset.menu = "";
     window.addEventListener("keydown", onKey);
     return () => {
       root.style.overflow = prev;
+      delete root.dataset.menu;
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -77,7 +80,7 @@ export function Nav() {
   return (
     <header
       data-site-header
-      className={`fixed inset-x-0 top-0 z-40 transition-[background-color,border-color] duration-300 ${
+      className={`fixed inset-x-0 top-0 ${open ? "z-50" : "z-40"} transition-[background-color,border-color] duration-300 ${
         scrolled && !open
           ? "border-b border-term-line/70 bg-term-bg/75 backdrop-blur-md"
           : "border-b border-transparent"
