@@ -62,7 +62,8 @@ export type ChallengeFrame = {
   time: number; // seconds, any monotonic clock
   dt: number;
   collected: ReadonlySet<string>; // cell ids
-  trophy: boolean; // the trophy cup has been collected (it is gone)
+  trophy: boolean; // the terrace cup has been collected (it is gone)
+  mazeTrophy: boolean; // the same for the cup in the hedge maze
   beam: boolean; // all three collected, beacon not yet lit
   glow: number; // 0..1 celebration level
   reduced: boolean;
@@ -303,7 +304,8 @@ function createChallengeVisuals(
   const cells = layout.challenge.cells;
   const beacon = layout.challenge.beacon;
   const trophy = layout.challenge.trophy;
-  if (cells.length === 0 && !beacon && !trophy) return null;
+  const mazeTrophy = layout.challenge.mazeTrophy;
+  if (cells.length === 0 && !beacon && !trophy && !mazeTrophy) return null;
   const cellMesh = new THREE.InstancedMesh(geos.box, material, Math.max(1, cells.length));
   cellMesh.name = "box|neon-cyan|cells";
   const beamMesh = new THREE.InstancedMesh(geos.cyl, material, 1);
@@ -316,7 +318,8 @@ function createChallengeVisuals(
     root.add(m);
     batches.push(m);
   }
-  const trophyParts = trophy ? createTrophyVisuals(trophy.position, gold, geos, root, batches) : null;
+  const trophyParts = trophy ? createTrophyVisuals(trophy.position, (f) => f.trophy, gold, geos, root, batches) : null;
+  const mazeParts = mazeTrophy ? createTrophyVisuals(mazeTrophy.position, (f) => f.mazeTrophy, gold, geos, root, batches) : null;
   const scale = cells.map(() => 1);
   let beamK = 0;
   const m4 = new THREE.Matrix4();
@@ -352,12 +355,14 @@ function createChallengeVisuals(
       beamK = f.beam ? 1 : 0;
       write(f);
       trophyParts?.snap(f);
+      mazeParts?.snap(f);
     },
     update(f) {
       cells.forEach((_, i) => (scale[i] = f.reduced ? target(f, i) : lerpTo(scale[i], target(f, i), f.dt, 9)));
       beamK = f.reduced ? (f.beam ? 1 : 0) : lerpTo(beamK, f.beam ? 1 : 0, f.dt, 3);
       write(f);
       trophyParts?.update(f);
+      mazeParts?.update(f);
     },
   };
 }
@@ -381,12 +386,13 @@ const CUP: readonly CupPart[] = [
 
 /**
  * The trophy cup: a gold-amber cup from primitives (the world's own cylinder, cone and orb geometry and its
- * lamp-glow material, so it adds no shader program), turning and bobbing on the top of the highest terrace,
+ * lamp-glow material, so it adds no shader program), turning and bobbing where it stands (the top terrace, the maze pit),
  * with a thin pillar of light so it reads from the plaza. Collected, it grows, rises and spins while eight sparks fly
  * out (0.5 s) and is gone; under reduced motion it is simply gone.
  */
 function createTrophyVisuals(
   base: Vec3,
+  taken: (f: ChallengeFrame) => boolean,
   material: THREE.Material,
   geos: Record<Shape, THREE.BufferGeometry>,
   root: THREE.Group,
@@ -470,12 +476,13 @@ function createTrophyVisuals(
   };
   return {
     snap(f) {
-      popK = f.trophy ? 1 : -1;
+      popK = taken(f) ? 1 : -1;
       write(f);
     },
     update(f) {
-      if (f.trophy && popK < 0) popK = f.reduced ? 1 : 0; // collected now: start the effect (or vanish at once)
-      else if (!f.trophy && popK >= 0) popK = -1; // a restart brings the cup back
+      const gone = taken(f);
+      if (gone && popK < 0) popK = f.reduced ? 1 : 0; // collected now: start the effect (or vanish at once)
+      else if (!gone && popK >= 0) popK = -1; // a restart brings the cup back
       else if (popK >= 0 && popK < 1) popK = Math.min(1, popK + f.dt / TROPHY_POP_SECONDS);
       write(f);
     },

@@ -42,8 +42,13 @@ describe("campus data", () => {
       expect(Math.abs(b.center.x) + b.size.x / 2, b.id).toBeLessThanOrEqual(32.01);
       expect(Math.abs(b.center.z) + b.size.z / 2, b.id).toBeLessThanOrEqual(32.01);
     }
-    const edges = CAMPUS.blocks.filter((b) => b.kind === "wall");
+    const edges = CAMPUS.blocks.filter((b) => b.kind === "wall" && b.id.startsWith("edge-"));
     expect(edges.length).toBe(4);
+    // The maze hedges are walls too, and stay inside the boundary.
+    for (const b of CAMPUS.blocks.filter((x) => x.id.startsWith("maze-"))) {
+      expect(Math.abs(b.center.x) + b.size.x / 2, b.id).toBeLessThanOrEqual(31);
+      expect(Math.abs(b.center.z) + b.size.z / 2, b.id).toBeLessThanOrEqual(31);
+    }
   });
 });
 
@@ -151,10 +156,13 @@ describe("destinations, signs and interactables", () => {
     }
   });
 
-  it("has a ravine that is a real void (a fall reaches the kill plane) crossed by stepping stones", () => {
-    expect(surfaceHeightAt(CAMPUS, 16, -22)).toBeCloseTo(0, 6); // a stone top
-    expect(surfaceHeightAt(CAMPUS, 14.2, -22)).toBeNull(); // between two stones
-    expect(surfaceHeightAt(CAMPUS, 16, -19)).toBeNull(); // off the stones
+  it("has a pit that is a real void (a fall reaches the kill plane) with 3 x 3 stepping stones", () => {
+    expect(surfaceHeightAt(CAMPUS, 16, -22)).toBeCloseTo(0, 6); // the middle stone
+    for (const x of [13.1, 16, 18.9]) for (const z of [-19.1, -22, -24.9]) expect(surfaceHeightAt(CAMPUS, x, z), `${x},${z}`).toBeCloseTo(0, 6);
+    expect(surfaceHeightAt(CAMPUS, 14.5, -22)).toBeNull(); // between two stones
+    expect(surfaceHeightAt(CAMPUS, 16, -20.5)).toBeNull(); // between two rows
+    expect(surfaceHeightAt(CAMPUS, 11.7, -22)).toBeNull(); // between the rim and the first stone
+    expect(surfaceHeightAt(CAMPUS, 10.5, -22)).toBeCloseTo(0, 6); // the rim inside the maze
     expect(CAMPUS.killPlaneY).toBeLessThan(-5);
   });
 

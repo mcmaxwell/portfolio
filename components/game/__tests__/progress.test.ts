@@ -7,6 +7,7 @@ import {
   browserStorage,
   canActivateBeacon,
   collectCell,
+  collectMazeTrophy,
   collectTrophy,
   completeChallenge,
   createProgressStore,
@@ -14,6 +15,7 @@ import {
   parseProgress,
   restartChallenge,
   type ProgressV1,
+  trophyCount,
 } from "../progress";
 
 function memoryStorage(initial: Record<string, string> = {}): Storage & { data: Record<string, string> } {
@@ -233,6 +235,16 @@ describe("trophy (additive field of version 1, ADR-005)", () => {
     const done = parseProgress(legacy({ collected: ["lab", "workshop", "tower"], completed: true }));
     expect(done.status).toBe("ok");
     expect(done.progress).toMatchObject({ completed: true, collected: ["lab", "workshop", "tower"], trophy: false });
+  });
+
+  it("the maze cup is a second additive field: absent means not collected, kept when stored, counted with the terrace cup", () => {
+    expect(parseProgress(legacy({ trophy: true })).progress.mazeTrophy).toBe(false);
+    expect(parseProgress(legacy({ mazeTrophy: true })).progress).toMatchObject({ trophy: false, mazeTrophy: true });
+    expect(parseProgress(legacy({ mazeTrophy: "yes" })).status).toBe("invalid");
+    const both = collectMazeTrophy(collectTrophy(defaultProgress()));
+    expect(trophyCount(both)).toBe(2);
+    expect(collectMazeTrophy(both)).toBe(both);
+    expect(restartChallenge({ ...defaultProgress(), mazeTrophy: true }).mazeTrophy).toBe(false);
   });
 
   it("a stored trophy is kept; a trophy that is not a boolean makes the record invalid", () => {

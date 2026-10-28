@@ -156,8 +156,9 @@ function tower(out: Parts) {
   // Crown mast and tip.
   out.local(f, "cyl", "pole", [0, 11.9, 4], [0.14, 2.6, 0.14]);
   out.local(f, "orb", "lamp-glow", [0, 13.25, 4], [0.34, 0.34, 0.34]);
-  // Podium trim, light pools and ceiling lights in the passage.
-  out.local(f, "box", "trim", [0, fy - 0.03, -0.02], [12.1, 0.06, 0.1]);
+  // Podium trim (5 mm proud of the top step, not level with it, so the two never fight for a pixel),
+  // light pools and ceiling lights in the passage.
+  out.local(f, "box", "trim", [0, fy - 0.025, -0.02], [12.1, 0.06, 0.1]);
   for (const z of [1.4, 3.6, 5.8]) {
     out.local(f, "box", "panel-light", [0, fy + 3.37, z], [0.5, 0.06, 1.1]);
     out.local(f, "quad", "decal-white", [0, fy + 0.03, z], [4.2, 1, 4.2]);

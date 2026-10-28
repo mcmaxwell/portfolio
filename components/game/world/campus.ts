@@ -48,6 +48,8 @@ const hallRoom = (id: string, fy: number): Room => ({ id, center: v(0, fy + H / 
 const LAB = { origin: { x: 9.5, z: 13 }, yaw: Math.atan2(0.5, 0.8) / RAD };
 const WORKSHOP = { origin: { x: -9.5, z: 13 }, yaw: -Math.atan2(0.5, 0.8) / RAD };
 const TOWER = { origin: { x: 0, z: 17.5 }, yaw: 0 };
+/** The pit in the hedge maze: 3 x 3 stepping stones, the cup on the middle one. */
+const PIT = { cols: [13.1, 16, 18.9], rows: [-19.1, -22, -24.9], centre: { x: 16, z: -22 } } as const;
 const WORKSHOP_FLOOR = 0.5;
 const TOWER_FLOOR = 0.6;
 
@@ -165,18 +167,24 @@ function sceneryBlocks(): Block[] {
 }
 
 function groundBlocks(): Block[] {
-  // A ravine (x 10..22, z -26..-18) cuts the south-east: the ground has no tile under it, so a
-  // fall reaches the kill plane. Three stepping stones cross it (the optional jumping challenge).
+  // A square pit (x 11..21, z -27..-17) in the south-east: the ground has no tile under it, so a fall
+  // reaches the kill plane. Nine stepping stones stand in it, 3 x 3, the cup on the middle one, and a
+  // small hedge maze closes round it (mazeBlocks).
   const g = (id: string, c: readonly [number, number], s: readonly [number, number]) =>
     blk(id, "ground", [c[0], -0.5, c[1]], [s[0], 1, s[1]], "ground");
   const out: Block[] = [
-    g("ground-main", [0, 7], [64, 50]),
-    g("ground-south", [0, -29], [64, 6]),
-    g("ground-sw", [-11, -22], [42, 8]),
-    g("ground-se", [27, -22], [10, 8]),
+    g("ground-main", [0, 7.5], [64, 49]),
+    g("ground-south", [0, -29.5], [64, 5]),
+    g("ground-sw", [-10.5, -22], [43, 10]),
+    g("ground-se", [26.5, -22], [11, 10]),
   ];
-  for (const [i, x] of [[0, 12.4], [1, 16], [2, 19.6]] as const) {
-    out.push(blk(`stone-${i}`, "prop", [x, -0.5, -22], [2.4, 1, 2.4], "path", { route: "optional" }));
+  // 1.3 m gaps between the stones and from the rim (1.1 m round the wider middle stone): one easy jump each.
+  let i = 0;
+  for (const z of PIT.rows) {
+    for (const x of PIT.cols) {
+      const s = x === PIT.centre.x && z === PIT.centre.z ? 2.0 : 1.6;
+      out.push(blk(`stone-${i++}`, "prop", [x, -0.5, z], [s, 1, s], "path", { route: "optional" }));
+    }
   }
   // The raised terrace: five platforms, each 0.8 m above the last (one jump each), up to 4 m.
   for (const [i, x, top] of [[0, -27.5, 0.8], [1, -24, 1.6], [2, -20.5, 2.4], [3, -17, 3.2], [4, -13.5, 4.0]] as const) {
@@ -191,6 +199,32 @@ function groundBlocks(): Block[] {
     blk("edge-w", "wall", [-30.5, 1.25, 0], [1, 2.5, 62], "foliage", { standoff: HEDGE_STANDOFF })
   );
   return out;
+}
+
+/**
+ * The hedge maze round the pit: two low rings (1.3 m, under the camera, too high to jump), the campus
+ * hedge closing them to the south. In at the north-west corner; west is a dead end, east then south
+ * leads to the gap at the inner ring's south-east corner and the rim of the pit.
+ */
+function mazeBlocks(): Block[] {
+  const HEDGE_H = 1.3;
+  const t = 0.6;
+  // A hedge from (x0, z0) to (x1, z1), axis aligned, t thick.
+  const hedge = (id: string, x0: number, z0: number, x1: number, z1: number) => {
+    const sx = Math.max(Math.abs(x1 - x0), t);
+    const sz = Math.max(Math.abs(z1 - z0), t);
+    return blk(id, "wall", [(x0 + x1) / 2, HEDGE_H / 2, (z0 + z1) / 2], [sx, HEDGE_H, sz], "foliage", { standoff: 0.2, camera: false });
+  };
+  return [
+    // Outer ring: west, north (the entrance is the gap at its west end) and east.
+    hedge("maze-outer-w", 7, -12.7, 7, -30),
+    hedge("maze-outer-n", 9.8, -13, 25.3, -13),
+    hedge("maze-outer-e", 25, -12.7, 25, -30),
+    // Inner ring round the rim: west (closed to the campus hedge), north, and east, open at its south end.
+    hedge("maze-inner-w", 9.5, -15.2, 9.5, -30),
+    hedge("maze-inner-n", 9.2, -15.5, 22.8, -15.5),
+    hedge("maze-inner-e", 22.5, -15.2, 22.5, -27),
+  ];
 }
 
 function plazaBlocks(): Block[] {
@@ -215,6 +249,7 @@ const dest = (id: Destination["id"], name: string, o: { origin: { x: number; z: 
 export function buildCampus(): Layout {
   const blocks: Block[] = [
     ...groundBlocks(),
+    ...mazeBlocks(),
     ...plazaBlocks(),
     ...sceneryBlocks(),
     ...placeBlocks(LAB.origin, LAB.yaw, "lab", labBlocks()),
@@ -251,6 +286,14 @@ export function buildCampus(): Layout {
     radius: TROPHY.radius,
     prompt: "Trophy",
   };
+  // The second cup, on the middle stone of the pit inside the hedge maze.
+  const mazeTrophy: Interactable = {
+    id: "maze-trophy",
+    kind: "trophy",
+    position: v(PIT.centre.x, 0, PIT.centre.z),
+    radius: TROPHY.radius,
+    prompt: "Trophy",
+  };
   const beacon: Interactable = { id: "beacon", kind: "beacon", position: v(0, 0, 1.5), radius: 2.0, prompt: "Light the beacon" };
 
   const sign = (id: string, text: string, o: { origin: { x: number; z: number }; yaw: number }, p: readonly [number, number, number], width: number, height: number, accent: Sign["accent"]): Sign => ({
@@ -276,7 +319,7 @@ export function buildCampus(): Layout {
     spawn: v(0, 0, -6),
     spawnYawDeg: 0,
     interactables,
-    challenge: { cells, beacon, trophy },
+    challenge: { cells, beacon, trophy, mazeTrophy },
     beacon: v(0, 0, 1.5),
     signs,
     destinations: [

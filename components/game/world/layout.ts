@@ -74,6 +74,8 @@ export type Challenge = {
   beacon: Interactable | null;
   /** The trophy cup on the highest terrace platform (an optional reward, not part of the cell count); also collected by walking into it. */
   trophy: Interactable | null;
+  /** The second cup, on the middle stone of the pit inside the hedge maze; collected the same way. */
+  mazeTrophy: Interactable | null;
 };
 
 export type Layout = {
@@ -110,7 +112,7 @@ export const TEST_ARENA: Layout = {
   spawn: v(0, 0, -12),
   spawnYawDeg: 0,
   interactables: [],
-  challenge: { cells: [], beacon: null, trophy: null },
+  challenge: { cells: [], beacon: null, trophy: null, mazeTrophy: null },
   beacon: null,
   signs: [],
   destinations: [],

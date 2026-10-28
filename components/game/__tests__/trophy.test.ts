@@ -190,3 +190,39 @@ describe("collection", () => {
     expect(game.progress.getState()).toMatchObject({ ...defaultProgress(), trophy: true });
   });
 });
+
+describe("the second cup, in the hedge maze", () => {
+  const cup = CAMPUS.challenge.mazeTrophy!;
+  const at = (over: Partial<Vec3> = {}): Vec3 => ({ ...cup.position, ...over });
+  const off = (): Vec3 => ({ ...cup.position, z: cup.position.z - 6 });
+
+  it("stands on the middle stone of the 3 x 3 pit, its reach inside the stone", () => {
+    const middle = getBlock(CAMPUS, "stone-4");
+    expect(cup).toMatchObject({ id: "maze-trophy", kind: "trophy" });
+    expect(cup.position).toMatchObject({ x: middle.center.x, y: 0, z: middle.center.z });
+    expect(cup.radius).toBeLessThan(middle.size.x / 2);
+    expect(Array.from({ length: 9 }, (_, i) => getBlock(CAMPUS, `stone-${i}`))).toHaveLength(9);
+    expect(TEST_ARENA.challenge.mazeTrophy).toBeNull();
+  });
+
+  it("walking into it saves it apart from the terrace cup and starts the same dance", () => {
+    const { game, challenge } = setup();
+    challenge.update(off());
+    challenge.update(at());
+    expect(game.progress.getState()).toMatchObject({ trophy: false, mazeTrophy: true });
+    expect(game.session.getState()).toMatchObject({ mode: "celebrating", celebration: "trophy" });
+  });
+
+  it("both cups count, and Restart brings both back", () => {
+    const { game, challenge } = setup();
+    challenge.update(off());
+    challenge.update(at());
+    game.session.dispatch({ type: "CELEBRATION_DONE" });
+    challenge.update(away());
+    challenge.update(feet());
+    expect(game.progress.getState()).toMatchObject({ trophy: true, mazeTrophy: true });
+    game.session.dispatch({ type: "CELEBRATION_DONE" });
+    game.progress.update(restartChallenge);
+    expect(game.progress.getState()).toMatchObject({ trophy: false, mazeTrophy: false });
+  });
+});

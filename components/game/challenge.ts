@@ -4,7 +4,7 @@
 // interactable that answers only after the third cell. No DOM, no three, no Rapier.
 import type { Interactable, Vec3 } from "./config";
 import { REACH_Y } from "./interactions";
-import { canActivateBeacon, collectCell, collectTrophy, completeChallenge } from "./progress";
+import { canActivateBeacon, collectCell, collectMazeTrophy, collectTrophy, completeChallenge, type ProgressV1 } from "./progress";
 import type { GameHandle } from "./session";
 import type { Challenge } from "./world/layout";
 
@@ -49,13 +49,18 @@ export function createChallenge(challenge: Challenge, game: Pick<GameHandle, "se
           progress.update((p) => collectCell(p, cell.cellId!));
         }
       }
-      // The trophy: once, by walking into it. Saved first, so a reload during the dance keeps it; the dance
+      // The cups (terrace and maze): each once, by walking into it. Saved first, so a reload during the dance keeps it; the dance
       // then plays in place (the session's "celebrating" mode releases the controls for its duration).
-      const trophy = challenge.trophy;
-      if (trophy && gate(trophy, progress.getState().trophy, inReach(player, trophy))) {
-        armed.delete(trophy.id);
-        progress.update(collectTrophy);
-        session.dispatch({ type: "TROPHY_COLLECTED" });
+      const cups = [
+        [challenge.trophy, (p: ProgressV1) => p.trophy, collectTrophy],
+        [challenge.mazeTrophy, (p: ProgressV1) => p.mazeTrophy, collectMazeTrophy],
+      ] as const;
+      for (const [cup, has, collect] of cups) {
+        if (cup && gate(cup, has(progress.getState()), inReach(player, cup))) {
+          armed.delete(cup.id);
+          progress.update(collect);
+          session.dispatch({ type: "TROPHY_COLLECTED" });
+        }
       }
     },
     beaconReady: () => canActivateBeacon(progress.getState()),
