@@ -12,7 +12,7 @@ import { setGameHair } from "./hairMaterial";
 import type { MotorState } from "./player";
 import { captureBones, createPoseBlend, type PoseBlend } from "./poseBlend";
 import { TIMING } from "./shell/transition";
-import { useAvatarGLTF } from "@/lib/avatarSource";
+import { resetToRest, useAvatarGLTF } from "@/lib/avatarSource";
 
 /** A standing, grounded motor state: primes the animator so frame zero is the idle pose. */
 const STANDING: MotorState = {
@@ -70,9 +70,8 @@ export function GameAvatar({ url, assets, groupRef, animatorRef, poseBlendRef, s
     if (blendPose) poseBlendRef.current = createPoseBlend(captureBones(scene), TIMING.entry.poseBlendMs / 1000);
     // The hero idle moved Hips and may have left mouth morphs open: start from bind pose.
     const flags: Array<[THREE.Mesh, boolean, boolean]> = [];
+    resetToRest(scene);
     scene.traverse((o) => {
-      const sk = o as THREE.SkinnedMesh;
-      if (sk.isSkinnedMesh) sk.skeleton.pose();
       const mesh = o as THREE.Mesh;
       if (mesh.isMesh) {
         if (mesh.morphTargetInfluences) mesh.morphTargetInfluences.fill(0);
