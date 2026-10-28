@@ -65,9 +65,9 @@ export const cases: readonly CaseStudy[] = [
     eyebrow: "Co-founder & CTO",
     hook: "A governed workforce of AI agents that runs the back office of a logistics company, with a human approving what matters.",
     facts: [
-      { value: "6", label: "connected modules" },
       { value: "8", label: "agent roles" },
-      { value: "2", label: "countries, Canada and the US" },
+      { value: "Live", label: "in production, new features every week" },
+      { value: "Award", label: "at the Startup Weekend where it was built" },
     ],
     problem:
       "Freight, finance and customer work in a logistics company lives in email, spreadsheets, a TMS and people's heads. Every request means someone reading, deciding and retyping, and the knowledge of how things are done leaves with them.",
@@ -79,10 +79,10 @@ export const cases: readonly CaseStudy[] = [
       "Approval gates: every agent action that matters waits for a person.",
     ],
     how:
-      "Modules around the memory core: Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent and RFP. Hybrid model routing sends routine steps to private models and high-stakes reasoning to frontier models. Built with Nik, my co-founder.",
+      "Modules around the memory core, among them Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent and RFP. Hybrid model routing sends routine steps to private models and high-stakes reasoning to frontier models. Built with Nik, my co-founder.",
     results: "Built and awarded at a Startup Weekend; now live, and improved every week with new custom features.",
     role: "Co-founder and CTO: architecture, agent runtime, model routing and product engineering.",
-    stack: ["Next.js", "TypeScript", "Agents", "Hybrid model routing", "Voice"],
+    stack: ["Next.js", "TypeScript", "Python", "Agents", "Hybrid model routing", "Voice"],
     link: "https://www.xecsuite.com",
     linkLabel: "Visit XecSuite",
     screens: [
@@ -119,10 +119,10 @@ export const cases: readonly CaseStudy[] = [
       "Admin dashboard, role-based auth, PIPEDA and CASL compliance.",
     ],
     how:
-      "Next.js front end with structured data, sitemaps and fast pages, so search engines treat it as a real publication. GPT-4o-mini writes, cron pipelines schedule, Cloudinary serves media, a Telegram bot broadcasts. New videos now include short animated pieces.",
+      "Next.js front end with structured data, sitemaps and fast pages, so search engines treat it as a real publication. GPT-4o-mini writes and Claude reviews every post and every analysis; cron pipelines schedule, Cloudinary serves media, a Telegram bot broadcasts. New videos now include short animated pieces.",
     results: "Live since February 2026 and still growing: several deploys a month with new or improved features, and a desktop PageSpeed score of 92.",
     role: "Everything: product, design, code, pipelines and operations.",
-    stack: ["Next.js", "GPT-4o-mini", "Cron pipelines", "Cloudinary", "Telegram", "ElevenLabs", "HeyGen", "Kling AI"],
+    stack: ["Next.js", "GPT-4o-mini", "Claude", "Cron pipelines", "Cloudinary", "Telegram", "ElevenLabs", "HeyGen", "Kling AI"],
     link: "https://newsstocks.live",
     linkLabel: "Visit NewsStocks.live",
     screens: [

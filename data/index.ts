@@ -78,9 +78,9 @@ export const projects = [
     role: "Co-founder & CTO",
     summary:
       "The AI operating layer for supply chain teams, run by an approval-gated agent workforce.",
-    stack: ["Next.js", "TypeScript", "Agents", "Hybrid model routing"],
+    stack: ["Next.js", "TypeScript", "Python", "Agents", "Hybrid model routing"],
     title: "XecSuite - AI Operating Layer for Supply Chain Teams",
-    des: "The AI operating layer for supply chain teams in Canada and the United States. It connects your systems and company knowledge and puts them to work across freight, finance and customer operations. A tenant-private company-memory core plus connected modules - Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent and RFP - run by a governed, approval-gated agent workforce with hybrid model routing (private models for routine work, frontier models for high-stakes reasoning). Built and awarded at a Startup Weekend; now live.",
+    des: "The AI operating layer for supply chain teams in Canada and the United States. It connects your systems and company knowledge and puts them to work across freight, finance and customer operations. A tenant-private company-memory core plus connected modules (among them Freight Desk, Load Coverage, Logistics, Premium CRM, Meeting Agent and RFP), run by a governed, approval-gated agent workforce with hybrid model routing (private models for routine work, frontier models for high-stakes reasoning). Built and awarded at a Startup Weekend; now live.",
     img: "/proj-xecsuite.webp",
     iconLists: ["/next.svg", "/ts.svg", "/tail.svg"],
     link: "https://www.xecsuite.com",
@@ -91,9 +91,9 @@ export const projects = [
     role: "Built at Apex Mind",
     summary:
       "A news site that writes, illustrates and publishes itself, from S&P 500 headlines to short-form video.",
-    stack: ["Next.js", "GPT-4o-mini", "Cron pipelines", "Telegram"],
+    stack: ["Next.js", "GPT-4o-mini", "Claude", "Cron pipelines", "Telegram"],
     title: "NewsStocks.live - Autonomous Financial-News Platform",
-    des: "A fully automated Next.js news platform. A cron pipeline pulls S&P 500 news, and GPT-4o-mini generates per-article summaries plus comprehensive market analysis (direction, confidence, key drivers, risk, sector outlooks, strategy). Images via a Pexels to DALL·E pipeline to Cloudinary, a Telegram bot broadcasts daily analysis, and the system auto-produces social posts and short-form videos for TikTok, YouTube, Instagram and Facebook. Admin dashboard, role-based auth, PIPEDA/CASL-compliant.",
+    des: "A fully automated Next.js news platform. A cron pipeline pulls S&P 500 news, GPT-4o-mini generates per-article summaries plus comprehensive market analysis (direction, confidence, key drivers, risk, sector outlooks, strategy), and Claude reviews every post and every analysis. Images via a Pexels to DALL·E pipeline to Cloudinary, a Telegram bot broadcasts daily analysis, and the system auto-produces social posts and short-form videos for TikTok, YouTube, Instagram and Facebook. Admin dashboard, role-based auth, PIPEDA/CASL-compliant.",
     img: "/proj-newsstocks.webp",
     iconLists: ["/next.svg", "/ts.svg", "/tail.svg"],
     link: "https://newsstocks.live",
