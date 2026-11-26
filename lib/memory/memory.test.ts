@@ -112,6 +112,33 @@ describe("ask handler", () => {
     expect(allow("9.9.9.9", Date.now() + RATE.windowMs + 1)).toBe(true);
   });
 
+  it("saves the question and the answer to the conversation log, never blocking on it", async () => {
+    const saved: { meta: Record<string, unknown>; turns: { role: string; text: string; at: number }[] }[] = [];
+    const log = vi.fn(async (meta, turns) => void saved.push({ meta, turns }));
+    const id = "1234abcd-5678";
+    await ask(req({ q: "What is XecSuite?", lens: "recruiter", id }), "sk-test", log, { country: "CA", device: "phone" });
+    expect(saved).toHaveLength(1);
+    expect(saved[0].meta).toMatchObject({ id, channel: "memory", lens: "recruiter", country: "CA", device: "phone" });
+    expect(saved[0].turns.map((t) => [t.role, t.text])).toEqual([
+      ["visitor", "What is XecSuite?"],
+      ["avatar", "I built it."],
+    ]);
+    expect(saved[0].turns[1].at).toBeGreaterThan(saved[0].turns[0].at);
+
+    // No id from the browser: nothing to group under, nothing saved. A failing store costs nothing.
+    await ask(req({ q: "Anything else?" }), "sk-test", log);
+    expect(saved).toHaveLength(1);
+    const broken = vi.fn(async () => {
+      throw new Error("down");
+    });
+    expect((await ask(req({ q: "Still answers?", id }), "sk-test", broken)).status).toBe(200);
+
+    // A question that got no answer is saved with why.
+    await ask(req({ q: "No key here", id }), undefined, log);
+    expect(saved[1].turns[1]).toMatchObject({ role: "action" });
+    expect(saved[1].turns[1].text).toContain("no key");
+  });
+
   it("falls back when OpenAI fails", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("nope", { status: 500 })));
     const res = await ask(req({ q: "What is XecSuite?" }), "sk-test");

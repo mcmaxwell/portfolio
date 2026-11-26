@@ -2,6 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { voice } from "@/lib/voice";
+import { track } from "@/lib/analytics";
+import { newChatId, referrerHost, sendTurns, type ClientTurn } from "@/lib/chatLogClient";
+
+/** A short, non-personal reason for a failed start, for analytics. */
+function failureReason(err: unknown): string {
+  if (err instanceof DOMException) {
+    if (err.name === "NotAllowedError" || err.name === "SecurityError") return "mic_denied";
+    if (err.name === "NotFoundError") return "no_mic";
+    return err.name.slice(0, 40);
+  }
+  const msg = err instanceof Error ? err.message : "";
+  if (/handshake/i.test(msg)) return "handshake";
+  if (/session|ephemeral/i.test(msg)) return "token";
+  return "other";
+}
 
 // Executes a voice command on the page. Add more actions here as you add tools.
 function runSiteAction(
@@ -55,6 +70,29 @@ export function useRealtimeChat(
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
 
+  // One conversation for the log and the analytics: its id, when it started, how many turns.
+  const sessionRef = useRef<{ id: string; startedAt: number; questions: number; answers: number; spokenAt: Map<string, number> } | null>(null);
+
+  const log = useCallback((turn: ClientTurn) => {
+    const s = sessionRef.current;
+    if (!s) return;
+    const first = s.questions + s.answers === 0;
+    sendTurns(s.id, "voice", [turn], first ? { referrer: referrerHost() } : {});
+  }, []);
+
+  const endSession = useCallback((how: "ended" | "error") => {
+    const s = sessionRef.current;
+    if (!s) return;
+    sessionRef.current = null;
+    if (how === "ended") {
+      track("avatar_chat_end", {
+        duration_sec: Math.round((Date.now() - s.startedAt) / 1000),
+        questions: s.questions,
+        answers: s.answers,
+      });
+    }
+  }, []);
+
   const cleanup = useCallback(() => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
@@ -106,6 +144,8 @@ export function useRealtimeChat(
   const connect = useCallback(async () => {
     setErrorMessage(null);
     setStatus("connecting");
+    sessionRef.current = { id: newChatId(), startedAt: Date.now(), questions: 0, answers: 0, spokenAt: new Map() };
+    track("avatar_chat_start");
 
     try {
       // 1. Get an ephemeral key from our server route.
@@ -154,6 +194,28 @@ export function useRealtimeChat(
       dc.addEventListener("message", (e) => {
         try {
           const evt = JSON.parse(e.data);
+          const s = sessionRef.current;
+          if (s && evt.type === "input_audio_buffer.committed" && evt.item_id) {
+            // The question's transcript can arrive after the answer starts: keep when it was said.
+            s.spokenAt.set(evt.item_id, Date.now());
+          } else if (s && evt.type === "conversation.item.input_audio_transcription.completed") {
+            const text = String(evt.transcript ?? "").trim();
+            if (text) {
+              log({ role: "visitor", text, at: s.spokenAt.get(evt.item_id) });
+              s.questions++;
+              track("avatar_question", { turn: s.questions });
+            }
+          } else if (
+            s &&
+            (evt.type === "response.output_audio_transcript.done" || evt.type === "response.audio_transcript.done")
+          ) {
+            const text = String(evt.transcript ?? "").trim();
+            if (text) {
+              log({ role: "avatar", text });
+              s.answers++;
+              track("avatar_answer", { turn: s.answers });
+            }
+          }
           if (evt.type === "input_audio_buffer.speech_started") {
             setStatus("listening");
           } else if (evt.type === "response.audio.delta") {
@@ -171,6 +233,7 @@ export function useRealtimeChat(
             let result: { ok: boolean; detail?: string } = { ok: false };
             try {
               const args = JSON.parse(evt.item.arguments || "{}");
+              const value = String(args.gesture ?? args.section ?? "").slice(0, 40);
               if (evt.item.name === "play_gesture" && gestureRef) {
                 const name = String(args.gesture || "");
                 gestureRef.current = { seq: gestureRef.current.seq + 1, name };
@@ -178,6 +241,8 @@ export function useRealtimeChat(
               } else {
                 result = runSiteAction(evt.item.name, args);
               }
+              track("avatar_action", { action: String(evt.item.name).slice(0, 40), value });
+              log({ role: "action", text: `${evt.item.name}(${value})${result.ok ? "" : " failed"}` });
             } catch {
               /* bad args */
             }
@@ -218,20 +283,33 @@ export function useRealtimeChat(
       await pc.setRemoteDescription(answer);
 
       setStatus("listening");
+      track("avatar_chat_connected");
     } catch (err) {
       console.error(err);
       setErrorMessage(err instanceof Error ? err.message : String(err));
       setStatus("error");
+      track("avatar_chat_error", { reason: failureReason(err) });
+      endSession("error");
       cleanup();
     }
-  }, [cleanup, gestureRef, startVolumeLoop]);
+  }, [cleanup, endSession, gestureRef, log, startVolumeLoop]);
 
   const disconnect = useCallback(() => {
+    endSession("ended");
     cleanup();
     setStatus("idle");
-  }, [cleanup]);
+  }, [cleanup, endSession]);
 
-  useEffect(() => cleanup, [cleanup]);
+  // Leaving the page mid-conversation still counts as an end.
+  useEffect(() => {
+    const onHide = () => endSession("ended");
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      endSession("ended");
+      cleanup();
+    };
+  }, [cleanup, endSession]);
 
   return { status, errorMessage, volumeRef, connect, disconnect };
 }
