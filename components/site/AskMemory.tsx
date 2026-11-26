@@ -6,6 +6,8 @@ import { buildLexicalIndex, lexicalSearch, type Match } from "@/lib/memory/searc
 import { LENSES, LENS_LABEL, LENS_QUESTIONS } from "@/lib/memory/lenses";
 import { useLens } from "@/lib/memory/useLens";
 import { FadeIn, RevealText, SectionLabel } from "./ui";
+import { track } from "@/lib/analytics";
+import { tabChatId } from "@/lib/chatLogClient";
 
 type Step = { label: string; detail?: string; state: "run" | "done" | "skip" };
 
@@ -69,10 +71,12 @@ export function AskMemory() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const run = async (question: string) => {
+  const run = async (question: string, suggested = false) => {
     const text = question.trim();
     if (text.length < 2 || busy) return;
     const id = ++runId.current;
+    const t0 = performance.now();
+    track("ask_memory_question", { lens, suggested, length: text.length });
     setBusy(true);
     setResult(null);
     setSteps([
@@ -84,7 +88,7 @@ export function AskMemory() {
       const res = await fetch("/api/memory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ q: text, lens }),
+        body: JSON.stringify({ q: text, lens, id: tabChatId() }),
       });
       if (!res.ok) throw new Error(String(res.status));
       const data = (await res.json()) as Semantic;
@@ -95,9 +99,16 @@ export function AskMemory() {
         { label: "Writing an answer from the closest four", detail: `${data.model.answer} · ${ms(data.timings.answerMs)}`, state: "done" },
       ]);
       setResult({ mode: "semantic", matches: data.matches.filter((m) => byId.has(m.id)), answer: data.answer });
-    } catch {
+      track("ask_memory_answer", { lens, mode: "semantic", ms: Math.round(performance.now() - t0) });
+    } catch (err) {
       if (id !== runId.current) return;
       const matches = lexicalSearch(index, text, 4);
+      track("ask_memory_answer", {
+        lens,
+        mode: "keyword",
+        reason: err instanceof Error && /^\d+$/.test(err.message) ? err.message : "network",
+        matches: matches.length,
+      });
       setSteps([
         { label: "Embedding your question", detail: "server unavailable", state: "skip" },
         { label: `Searching ${corpus.length} memories`, detail: "keyword ranking (BM25) in your browser", state: "done" },
@@ -121,7 +132,7 @@ export function AskMemory() {
 
   const ask = (question: string) => {
     setQ(question);
-    void run(question);
+    void run(question, true);
   };
 
   return (
@@ -138,6 +149,9 @@ export function AskMemory() {
               Everything on this site, cut into {corpus.length} passages. Your question is matched by meaning, the closest
               passages are shown with how close they are, and the answer is written from them alone.
             </p>
+            <p className="mt-4 max-w-md text-xs leading-relaxed text-term-muted">
+              I keep questions for 90 days to make the answers better. No names, emails or IP addresses.
+            </p>
             <div className="mt-10">
               <p id="lens-label" className="mb-3 text-[10px] uppercase tracking-[0.2em] text-term-muted">
                 Who are you?
@@ -148,7 +162,10 @@ export function AskMemory() {
                     key={l}
                     type="button"
                     aria-pressed={lens === l}
-                    onClick={() => setLens(l)}
+                    onClick={() => {
+                      if (l !== lens) track("ask_memory_lens", { lens: l });
+                      setLens(l);
+                    }}
                     className={`rounded-full px-4 py-2 text-sm transition-colors ${
                       lens === l ? "bg-term-paper text-term-bg" : "text-term-muted hover:text-term-paper"
                     }`}

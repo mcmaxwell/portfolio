@@ -32,6 +32,10 @@ const SECTIONS: { title: string; entries: Entry[] }[] = [
         label: "The world",
         body: "Play / explore opens a small 3D campus in the same canvas: Rapier physics, a follow camera, and the same avatar handed over from the hero pose without a cut.",
       },
+      {
+        label: "Privacy",
+        body: "What you ask the avatar or my memory is kept for 90 days so I can see what people want to know and make the answers better. It is stored with a random id, your country and whether you are on a phone. No name, email or IP address. Google Analytics only counts that a chat happened.",
+      },
     ],
   },
   {

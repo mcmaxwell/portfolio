@@ -2,6 +2,10 @@ import { buildCorpus, memoryText, type Memory } from "@/lib/memory/corpus";
 import { topK } from "@/lib/memory/search";
 import { LENSES, type Lens } from "@/lib/memory/lenses";
 import { owner } from "@/lib/persona";
+import { isChatId, type ChatMeta, type Turn } from "@/lib/chatLog";
+
+/** Where a question and its answer are saved (lib/chatLog.ts in production, a spy in tests). */
+export type AskLogger = (meta: ChatMeta, turns: Turn[]) => Promise<unknown>;
 
 /**
  * "Ask my memory" (served by app/api/memory/route.ts): embeds the visitor's question, finds the
@@ -69,24 +73,50 @@ const LENS_FRAMING: Record<Lens, string> = {
 const json = (body: unknown, status = 200, headers?: Record<string, string>) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });
 
-export async function ask(req: Request, apiKey: string | undefined): Promise<Response> {
-  if (!apiKey) return json({ error: "unavailable", fallback: true }, 503);
-
+export async function ask(
+  req: Request,
+  apiKey: string | undefined,
+  log?: AskLogger,
+  meta: Pick<ChatMeta, "country" | "device"> = {}
+): Promise<Response> {
   let q = "";
   let lens: Lens = "founder";
+  let chatId: string | null = null;
   try {
-    const body = (await req.json()) as { q?: unknown; lens?: unknown };
+    const body = (await req.json()) as { q?: unknown; lens?: unknown; id?: unknown };
     q = typeof body.q === "string" ? body.q.trim() : "";
     if (typeof body.lens === "string" && (LENSES as readonly string[]).includes(body.lens)) lens = body.lens as Lens;
+    if (isChatId(body.id)) chatId = body.id;
   } catch {
     // Treated as an empty question below.
   }
-  if (q.length < 2 || q.length > MAX_QUESTION) {
-    return json({ error: `Ask in 2 to ${MAX_QUESTION} characters.` }, 400);
+
+  // Saves the question with what the visitor got back. Awaited (a serverless function may stop
+  // once it has answered) but bounded by the store's own timeout, and it never throws.
+  const asked = Date.now();
+  const save = async (reply: Turn) => {
+    if (!log || !chatId) return;
+    try {
+      await log({ id: chatId, channel: "memory", startedAt: asked, lens, ...meta }, [
+        { role: "visitor", text: q, at: asked },
+        { ...reply, at: Math.max(reply.at, asked + 1) },
+      ]);
+    } catch {
+      // Logging must never cost the visitor an answer.
+    }
+  };
+  const fallback = (why: string) => save({ role: "action", text: `No answer (${why}), keyword results shown`, at: Date.now() });
+
+  const valid = q.length >= 2 && q.length <= MAX_QUESTION;
+  if (!apiKey) {
+    if (valid) await fallback("server has no key");
+    return json({ error: "unavailable", fallback: true }, 503);
   }
+  if (!valid) return json({ error: `Ask in 2 to ${MAX_QUESTION} characters.` }, 400);
 
   const visitor = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "anon";
   if (!allow(visitor)) {
+    await fallback("rate limited");
     return json({ error: "rate_limited", fallback: true }, 429, { "Retry-After": "600" });
   }
 
@@ -123,6 +153,7 @@ export async function ask(req: Request, apiKey: string | undefined): Promise<Res
       apiKey
     );
     const answer = chat.choices[0]?.message.content.trim() ?? "";
+    await save({ role: "avatar", text: answer || "(empty answer)", at: Date.now() });
     return json({
       mode: "semantic",
       model: { embedding: EMBEDDING_MODEL, answer: ANSWER_MODEL },
@@ -132,6 +163,7 @@ export async function ask(req: Request, apiKey: string | undefined): Promise<Res
       timings: { embedMs: t1 - t0, searchMs: t2 - t1, answerMs: Date.now() - t2 },
     });
   } catch {
+    await fallback("OpenAI error");
     return json({ error: "upstream", fallback: true }, 502);
   }
 }

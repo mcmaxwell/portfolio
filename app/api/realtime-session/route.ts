@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const REALTIME_MODEL = "gpt-realtime-2";
+const TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe";
 const VOICE = "cedar"; // male voice. Other male options: ash | echo | verse. Female: marin | shimmer | coral
 
 export async function GET() {
@@ -31,7 +32,12 @@ export async function GET() {
           type: "realtime",
           model: REALTIME_MODEL,
           instructions: buildInstructions(),
-          audio: { output: { voice: VOICE } },
+          // Input transcription gives a text copy of what the visitor says, for the private
+          // conversation log (lib/chatLog.ts). It does not change how the model hears them.
+          audio: {
+            input: { transcription: { model: TRANSCRIBE_MODEL } },
+            output: { voice: VOICE },
+          },
           tool_choice: "auto",
           tools: [
             {
